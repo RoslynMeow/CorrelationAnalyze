@@ -120,9 +120,9 @@ onBeforeUnmount(() => {
     />
     <main class="wrap">
       <div v-if="ds.error" class="banner warn">⚠️ {{ ds.error }}</div>
+      <!-- KeepAlive 用 key 做缓存索引；key 必须按「数据集 + 页签」唯一，
+           否则不同页签会复用同一个组件实例 -->
       <KeepAlive :max="12">
-        <!-- key 必须按「数据集 + 页签」唯一：KeepAlive 用 key 做缓存索引，
-             若不同组件复用同一个 key，会把上一个页签的实例错误复用 -->
         <component :is="current.component" :key="`${ds.datasetId}:${active}`" />
       </KeepAlive>
     </main>
