@@ -68,19 +68,14 @@ const hasTitleOverride = computed(() => Object.keys(titleOverride.value).length 
 const isPolar = computed(() =>
   props.traces.some((raw) => (raw as Record<string, unknown>).type === 'scatterpolar'),
 )
-const effectiveHeight = computed<number | null>(() => {
-  if (size.value.height) return size.value.height
-  return typeof props.height === 'number' ? props.height : null
-})
 const effectiveWidth = computed<number | null>(
   () => size.value.width ?? settings.state.charts.defaultWidth ?? props.maxWidth ?? null,
 )
 
-/** 无单图高度覆盖时，自动填满父容器 */
-const fillHost = computed(
-  () => !!props.fill && !size.value.height && !preview.value,
+/** 图表自身的默认高度：不随容器拉伸 */
+const chartHeight = computed(() =>
+  size.value.height ?? (typeof props.height === 'number' ? props.height : 430),
 )
-const hasFixedHeight = computed(() => !!size.value.height)
 
 const wrapStyle = computed(() => {
   if (preview.value) {
@@ -92,18 +87,8 @@ const wrapStyle = computed(() => {
     }
   }
   const w = effectiveWidth.value
-  if (fillHost.value) {
-    return {
-      height: 'auto',
-      width: w ? `${w}px` : '100%',
-      maxWidth: '100%',
-      margin: w ? '0 auto' : '0',
-      flex: '1 1 auto',
-    }
-  }
-  const h = effectiveHeight.value
   return {
-    height: h ? `${h}px` : props.height || '430px',
+    height: `${chartHeight.value}px`,
     width: w ? `${w}px` : '100%',
     maxWidth: '100%',
     margin: w ? '0 auto' : '0',
@@ -112,13 +97,7 @@ const wrapStyle = computed(() => {
 
 const styledLayout = computed(() => {
   const base = { ...(props.layout || {}) }
-  if (fillHost.value) {
-    // 由容器高度决定；Plotly 的 autosize 会跟随容器
-    delete base.height
-    base.autosize = true
-  } else if (effectiveHeight.value) {
-    base.height = effectiveHeight.value
-  }
+  base.height = chartHeight.value
   const t = titleOverride.value
   if (t.title) {
     base.title = { ...(base.title as Record<string, unknown> | undefined), text: t.title }
@@ -532,13 +511,14 @@ function onSeriesColor(key: string, e: Event): void {
 </script>
 
 <template>
-  <div
-    ref="wrapEl"
-    class="chart-wrap"
-    :class="{ resizing, fill: fillHost, sized: hasFixedHeight }"
-    :style="wrapStyle"
-    :data-chart-id="chartId"
-  >
+  <div class="chart-frame" :class="{ fill: props.fill }">
+    <div
+      ref="wrapEl"
+      class="chart-wrap"
+      :class="{ resizing }"
+      :style="wrapStyle"
+      :data-chart-id="chartId"
+    >
     <div ref="el" class="chart-host" data-plotly-host :style="hostStyle"></div>
 
     <div v-if="chartLoading" class="chart-loading">{{ $t('正在加载图表库…') }}</div>
@@ -635,7 +615,7 @@ function onSeriesColor(key: string, e: Event): void {
             <button class="linkbtn" type="button" @click="clearSize">{{ $t('自动') }}</button>
           </div>
           <p class="hint" style="margin: 2px 0 4px">
-            {{ $t('也可以直接拖动图表右下角的手柄实时缩放；双击手柄恢复自动尺寸。设置固定高度后，图表卡片会随高度收缩。') }}
+            {{ $t('也可以直接拖动图表右下角的手柄实时缩放；双击手柄恢复默认尺寸。图本身可自由调整，外层卡片始终占满剩余高度。') }}
           </p>
 
           <div class="cs-sub">{{ $t('标题') }}</div>
@@ -725,6 +705,7 @@ function onSeriesColor(key: string, e: Event): void {
     ></div>
     <div v-if="resizing && preview" class="chart-size-badge">
       {{ preview.width }} × {{ preview.height }}
+    </div>
     </div>
   </div>
 </template>

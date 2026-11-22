@@ -586,33 +586,8 @@ html[data-theme='dark'] .dropcard.drag {
   flex-direction: column;
   padding: 8px 8px 0;
 }
-.panel-fit > .chart-card > .chart-wrap {
+.panel-fit > .chart-card > .chart-frame {
   flex: 1 1 auto;
-  min-height: 0;
-}
-/* 单图设置了固定高度（或正在拖动）时，不再强制铺满视口，允许整体变矮 */
-.panel-fit:has(> .chart-card > .chart-wrap.sized),
-.panel-fit:has(> .chart-card > .chart-wrap.resizing) {
-  flex: 0 0 auto;
-}
-.panel-fit > .chart-card:has(> .chart-wrap.sized),
-.panel-fit > .chart-card:has(> .chart-wrap.resizing) {
-  flex: 0 0 auto;
-  min-height: 0;
-}
-.panel-fit > .chart-card > .chart-wrap.sized,
-.panel-fit > .chart-card > .chart-wrap.resizing {
-  flex: 0 0 auto;
-  min-height: 0;
-}
-/* 总览 / 偏相关等双列布局：固定高度时也让容器随内容收缩 */
-.panel-fit .grid2:has(.chart-wrap.sized) {
-  flex: 0 0 auto;
-}
-.panel-fit:has(> .grid2 .chart-wrap.sized) {
-  flex: 0 0 auto;
-}
-.panel-fit .grid2:has(.chart-wrap.sized) > .card {
   min-height: 0;
 }
 .panel-fit > .chart-card .empty-chart {
@@ -648,8 +623,9 @@ html[data-theme='dark'] .dropcard.drag {
   flex-direction: column;
   min-height: 0;
 }
-.panel-fit .grid-charts .chart-wrap.fill {
-  min-height: 140px;
+.panel-fit .grid-charts .chart-frame.fill {
+  flex: none;
+  overflow: visible;
 }
 @keyframes fade {
   from {
@@ -1102,15 +1078,15 @@ html[data-theme='dark'] .dropcard.drag {
   height: 100%;
   min-width: 0;
 }
-/* 填满父容器时，图表高度完全由 flex 决定，避免高度百分比循环 */
-.chart-wrap.fill {
-  min-height: 220px;
+/* 外层容器负责占满卡片；图表本身保持独立尺寸，超出时在容器内滚动 */
+.chart-frame {
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
 }
-.chart-wrap.fill .chart-host {
-  position: absolute;
-  inset: 0;
-  width: auto;
-  height: auto;
+.chart-frame.fill {
+  flex: 1 1 auto;
+  overflow: auto;
 }
 .chart-loading {
   position: absolute;

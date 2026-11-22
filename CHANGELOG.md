@@ -27,7 +27,7 @@
 
 ### Fixed
 
-- Per-chart fixed heights now shrink the chart card and panel instead of being stretched back to the viewport; drag-to-resize preview follows the same rule
+- Per-chart width and height are now independent of the container: the card still fills the available height, while the plot can be resized freely and scrolls inside the card when larger
 
 ### Removed
 

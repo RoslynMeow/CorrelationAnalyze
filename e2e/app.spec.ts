@@ -76,25 +76,34 @@ test('行筛选影响数据与分析', async ({ page }) => {
   await expect(page.locator('.pinfo').first()).toContainText('共 30 行')
 })
 
-test('图表固定高度可以收紧卡片', async ({ page }) => {
+test('图表尺寸可独立于容器调整', async ({ page }) => {
   await openSample(page)
   await openTab(page, '分布分析')
   const wrap = page.locator('[data-chart-id="distribution"]')
   const card = page.locator('.panel > .chart-card')
+  const frame = page.locator('.panel > .chart-card > .chart-frame')
   await expect(wrap).toBeVisible()
   const before = await wrap.evaluate((el) => el.getBoundingClientRect().height)
-  expect(before).toBeGreaterThan(500)
+  expect(before).toBeGreaterThan(400)
 
   await wrap.locator('.chart-tool[title^="图表设置"]').click()
+  const widthInput = page.locator('.chart-style .cs-size-row input').nth(0)
   const heightInput = page.locator('.chart-style .cs-size-row input').nth(1)
+  await widthInput.fill('700')
+  await widthInput.press('Tab')
   await heightInput.fill('320')
   await heightInput.press('Tab')
   await expect.poll(() => wrap.evaluate((el) => el.getBoundingClientRect().height)).toBeLessThan(360)
-  expect(await card.evaluate((el) => el.getBoundingClientRect().height)).toBeLessThan(400)
+  await expect.poll(() => wrap.evaluate((el) => el.getBoundingClientRect().width)).toBeLessThan(760)
+  // 容器仍占满剩余高度，只有图本身变小
+  expect(await card.evaluate((el) => el.getBoundingClientRect().height)).toBeGreaterThan(500)
+  expect(await frame.evaluate((el) => el.getBoundingClientRect().height)).toBeGreaterThan(500)
 
+  await widthInput.fill('')
+  await widthInput.press('Tab')
   await heightInput.fill('')
   await heightInput.press('Tab')
-  await expect.poll(() => wrap.evaluate((el) => el.getBoundingClientRect().height)).toBeGreaterThan(500)
+  await expect.poll(() => wrap.evaluate((el) => el.getBoundingClientRect().height)).toBeGreaterThan(400)
 })
 
 test('数据搜索与导出', async ({ page }) => {
