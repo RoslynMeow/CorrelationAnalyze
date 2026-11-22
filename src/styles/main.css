@@ -914,6 +914,15 @@ html[data-theme='dark'] .dropcard.drag {
 }
 .chart-wrap.resizing {
   user-select: none;
+  outline: 1px dashed var(--accent);
+  outline-offset: 2px;
+}
+.chart-wrap.resizing .chart-tools {
+  opacity: 0;
+  pointer-events: none;
+}
+.chart-wrap.resizing .chart-host {
+  will-change: transform;
 }
 .chart-size-badge {
   position: absolute;

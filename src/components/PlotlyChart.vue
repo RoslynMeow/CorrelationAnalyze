@@ -34,6 +34,7 @@ const wrapEl = ref<HTMLDivElement | null>(null)
 const styleOpen = ref(false)
 const resizing = ref(false)
 const preview = ref<{ width: number; height: number } | null>(null)
+const dragBase = ref<{ w: number; h: number } | null>(null)
 
 const size = computed(() => settings.chartSize(props.chartId))
 const effectiveHeight = computed<number | null>(() => {
@@ -67,6 +68,25 @@ const styledLayout = computed(() => {
   const base = { ...(props.layout || {}) }
   if (effectiveHeight.value) base.height = effectiveHeight.value
   return base
+})
+
+/**
+ * 拖动时不做真实重绘：把图表按原尺寸渲染后整体 CSS 缩放，
+ * 松手才执行一次 Plotly 重绘，避免每帧 resize 造成的卡顿。
+ */
+const hostStyle = computed(() => {
+  if (!resizing.value || !preview.value || !dragBase.value) return {}
+  const sx = preview.value.width / dragBase.value.w
+  const sy = preview.value.height / dragBase.value.h
+  return {
+    position: 'absolute' as const,
+    top: '0',
+    left: '0',
+    width: `${dragBase.value.w}px`,
+    height: `${dragBase.value.h}px`,
+    transform: `scale(${sx}, ${sy})`,
+    transformOrigin: 'top left',
+  }
 })
 
 function onSize(key: 'width' | 'height', e: Event): void {
@@ -112,6 +132,7 @@ function onResizeStart(e: PointerEvent): void {
     maxW: Math.min(1600, Math.max(280, parentW)),
   }
   preview.value = { width: Math.round(rect.width), height: Math.round(rect.height) }
+  dragBase.value = { w: rect.width, h: rect.height }
   resizing.value = true
   moved = false
   document.body.style.userSelect = 'none'
@@ -140,7 +161,12 @@ function onResizeEnd(): void {
   preview.value = null
   resizing.value = false
   dragStart = null
+  dragBase.value = null
   moved = false
+  // 等下一帧布局恢复后再真实重绘一次
+  requestAnimationFrame(() => {
+    void draw()
+  })
 }
 
 function seriesKeyOf(t: Record<string, unknown>): string {
@@ -251,7 +277,7 @@ let resizeRaf = 0
 onMounted(() => {
   if (typeof ResizeObserver === 'undefined' || !el.value) return
   resizeObserver = new ResizeObserver(() => {
-    if (resizeRaf) return
+    if (resizeRaf || resizing.value) return
     resizeRaf = requestAnimationFrame(() => {
       resizeRaf = 0
       if (!el.value) return
@@ -341,7 +367,7 @@ function onSeriesColor(key: string, e: Event): void {
 
 <template>
   <div ref="wrapEl" class="chart-wrap" :class="{ resizing }" :style="wrapStyle">
-    <div ref="el" class="chart-host" data-plotly-host></div>
+    <div ref="el" class="chart-host" data-plotly-host :style="hostStyle"></div>
 
     <div class="chart-tools" @mousedown.stop @click.stop>
       <button class="chart-tool" type="button" title="复制图片" @click="copyImage">
