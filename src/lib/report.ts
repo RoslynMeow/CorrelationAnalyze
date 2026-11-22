@@ -19,6 +19,8 @@ export interface ReportMeta {
   subtitle?: string
   /** 报告末尾备注 */
   notes?: string
+  /** 行筛选摘要，例如 gender ∈ {Female} */
+  filterSummary?: string
 }
 
 const esc = (s: string): string =>
@@ -222,7 +224,11 @@ export function buildReportHtml(meta: ReportMeta, sections: ReportSection[]): st
     <div class="meta">
       ${esc(t('数据：{name}', { name: meta.datasetName }))} ·
       ${esc(t('{rows} 行 × {cols} 列', { rows: meta.rows, cols: meta.columns }))} ·
-      ${esc(t('生成时间：{time}', { time: meta.generatedAt }))}
+      ${esc(t('生成时间：{time}', { time: meta.generatedAt }))}${
+        meta.filterSummary
+          ? ` · ${esc(t('筛选：{f}', { f: meta.filterSummary }))}`
+          : ''
+      }
     </div>
   </header>
   <nav class="report-toc"><b>${esc(t('目录'))}</b><ol>${toc}</ol></nav>

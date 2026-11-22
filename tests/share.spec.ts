@@ -3,13 +3,17 @@ import { decodeShare, encodeShare, shareUrl } from '@/lib/share'
 
 describe('视图分享链接', () => {
   it('编码后可还原页签与视图选择', () => {
-    const raw = encodeShare('target', {
-      target: 'risk_level',
-      targetMethod: 'spearman',
-      groupVars: ['stress_level', 'sleep_hours'],
-      matrixSignif: true,
-      partialControls: ['sleep_hours'],
-    })
+    const raw = encodeShare(
+      'target',
+      {
+        target: 'risk_level',
+        targetMethod: 'spearman',
+        groupVars: ['stress_level', 'sleep_hours'],
+        matrixSignif: true,
+        partialControls: ['sleep_hours'],
+      },
+      [{ type: 'category', column: 'gender', values: ['Female'] }],
+    )
     const out = decodeShare(raw)!
     expect(out.tab).toBe('target')
     expect(out.view).toMatchObject({
@@ -18,6 +22,11 @@ describe('视图分享链接', () => {
       groupVars: ['stress_level', 'sleep_hours'],
       matrixSignif: true,
       partialControls: ['sleep_hours'],
+    })
+    expect(out.filter?.[0]).toMatchObject({
+      type: 'category',
+      column: 'gender',
+      values: ['Female'],
     })
   })
 

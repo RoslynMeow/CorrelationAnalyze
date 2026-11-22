@@ -45,6 +45,11 @@ export interface Dataset {
 export type AssocMethod = 'pearson' | 'spearman'
 export type AssocType = 'r' | 'ρ' | 'V' | 'η'
 
+export type FilterRule =
+  | { type: 'number'; column: string; min: number | null; max: number | null }
+  | { type: 'date'; column: string; min: string; max: string }
+  | { type: 'category'; column: string; values: string[]; includeMissing?: boolean }
+
 export interface AssocResult {
   /** 0–1 的关联强度 */
   strength: number

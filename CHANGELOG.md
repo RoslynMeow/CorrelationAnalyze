@@ -19,6 +19,7 @@
 - VIF multicollinearity panel with normal / watch / high tiers and collinearity notes
 - Shareable view links (`?view=…`) that restore the current tab and analysis selections after loading the same CSV
 - Report dialog with custom title, subtitle and notes, rendered into the HTML / PDF export
+- Global row filter (category values, numeric and date ranges, AND combined): all statistics, charts, data preview, share links and reports use the filtered rows
 
 ### Changed
 

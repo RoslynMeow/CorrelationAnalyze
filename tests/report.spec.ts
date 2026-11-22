@@ -37,6 +37,7 @@ describe('报告导出', () => {
         title: '心理健康 <b>报告</b>',
         subtitle: '2026 春季课程项目',
         notes: '口径：pairwise\n第二行',
+        filterSummary: 'gender ∈ {Female}',
       },
       [{ key: 'overview', label: '关联总览', html: '<p>ok</p>', charts: 0 }],
     )
@@ -44,6 +45,7 @@ describe('报告导出', () => {
     expect(html).toContain('2026 春季课程项目')
     expect(html).toContain('report-notes')
     expect(html).toContain('口径：pairwise')
+    expect(html).toContain('筛选：gender ∈ {Female}')
     expect(html).not.toContain('<b>报告</b>')
   })
 

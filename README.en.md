@@ -48,6 +48,7 @@ from the test fixtures.
 
 Also included:
 
+- Global row filter (category values, numeric / date ranges, AND combined); all statistics, charts, preview and reports use the filtered rows
 - Settings drawer: theme tokens, density, radius, shadow, table styles
 - 4 palette presets + custom palette; per-chart and per-series colors
 - Per-chart width/height, presets, drag-to-resize, custom title / axis titles
@@ -73,7 +74,9 @@ one-way ANOVA F for η. Fisher z confidence intervals cover r / ρ; regression s
 t-based interval. Target rankings and all variable pairs include Benjamini–Hochberg FDR
 q values. Partial correlations residualize on up to 5 controls (standardized regression);
 VIF = 1 / (1 − R²) flags multicollinearity (VIF < 5 normal, 5–10 watch, > 10 high).
-The implementation lives in `src/lib/stats.ts` and is validated against
+Row filters keep matching rows before any statistic: category values match trimmed raw
+strings, numeric / date ranges include their bounds, and missing values are excluded by
+default. The implementation lives in `src/lib/stats.ts` and is validated against
 pandas / scipy / statsmodels with a 1e-9 tolerance.
 
 ## Quick start
@@ -85,7 +88,7 @@ git clone https://github.com/RoslynMeow/CorrelationAnalyze.git
 cd CorrelationAnalyze
 npm install
 npm run dev          # http://localhost:5188
-npm test             # 97 tests
+npm test             # 104 tests
 npm run test:e2e     # Playwright browser tests
 npm run build        # -> dist/
 npm run build:single # -> dist-single/index.html (portable, offline)
@@ -104,7 +107,7 @@ src/
   workers/           # pairwise association worker
   components/        # PlotlyChart, SettingsDrawer, ...
   panels/            # 12 analysis tabs
-tests/               # 97 tests + CSV fixture
+tests/               # 104 tests + CSV fixture
 e2e/                 # Playwright browser tests
 .github/             # CI, Pages, issue/PR templates
 ```
@@ -158,6 +161,7 @@ Full board: **https://github.com/users/RoslynMeow/projects/8**
 - [x] Phase 4: p values, 95% CI, R² and FDR correction
 - [x] Phase 4: partial correlation matrix and VIF
 - [x] Phase 4: shareable view links, custom report title and notes
+- [x] Phase 5: global row filter (category / numeric / date, AND combined)
 - [x] Common dataset presets (auto / mental health / custom)
 
 ## Privacy

@@ -9,6 +9,8 @@ const props = defineProps<{
   max?: number
   /** 选项超过该数量时显示搜索框 */
   searchThreshold?: number
+  /** 搜索框占位文案 */
+  searchPlaceholder?: string
 }>()
 
 const emit = defineEmits<{ (e: 'update:modelValue', v: string[]): void }>()
@@ -84,7 +86,7 @@ function clear(): void {
         v-model="keyword"
         class="chipsearch"
         type="search"
-        :placeholder="$t('筛选变量…')"
+        :placeholder="props.searchPlaceholder || $t('筛选变量…')"
         :aria-label="$t('筛选变量')"
       />
       <span class="chipspacer"></span>

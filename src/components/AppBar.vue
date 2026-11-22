@@ -6,6 +6,7 @@ const props = defineProps<{
   active: string
   fileName: string
   chipTitle: string
+  filterActive?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -16,6 +17,7 @@ const emit = defineEmits<{
   (e: 'report'): void
   (e: 'presets'): void
   (e: 'share'): void
+  (e: 'filter'): void
 }>()
 
 const tabsEl = ref<HTMLElement | null>(null)
@@ -73,11 +75,12 @@ function selectTab(key: string): void {
   emit('select', key)
 }
 
-function act(kind: 'presets' | 'report' | 'share' | 'change' | 'settings'): void {
+function act(kind: 'presets' | 'report' | 'share' | 'filter' | 'change' | 'settings'): void {
   menuOpen.value = false
   if (kind === 'presets') emit('presets')
   else if (kind === 'report') emit('report')
   else if (kind === 'share') emit('share')
+  else if (kind === 'filter') emit('filter')
   else if (kind === 'change') emit('change')
   else emit('settings')
 }
@@ -158,6 +161,14 @@ watch(
       <span class="filechip" :title="chipTitle">{{ props.fileName }}</span>
 
       <div class="appactions-inline wide-only">
+        <button
+          class="btn ghost filter-btn"
+          type="button"
+          :class="{ active: props.filterActive }"
+          @click="emit('filter')"
+        >
+          {{ $t('筛选') }}
+        </button>
         <button class="btn ghost" type="button" @click="emit('presets')">{{ $t('预设') }}</button>
         <button class="btn ghost" type="button" @click="emit('report')">{{ $t('报告') }}</button>
         <button class="btn ghost" type="button" @click="emit('share')">{{ $t('分享') }}</button>
@@ -199,6 +210,15 @@ watch(
           ⋯
         </button>
         <div v-if="menuOpen" class="appmenu-panel" role="menu">
+          <button
+            class="appmenu-item"
+            type="button"
+            role="menuitem"
+            :class="{ active: props.filterActive }"
+            @click="act('filter')"
+          >
+            {{ $t('筛选') }}
+          </button>
           <button class="appmenu-item" type="button" role="menuitem" @click="act('presets')">
             {{ $t('预设') }}
           </button>

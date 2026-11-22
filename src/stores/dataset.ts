@@ -12,9 +12,11 @@ import {
   buildDataset,
 } from '@/lib/infer'
 import { assoc, computePairs, slimColumns } from '@/lib/associations'
+import { buildFilterMask, filterCount, normalizeRules, subsetDataset } from '@/lib/filter'
 import { bhAdjust } from '@/lib/stats'
+import { fmt } from '@/lib/format'
 import AssociationsWorker from '@/workers/associations.worker?worker&inline'
-import type { AssocMethod, AssocResult, Column, Dataset, PairAssoc } from '@/types'
+import type { AssocMethod, AssocResult, Column, Dataset, FilterRule, PairAssoc } from '@/types'
 import { toast } from '@/composables/useToast'
 import { t } from '@/i18n'
 import { useSettingsStore } from './settings'
@@ -27,11 +29,23 @@ interface PendingCall {
 }
 
 export const useDatasetStore = defineStore('dataset', () => {
-  const dataset = shallowRef<Dataset | null>(null)
+  /** 原始数据（未筛选） */
+  const source = shallowRef<Dataset | null>(null)
+  const filterRules = ref<FilterRule[]>([])
   const fileName = ref('')
   const datasetId = ref(0)
   const loading = ref(false)
   const error = ref('')
+
+  const filtered = computed<Dataset | null>(() => {
+    const src = source.value
+    if (!src) return null
+    if (!filterRules.value.length) return src
+    const mask = buildFilterMask(src.columns, src.n, filterRules.value)
+    if (!mask) return src
+    return subsetDataset(src, mask)
+  })
+  const dataset = computed(() => filtered.value)
 
   /** 按方法缓存的全量变量对（worker 计算） */
   const pairCache = ref<Partial<Record<AssocMethod, PairAssoc[]>>>({})
@@ -39,6 +53,9 @@ export const useDatasetStore = defineStore('dataset', () => {
 
   const hasData = computed(() => !!dataset.value)
   const n = computed(() => dataset.value?.n ?? 0)
+  const sourceN = computed(() => source.value?.n ?? 0)
+  const filterActive = computed(() => filterRules.value.length > 0)
+  const sourceColumns = computed<Column[]>(() => source.value?.columns ?? [])
   const nums = computed<Column[]>(() => (dataset.value ? numericCols(dataset.value) : []))
   const cats = computed<Column[]>(() => (dataset.value ? categoryCols(dataset.value) : []))
   const dates = computed<Column[]>(() => (dataset.value ? dateCols(dataset.value) : []))
@@ -46,13 +63,41 @@ export const useDatasetStore = defineStore('dataset', () => {
   const assocs = computed<Column[]>(() => (dataset.value ? assocCols(dataset.value) : []))
   const targets = computed<Column[]>(() => (dataset.value ? targetCols(dataset.value) : []))
   const chipTitle = computed(() =>
-    dataset.value
+    source.value
       ? `${fileName.value} · ${t('{rows} 行 × {cols} 列', {
-          rows: dataset.value.n,
-          cols: dataset.value.headers.length,
+          rows: source.value.n,
+          cols: source.value.headers.length,
         })}`
       : '',
   )
+
+  const filterSummary = computed(() => {
+    if (!filterRules.value.length) return ''
+    const settings = useSettingsStore()
+    const parts: string[] = []
+    for (const rule of filterRules.value) {
+      const label = settings.columnLabel(rule.column)
+      if (rule.type === 'number') {
+        if (rule.min !== null && rule.max !== null) parts.push(`${label} ∈ [${fmt(rule.min, 4)}, ${fmt(rule.max, 4)}]`)
+        else if (rule.min !== null) parts.push(`${label} ≥ ${fmt(rule.min, 4)}`)
+        else if (rule.max !== null) parts.push(`${label} ≤ ${fmt(rule.max, 4)}`)
+      } else if (rule.type === 'date') {
+        parts.push(
+          rule.min && rule.max
+            ? `${label} ∈ [${rule.min}, ${rule.max}]`
+            : rule.min
+              ? `${label} ≥ ${rule.min}`
+              : `${label} ≤ ${rule.max}`,
+        )
+      } else {
+        const vals = rule.values.map((v) => settings.valueLabel(rule.column, v))
+        parts.push(
+          `${label} ∈ {${vals.join('、') || '—'}}${rule.includeMissing ? t('（含缺失）') : ''}`,
+        )
+      }
+    }
+    return parts.join(' · ')
+  })
 
   function column(name: string): Column | undefined {
     return dataset.value ? colByName(dataset.value, name) : undefined
@@ -61,7 +106,8 @@ export const useDatasetStore = defineStore('dataset', () => {
   function applyData(headers: string[], rows: string[][], name: string): void {
     if (!headers.length) throw new Error(t('没有解析到表头'))
     const ds = buildDataset(name, headers, rows)
-    dataset.value = ds
+    source.value = ds
+    filterRules.value = []
     fileName.value = name
     const settings = useSettingsStore()
     const view = useViewStore()
@@ -107,13 +153,40 @@ export const useDatasetStore = defineStore('dataset', () => {
   }
 
   function reset(): void {
-    dataset.value = null
+    source.value = null
+    filterRules.value = []
     fileName.value = ''
     pairCache.value = {}
     error.value = ''
     useSettingsStore().activateProfile(null)
     useViewStore().reset()
     document.title = t('关联性分析')
+  }
+
+  /* ---------------- 行筛选 ---------------- */
+
+  function previewFilter(rules: FilterRule[]): number {
+    const src = source.value
+    if (!src) return 0
+    const mask = buildFilterMask(src.columns, src.n, rules)
+    return filterCount(src, mask)
+  }
+
+  /** 应用筛选；自动丢弃无效规则，空规则等同清除 */
+  function applyFilters(rules: FilterRule[]): number {
+    const src = source.value
+    if (!src) return 0
+    const clean = normalizeRules(rules, src.columns)
+    filterRules.value = clean
+    datasetId.value++
+    pairCache.value = {}
+    error.value = ''
+    return filterCount(src, buildFilterMask(src.columns, src.n, clean))
+  }
+
+  function clearFilters(): void {
+    if (!filterRules.value.length) return
+    applyFilters([])
   }
 
   /* ---------------- 变量对计算（Web Worker + 主线程回退） ---------------- */
@@ -222,6 +295,7 @@ export const useDatasetStore = defineStore('dataset', () => {
 
   return {
     dataset,
+    source,
     fileName,
     datasetId,
     loading,
@@ -230,6 +304,11 @@ export const useDatasetStore = defineStore('dataset', () => {
     pairCache,
     hasData,
     n,
+    sourceN,
+    sourceColumns,
+    filterRules,
+    filterActive,
+    filterSummary,
     nums,
     cats,
     dates,
@@ -240,6 +319,9 @@ export const useDatasetStore = defineStore('dataset', () => {
     column,
     loadFile,
     reset,
+    previewFilter,
+    applyFilters,
+    clearFilters,
     ensurePairs,
     cachedPairs,
     assocWithTarget,

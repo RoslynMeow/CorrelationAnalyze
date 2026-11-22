@@ -54,6 +54,28 @@ test('偏相关矩阵与 VIF', async ({ page }) => {
   await expect(page.locator('[data-chart-id="partial"]')).toBeVisible()
 })
 
+test('行筛选影响数据与分析', async ({ page }) => {
+  await openSample(page)
+  await page.getByRole('button', { name: '筛选', exact: true }).click()
+  const dialog = page.getByRole('dialog', { name: '筛选数据' })
+  await expect(dialog).toBeVisible()
+
+  await dialog.getByRole('button', { name: /添加条件/ }).click()
+  await dialog.locator('.filter-rule select').selectOption('gender')
+  await dialog.locator('.filter-rule .chips label[title="Female"]').click()
+  await expect(dialog.locator('.filter-preview')).toContainText('15')
+  await dialog.getByRole('button', { name: '应用筛选' }).click()
+
+  await expect(page.locator('.filter-banner')).toContainText('已筛选 15 / 30 行')
+  await openTab(page, '数据预览')
+  await expect(page.locator('.pinfo').first()).toContainText('共 15 行')
+  await expect(page.locator('.tablewrap tbody tr')).toHaveCount(15)
+
+  await page.locator('.filter-banner').getByRole('button', { name: '清除' }).click()
+  await expect(page.locator('.filter-banner')).toBeHidden()
+  await expect(page.locator('.pinfo').first()).toContainText('共 30 行')
+})
+
 test('数据搜索与导出', async ({ page }) => {
   await openSample(page)
   await openTab(page, '数据预览')
@@ -96,6 +118,14 @@ test('弹窗焦点与 Esc 关闭', async ({ page }) => {
 
 test('生成报告会打开新页面', async ({ page }) => {
   await openSample(page)
+  await page.getByRole('button', { name: '筛选', exact: true }).click()
+  const filterDialog = page.getByRole('dialog', { name: '筛选数据' })
+  await filterDialog.getByRole('button', { name: /添加条件/ }).click()
+  await filterDialog.locator('.filter-rule select').selectOption('gender')
+  await filterDialog.locator('.filter-rule .chips label[title="Female"]').click()
+  await filterDialog.getByRole('button', { name: '应用筛选' }).click()
+  await expect(page.locator('.filter-banner')).toContainText('已筛选 15 / 30 行')
+
   await page.getByRole('button', { name: '报告', exact: true }).click()
   const dialog = page.getByRole('dialog', { name: '导出报告' })
   await dialog.getByLabel('报告标题').fill('自定义报告')
@@ -108,4 +138,6 @@ test('生成报告会打开新页面', async ({ page }) => {
   ])
   await expect(popup.locator('body')).toContainText('自定义报告', { timeout: 30_000 })
   await expect(popup.locator('.report-notes')).toContainText('E2E 备注')
+  await expect(popup.locator('.report-head')).toContainText('筛选：')
+  await expect(popup.locator('.report-head')).toContainText('gender')
 })

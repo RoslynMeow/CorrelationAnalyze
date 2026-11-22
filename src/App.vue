@@ -7,6 +7,7 @@ import AppBar from '@/components/AppBar.vue'
 import SettingsDrawer from '@/components/SettingsDrawer.vue'
 import ReportDialog from '@/components/ReportDialog.vue'
 import PresetDialog from '@/components/PresetDialog.vue'
+import FilterDialog from '@/components/FilterDialog.vue'
 import {
   buildReportHtml,
   capturePanel,
@@ -20,6 +21,7 @@ import { t } from '@/i18n'
 import { copyText } from '@/lib/exportChart'
 import { decodeShare, shareUrl } from '@/lib/share'
 import { useViewStore } from '@/stores/view'
+import type { FilterRule } from '@/types'
 import Toast from '@/components/Toast.vue'
 import OverviewPanel from '@/panels/OverviewPanel.vue'
 import MatrixPanel from '@/panels/MatrixPanel.vue'
@@ -55,6 +57,7 @@ const view = useViewStore()
 const settingsOpen = ref(false)
 const reportOpen = ref(false)
 const presetOpen = ref(false)
+const filterOpen = ref(false)
 
 let pendingShare = decodeShare(new URLSearchParams(location.search).get('view'))
 
@@ -87,13 +90,14 @@ watch(
     if (!data) return
     if (shared.tab && TABS.some((t) => t.key === shared.tab)) active.value = shared.tab
     view.apply(shared.view, data)
+    if (shared.filter?.length) ds.applyFilters(shared.filter)
     toast(t('已应用分享的视图'))
   },
 )
 
 async function shareView(): Promise<void> {
   try {
-    const url = shareUrl(location.href, active.value, view.snapshot())
+    const url = shareUrl(location.href, active.value, view.snapshot(), ds.filterRules)
     const ok = await copyText(url)
     toast(
       ok
@@ -104,6 +108,18 @@ async function shareView(): Promise<void> {
   } catch {
     toast(t('复制失败，请重试'))
   }
+}
+
+function applyFilter(rules: FilterRule[]): void {
+  const matched = ds.applyFilters(rules)
+  filterOpen.value = false
+  toast(t('已筛选 {n} / {total} 行', { n: matched, total: ds.sourceN }))
+}
+
+function clearFilter(): void {
+  ds.clearFilters()
+  filterOpen.value = false
+  toast(t('已清除筛选'))
 }
 
 const fileInput = ref<HTMLInputElement | null>(null)
@@ -175,6 +191,7 @@ async function generateReport(
         rows: ds.n,
         columns: ds.dataset?.headers.length ?? 0,
         generatedAt: new Date().toLocaleString('zh-CN'),
+        filterSummary: ds.filterActive ? ds.filterSummary : '',
         ...meta,
       },
       sections,
@@ -218,6 +235,7 @@ onBeforeUnmount(() => {
       :active="active"
       :file-name="ds.fileName"
       :chip-title="ds.chipTitle"
+      :filter-active="ds.filterActive"
       @select="active = $event"
       @change="pick"
       @theme="settings.toggleMode()"
@@ -225,9 +243,17 @@ onBeforeUnmount(() => {
       @report="reportOpen = true"
       @presets="presetOpen = true"
       @share="shareView"
+      @filter="filterOpen = true"
     />
     <main ref="mainEl" class="wrap">
       <div v-if="ds.error" class="banner warn">⚠️ {{ ds.error }}</div>
+      <div v-if="ds.filterActive" class="banner filter-banner">
+        <span>
+          🔎 {{ $t('已筛选 {n} / {total} 行，分析与报告仅基于筛选后的数据', { n: ds.n, total: ds.sourceN }) }}
+        </span>
+        <button class="linkbtn" type="button" @click="filterOpen = true">{{ $t('修改') }}</button>
+        <button class="linkbtn" type="button" @click="clearFilter">{{ $t('清除') }}</button>
+      </div>
       <!-- KeepAlive 用 key 做缓存索引；key 必须按「数据集 + 页签」唯一，
            否则不同页签会复用同一个组件实例 -->
       <KeepAlive :max="12">
@@ -262,4 +288,13 @@ onBeforeUnmount(() => {
     @generate="generateReport"
   />
   <PresetDialog :open="presetOpen" @close="presetOpen = false" />
+  <FilterDialog
+    :open="filterOpen"
+    :columns="ds.sourceColumns"
+    :total="ds.sourceN"
+    :rules="ds.filterRules"
+    @close="filterOpen = false"
+    @apply="applyFilter"
+    @clear="clearFilter"
+  />
 </template>
