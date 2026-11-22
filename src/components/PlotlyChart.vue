@@ -80,6 +80,7 @@ const effectiveWidth = computed<number | null>(
 const fillHost = computed(
   () => !!props.fill && !size.value.height && !preview.value,
 )
+const hasFixedHeight = computed(() => !!size.value.height)
 
 const wrapStyle = computed(() => {
   if (preview.value) {
@@ -534,7 +535,7 @@ function onSeriesColor(key: string, e: Event): void {
   <div
     ref="wrapEl"
     class="chart-wrap"
-    :class="{ resizing, fill: fillHost }"
+    :class="{ resizing, fill: fillHost, sized: hasFixedHeight }"
     :style="wrapStyle"
     :data-chart-id="chartId"
   >
@@ -634,7 +635,7 @@ function onSeriesColor(key: string, e: Event): void {
             <button class="linkbtn" type="button" @click="clearSize">{{ $t('自动') }}</button>
           </div>
           <p class="hint" style="margin: 2px 0 4px">
-            {{ $t('也可以直接拖动图表右下角的手柄实时缩放；双击手柄恢复自动尺寸。') }}
+            {{ $t('也可以直接拖动图表右下角的手柄实时缩放；双击手柄恢复自动尺寸。设置固定高度后，图表卡片会随高度收缩。') }}
           </p>
 
           <div class="cs-sub">{{ $t('标题') }}</div>

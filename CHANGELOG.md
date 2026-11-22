@@ -25,6 +25,10 @@
 - Plotly is lazy-loaded (first-screen JS drops from ~4.9 MB to ~250 KB) and prefetched after CSV load
 - Mobile keeps natural page scrolling and fixed chart heights instead of compressing to one screen
 
+### Fixed
+
+- Per-chart fixed heights now shrink the chart card and panel instead of being stretched back to the viewport; drag-to-resize preview follows the same rule
+
 ### Removed
 
 - Full-page HTML / PDF report export, its dialog and `src/lib/report.ts` (feature temporarily removed)

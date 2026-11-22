@@ -76,6 +76,27 @@ test('行筛选影响数据与分析', async ({ page }) => {
   await expect(page.locator('.pinfo').first()).toContainText('共 30 行')
 })
 
+test('图表固定高度可以收紧卡片', async ({ page }) => {
+  await openSample(page)
+  await openTab(page, '分布分析')
+  const wrap = page.locator('[data-chart-id="distribution"]')
+  const card = page.locator('.panel > .chart-card')
+  await expect(wrap).toBeVisible()
+  const before = await wrap.evaluate((el) => el.getBoundingClientRect().height)
+  expect(before).toBeGreaterThan(500)
+
+  await wrap.locator('.chart-tool[title^="图表设置"]').click()
+  const heightInput = page.locator('.chart-style .cs-size-row input').nth(1)
+  await heightInput.fill('320')
+  await heightInput.press('Tab')
+  await expect.poll(() => wrap.evaluate((el) => el.getBoundingClientRect().height)).toBeLessThan(360)
+  expect(await card.evaluate((el) => el.getBoundingClientRect().height)).toBeLessThan(400)
+
+  await heightInput.fill('')
+  await heightInput.press('Tab')
+  await expect.poll(() => wrap.evaluate((el) => el.getBoundingClientRect().height)).toBeGreaterThan(500)
+})
+
 test('数据搜索与导出', async ({ page }) => {
   await openSample(page)
   await openTab(page, '数据预览')

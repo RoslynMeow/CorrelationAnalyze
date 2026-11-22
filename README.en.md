@@ -51,7 +51,7 @@ Also included:
 - Global row filter (category values, numeric / date ranges, AND combined); all statistics, charts, preview and share links use the filtered rows
 - Settings drawer: theme tokens, density, radius, shadow, table styles
 - 4 palette presets + custom palette; per-chart and per-series colors
-- Per-chart width/height, presets, drag-to-resize, custom title / axis titles
+- Per-chart width/height, presets, drag-to-resize, custom title / axis titles; a fixed height shrinks the card and panel instead of stretching to the viewport
 - Column and category value display aliases (display only; stats use raw values)
 - Per-file profiles keyed by CSV headers (aliases, sizes, titles, colors)
 - All static UI text can be searched, edited and reset in Settings → Text

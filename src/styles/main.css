@@ -590,6 +590,31 @@ html[data-theme='dark'] .dropcard.drag {
   flex: 1 1 auto;
   min-height: 0;
 }
+/* 单图设置了固定高度（或正在拖动）时，不再强制铺满视口，允许整体变矮 */
+.panel-fit:has(> .chart-card > .chart-wrap.sized),
+.panel-fit:has(> .chart-card > .chart-wrap.resizing) {
+  flex: 0 0 auto;
+}
+.panel-fit > .chart-card:has(> .chart-wrap.sized),
+.panel-fit > .chart-card:has(> .chart-wrap.resizing) {
+  flex: 0 0 auto;
+  min-height: 0;
+}
+.panel-fit > .chart-card > .chart-wrap.sized,
+.panel-fit > .chart-card > .chart-wrap.resizing {
+  flex: 0 0 auto;
+  min-height: 0;
+}
+/* 总览 / 偏相关等双列布局：固定高度时也让容器随内容收缩 */
+.panel-fit .grid2:has(.chart-wrap.sized) {
+  flex: 0 0 auto;
+}
+.panel-fit:has(> .grid2 .chart-wrap.sized) {
+  flex: 0 0 auto;
+}
+.panel-fit .grid2:has(.chart-wrap.sized) > .card {
+  min-height: 0;
+}
 .panel-fit > .chart-card .empty-chart {
   flex: 1 1 auto;
 }
