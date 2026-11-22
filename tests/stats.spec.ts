@@ -11,7 +11,7 @@ let ds: Dataset
 const col = (name: string) => ds.columns.find((c) => c.name === name)!
 
 beforeAll(() => {
-  const text = readFileSync(resolve(__dirname, '../src/assets/sample.csv'), 'utf8')
+  const text = readFileSync(resolve(__dirname, './fixtures/sample.csv'), 'utf8')
   const { headers, rows } = parseCSV(text)
   ds = buildDataset('test', headers, rows)
 })

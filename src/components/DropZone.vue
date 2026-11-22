@@ -1,6 +1,6 @@
 <script setup lang="ts">
 defineProps<{ drag: boolean }>()
-const emit = defineEmits<{ (e: 'pick'): void; (e: 'sample'): void }>()
+const emit = defineEmits<{ (e: 'pick'): void }>()
 </script>
 
 <template>
@@ -15,15 +15,6 @@ const emit = defineEmits<{ (e: 'pick'): void; (e: 'sample'): void }>()
       @keydown.enter.prevent="emit('pick')"
       @keydown.space.prevent="emit('pick')"
     >
-      <button
-        class="btn sample-btn sample-top"
-        type="button"
-        title="载入 30 行示例 CSV"
-        @click.stop="emit('sample')"
-      >
-        示例数据
-      </button>
-
       <div class="dropicon">
         <svg
           viewBox="0 0 24 24"

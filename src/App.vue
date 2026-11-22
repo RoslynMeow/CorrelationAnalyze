@@ -106,7 +106,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <DropZone v-if="!ds.hasData" :drag="dragging" @pick="pick" @sample="ds.loadSample()" />
+  <DropZone v-if="!ds.hasData" :drag="dragging" @pick="pick" />
 
   <template v-else>
     <AppBar

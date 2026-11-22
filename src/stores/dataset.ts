@@ -13,7 +13,6 @@ import {
 } from '@/lib/infer'
 import { assoc, computePairs, slimColumns } from '@/lib/associations'
 import AssociationsWorker from '@/workers/associations.worker?worker&inline'
-import sampleCsv from '@/assets/sample.csv?raw'
 import type { AssocMethod, Column, Dataset, PairAssoc } from '@/types'
 import { toast } from '@/composables/useToast'
 
@@ -78,19 +77,6 @@ export const useDatasetStore = defineStore('dataset', () => {
       toast(error.value, 4500)
     } finally {
       loading.value = false
-    }
-  }
-
-  function loadSample(): void {
-    error.value = ''
-    try {
-      const { headers, rows } = parseCSV(sampleCsv)
-      applyData(headers, rows, '示例数据 test')
-      toast(`已载入示例数据 ${rows.length} 行 × ${headers.length} 列`)
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err)
-      error.value = `示例数据解析失败（${msg}）`
-      toast(error.value, 4000)
     }
   }
 
@@ -220,7 +206,6 @@ export const useDatasetStore = defineStore('dataset', () => {
     chipTitle,
     column,
     loadFile,
-    loadSample,
     reset,
     ensurePairs,
     cachedPairs,
