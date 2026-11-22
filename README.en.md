@@ -139,6 +139,10 @@ Files never leave the browser. All parsing, statistics and charting run locally;
 works offline and offers a single-file build. Settings are stored in `localStorage` and can
 be exported as JSON.
 
+## Changelog
+
+See [CHANGELOG.md](./CHANGELOG.md).
+
 ## License
 
 [MIT](./LICENSE) © 2026 RoslynMeow

@@ -245,6 +245,10 @@ npm test
 - 功能建议：请说明使用场景，而不只是实现方式
 - 统计口径变更：必须同步更新 `tests/stats.spec.ts` 与 pandas / scipy 基准
 
+## 更新日志
+
+见 [CHANGELOG.md](./CHANGELOG.md)。
+
 ## License
 
 [MIT](./LICENSE) © 2026 RoslynMeow
