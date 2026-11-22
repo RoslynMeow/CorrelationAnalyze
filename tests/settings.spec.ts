@@ -50,7 +50,7 @@ describe('配置合并与校验', () => {
     const s = mergeSettings({
       appearance: { mode: 'neon', density: 'huge', shadow: 'heavy' },
     })
-    expect(s.appearance.mode).toBe('light')
+    expect(s.appearance.mode).toBe('system')
     expect(s.appearance.density).toBe('normal')
     expect(s.appearance.shadow).toBe('soft')
   })

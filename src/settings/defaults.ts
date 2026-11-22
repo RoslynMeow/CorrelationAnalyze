@@ -143,7 +143,7 @@ export function defaultSettings(): Settings {
   return {
     version: 1,
     appearance: {
-      mode: 'light',
+      mode: 'system',
       colors: {},
       radius: null,
       density: 'normal',
