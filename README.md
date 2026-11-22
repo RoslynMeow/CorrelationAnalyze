@@ -22,7 +22,7 @@
   <img alt="Vite" src="https://img.shields.io/badge/Vite-8-646cff?style=flat-square&logo=vite&logoColor=white">
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5-3178c6?style=flat-square&logo=typescript&logoColor=white">
   <img alt="Plotly" src="https://img.shields.io/badge/Plotly-4-3f4f75?style=flat-square&logo=plotly&logoColor=white">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-55%20passed-3fb950?style=flat-square">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-59%20passed-3fb950?style=flat-square">
 </p>
 
 <p align="center"><strong>简体中文</strong> · <a href="./README.en.md">English</a></p>
@@ -61,9 +61,9 @@
 - **图表**：4 套色板预设 + 12 色自定义、热力图色阶、网格、透明背景、宽度上限
 - **单图**：每张图独立的宽高、小/中/大预设、拖拽右下角实时缩放、图表标题/轴标题、逐序列配色
 - **表格**：表头背景、边框、字号、斑马纹
-- **数据**：列显示名、类别取值显示名（例如 `mental_health_index → 心理健康指数`、`Low → 低`）
+- **数据**：列显示名、类别取值显示名（例如 `mental_health_index → 心理健康指数`、`Low → 低`），按 CSV 表头自动保存
 - **导出**：默认 PNG / SVG、PNG 1x/2x/3x
-- **配置**：导出 / 导入 JSON、恢复默认
+- **配置**：全局设置 + 按文件配置，导出 / 导入 JSON、恢复默认
 
 ### 导出与复制
 
@@ -98,7 +98,7 @@ cd CorrelationAnalyze
 npm install
 
 npm run dev          # http://localhost:5188
-npm test             # 55 个单元测试
+npm test             # 59 个单元测试
 npm run typecheck
 npm run build        # 常规构建 -> dist/
 npm run build:single # 单文件便携版 -> dist-single/index.html
@@ -153,7 +153,7 @@ CorrelationAnalyze/
 │  ├─ workers/associations.worker.ts
 │  ├─ components/              # PlotlyChart / SettingsDrawer / 图表工具条等
 │  └─ panels/                  # 11 个页签
-├─ tests/                      # 55 个测试 + fixtures/sample.csv（仅测试用）
+├─ tests/                      # 59 个测试 + fixtures/sample.csv（仅测试用）
 └─ .github/                    # CI、Pages、Issue/PR 模板
 ```
 
@@ -175,12 +175,13 @@ CorrelationAnalyze/
 npm test
 ```
 
-当前 **55 个测试全部通过**：
+当前 **59 个测试全部通过**：
 
 - `tests/stats.spec.ts`：基础统计 + 与 pandas / scipy 对照（容差 1e-9）
 - `tests/csv.spec.ts`：引号、CRLF、BOM、重复列名、GB18030 / UTF-16
 - `tests/infer.spec.ts`：类型推断、ID 列、分组列、有序等级、行数截断
 - `tests/settings.spec.ts`：配置合并、非法值回退、颜色校验、尺寸限幅、JSON 往返
+- `tests/profiles.spec.ts`：文件签名、按文件配置校验、颜色 / 尺寸 / 标题清洗
 
 对照基准示例：
 
@@ -212,8 +213,8 @@ npm test
 - [x] 外观、色板、表格、单图尺寸/标题、导出与配置导入导出
 - [x] Web Worker、GitHub Pages、单文件构建
 - [x] 第 2 期：列名与类别取值显示映射
+- [x] 第 2 期：按 CSV 文件保存列映射与图表配置
 - [ ] 第 2 期：全界面文案可编辑（i18n 词典）
-- [ ] 第 2 期：按 CSV 文件保存列映射与图表配置
 - [x] 第 3 期：单图标题 / 轴标题编辑
 - [ ] 第 3 期：整页报告导出（HTML / PDF）
 - [ ] 常见数据集预设模板

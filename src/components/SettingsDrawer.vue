@@ -120,6 +120,20 @@ function resetAll(): void {
   }
 }
 
+function clearCurrentProfile(): void {
+  if (window.confirm('清除当前 CSV 的列映射与单图配置？全局外观设置不受影响。')) {
+    settings.clearCurrentProfile()
+    toast('已清除当前文件配置')
+  }
+}
+
+function clearAllProfiles(): void {
+  if (window.confirm('清除所有按文件保存的列映射与图表配置？全局外观设置不受影响。')) {
+    settings.clearAllProfiles()
+    toast('已清除全部文件配置')
+  }
+}
+
 function onKey(e: KeyboardEvent): void {
   if (e.key === 'Escape' && props.open) emit('close')
 }
@@ -468,7 +482,7 @@ onBeforeUnmount(() => {
         <!-- ================= 数据 ================= -->
         <section v-else-if="tab === 'data'" class="set-section">
           <p class="hint">
-            映射只改显示，统计、缓存与导出仍使用原始列名和取值。当前为全局配置；按文件配置在 Issue #3。
+            映射只改显示，统计、缓存与导出仍使用原始列名和取值。映射按 CSV 表头自动保存，同一组列再次打开会恢复。
           </p>
 
           <template v-if="aliasColumns.length">
@@ -573,16 +587,41 @@ onBeforeUnmount(() => {
 
         <!-- ================= 配置 ================= -->
         <section v-else class="set-section">
-          <p class="hint">
-            当前版本保存全局设置；列显示名与取值映射已加入「数据」页。界面文案与按文件配置会在后续 Issue 中完成。
-          </p>
-          <div class="set-actions">
-            <button class="btn" type="button" @click="exportConfig">导出配置 JSON</button>
-            <button class="btn" type="button" @click="fileInput?.click()">导入配置 JSON</button>
-            <button class="btn" type="button" @click="resetAll">恢复全部默认</button>
+          <div class="set-block">
+            <div class="set-label">
+              按文件配置
+              <span class="hint">{{ settings.profileCount }} 个文件</span>
+            </div>
+            <p class="hint">
+              当前文件：{{ settings.activeProfileName || '未载入' }}。列映射、单图尺寸 / 标题 / 配色按 CSV 表头保存。
+            </p>
+            <div class="set-actions">
+              <button
+                class="btn"
+                type="button"
+                :disabled="!settings.activeProfileKey"
+                @click="clearCurrentProfile"
+              >
+                清除当前文件配置
+              </button>
+              <button class="btn" type="button" :disabled="!settings.profileCount" @click="clearAllProfiles">
+                清除全部文件配置
+              </button>
+            </div>
           </div>
-          <input ref="fileInput" type="file" accept=".json,application/json" hidden @change="onImport" />
-          <p class="hint">配置保存在浏览器 localStorage（键 `ca-settings-v1`），换电脑可用导出/导入迁移。</p>
+
+          <div class="set-block">
+            <div class="set-label">导入 / 导出</div>
+            <div class="set-actions">
+              <button class="btn" type="button" @click="exportConfig">导出配置 JSON</button>
+              <button class="btn" type="button" @click="fileInput?.click()">导入配置 JSON</button>
+              <button class="btn" type="button" @click="resetAll">恢复全部默认</button>
+            </div>
+            <input ref="fileInput" type="file" accept=".json,application/json" hidden @change="onImport" />
+            <p class="hint">
+              全局设置保存在 `ca-settings-v1`，按文件配置保存在 `ca-profiles-v1`；导出的 JSON 会同时包含两者。
+            </p>
+          </div>
         </section>
       </div>
     </aside>

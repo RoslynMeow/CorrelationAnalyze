@@ -15,6 +15,7 @@ import { assoc, computePairs, slimColumns } from '@/lib/associations'
 import AssociationsWorker from '@/workers/associations.worker?worker&inline'
 import type { AssocMethod, Column, Dataset, PairAssoc } from '@/types'
 import { toast } from '@/composables/useToast'
+import { useSettingsStore } from './settings'
 
 interface PendingCall {
   resolve: (pairs: PairAssoc[]) => void
@@ -53,6 +54,7 @@ export const useDatasetStore = defineStore('dataset', () => {
     const ds = buildDataset(name, headers, rows)
     dataset.value = ds
     fileName.value = name
+    useSettingsStore().activateProfile(ds.headers, name)
     datasetId.value++
     pairCache.value = {}
     error.value = ''
@@ -85,6 +87,7 @@ export const useDatasetStore = defineStore('dataset', () => {
     fileName.value = ''
     pairCache.value = {}
     error.value = ''
+    useSettingsStore().activateProfile(null)
     document.title = '关联性分析'
   }
 

@@ -1,10 +1,12 @@
 import { computed, ref, watch } from 'vue'
 import { defineStore } from 'pinia'
 import { chartThemeTick, bumpTheme } from '@/lib/themeBus'
-import { defaultSettings, TOKEN_VARS, type ChartSize, type ChartTitle, type ColorToken, type Settings } from '@/settings/defaults'
+import { defaultSettings, TOKEN_VARS, type ChartSize, type ChartTitle, type ColorToken, type FileProfile, type Profiles, type Settings } from '@/settings/defaults'
 import { mergeSettings } from '@/settings/merge'
+import { emptyProfile, profileKey, sanitizeProfiles } from '@/settings/profiles'
 
 const STORAGE_KEY = 'ca-settings-v1'
+const PROFILES_KEY = 'ca-profiles-v1'
 
 function loadInitial(): Settings {
   if (typeof window === 'undefined') return defaultSettings()
@@ -24,12 +26,31 @@ function loadInitial(): Settings {
   return defaultSettings()
 }
 
+function loadProfiles(): Profiles {
+  if (typeof window === 'undefined') return {}
+  try {
+    const raw = localStorage.getItem(PROFILES_KEY)
+    return raw ? sanitizeProfiles(JSON.parse(raw)) : {}
+  } catch {
+    return {}
+  }
+}
+
 export const useSettingsStore = defineStore('settings', () => {
   const state = ref<Settings>(loadInitial())
+  const profiles = ref<Profiles>(loadProfiles())
+  const activeProfileKey = ref<string | null>(null)
   const systemDark = ref(false)
   let inited = false
   let saveTimer: ReturnType<typeof setTimeout> | undefined
   let bumpTimer: ReturnType<typeof setTimeout> | undefined
+  let profilesTimer: ReturnType<typeof setTimeout> | undefined
+
+  const activeProfile = computed<FileProfile | undefined>(() =>
+    activeProfileKey.value ? profiles.value[activeProfileKey.value] : undefined,
+  )
+  const profileCount = computed(() => Object.keys(profiles.value).length)
+  const activeProfileName = computed(() => activeProfile.value?.name ?? '')
 
   const isDark = computed(
     () =>
@@ -128,6 +149,74 @@ export const useSettingsStore = defineStore('settings', () => {
     saveTimer = setTimeout(saveNow, 250)
   }
 
+  /* ---------------- 按文件配置 ---------------- */
+
+  function saveProfilesNow(): void {
+    if (typeof window === 'undefined') return
+    try {
+      localStorage.setItem(PROFILES_KEY, JSON.stringify(profiles.value))
+    } catch {
+      /* 配额或隐私模式：忽略 */
+    }
+  }
+
+  function scheduleProfilesSave(): void {
+    if (profilesTimer) clearTimeout(profilesTimer)
+    profilesTimer = setTimeout(saveProfilesNow, 300)
+  }
+
+  function mutateProfile(fn: (p: FileProfile) => FileProfile): boolean {
+    const key = activeProfileKey.value
+    const cur = key ? profiles.value[key] : undefined
+    if (!key || !cur) return false
+    const next = fn({ ...cur })
+    profiles.value = { ...profiles.value, [key]: { ...next, updatedAt: Date.now() } }
+    scheduleProfilesSave()
+    return true
+  }
+
+  /** 载入新数据时切换当前文件的配置；headers 为 null 时停用 */
+  function activateProfile(headers: string[] | null, name = ''): void {
+    if (!headers) {
+      activeProfileKey.value = null
+      return
+    }
+    const key = profileKey(headers)
+    const existing = profiles.value[key]
+    if (existing) {
+      profiles.value = {
+        ...profiles.value,
+        [key]: { ...existing, name: name || existing.name, updatedAt: Date.now() },
+      }
+    } else {
+      const all = { ...profiles.value }
+      // 只保留最近使用的 80 个文件配置
+      if (Object.keys(all).length >= 80) {
+        const oldest = Object.entries(all).sort((a, b) => a[1].updatedAt - b[1].updatedAt)[0]
+        if (oldest) delete all[oldest[0]]
+      }
+      all[key] = emptyProfile(name)
+      profiles.value = all
+    }
+    activeProfileKey.value = key
+    scheduleProfilesSave()
+  }
+
+  function clearCurrentProfile(): void {
+    const key = activeProfileKey.value
+    if (!key) return
+    profiles.value = { ...profiles.value, [key]: emptyProfile(activeProfile.value?.name ?? '') }
+    saveProfilesNow()
+  }
+
+  function clearAllProfiles(): void {
+    const key = activeProfileKey.value
+    const name = activeProfile.value?.name ?? ''
+    profiles.value = key ? { [key]: emptyProfile(name) } : {}
+    saveProfilesNow()
+    bumpTheme()
+  }
+
   watch(
     state,
     () => {
@@ -165,10 +254,23 @@ export const useSettingsStore = defineStore('settings', () => {
   /* ---------------- 图表系列覆盖 ---------------- */
 
   function chartSeries(chartId: string): Record<string, string> {
-    return state.value.charts.series[chartId] ?? {}
+    return {
+      ...(state.value.charts.series[chartId] ?? {}),
+      ...(activeProfile.value?.series[chartId] ?? {}),
+    }
   }
 
   function setSeriesColor(chartId: string, seriesKey: string, color: string): void {
+    const done = mutateProfile((p) => {
+      const series = { ...p.series }
+      const cur = { ...(series[chartId] ?? {}) }
+      if (color) cur[seriesKey] = color
+      else delete cur[seriesKey]
+      if (Object.keys(cur).length) series[chartId] = cur
+      else delete series[chartId]
+      return { ...p, series }
+    })
+    if (done) return
     const all = { ...state.value.charts.series }
     const cur = { ...(all[chartId] ?? {}) }
     if (color) cur[seriesKey] = color
@@ -179,6 +281,11 @@ export const useSettingsStore = defineStore('settings', () => {
   }
 
   function clearChartSeries(chartId: string): void {
+    mutateProfile((p) => {
+      const series = { ...p.series }
+      delete series[chartId]
+      return { ...p, series }
+    })
     const all = { ...state.value.charts.series }
     delete all[chartId]
     state.value.charts.series = all
@@ -187,29 +294,47 @@ export const useSettingsStore = defineStore('settings', () => {
   /* ---------------- 单图尺寸 ---------------- */
 
   function chartSize(chartId: string): ChartSize {
-    return state.value.charts.sizes[chartId] ?? {}
+    return {
+      ...(state.value.charts.sizes[chartId] ?? {}),
+      ...(activeProfile.value?.sizes[chartId] ?? {}),
+    }
   }
 
   function setChartSize(
     chartId: string,
     patch: { width?: number | null; height?: number | null },
   ): void {
+    const apply = (all: Record<string, ChartSize>): void => {
+      const cur: ChartSize = { ...(all[chartId] ?? {}) }
+      if (patch.width !== undefined) {
+        if (patch.width === null) delete cur.width
+        else cur.width = Math.min(1600, Math.max(280, Math.round(patch.width)))
+      }
+      if (patch.height !== undefined) {
+        if (patch.height === null) delete cur.height
+        else cur.height = Math.min(1200, Math.max(200, Math.round(patch.height)))
+      }
+      if (Object.keys(cur).length) all[chartId] = cur
+      else delete all[chartId]
+    }
+
+    const done = mutateProfile((p) => {
+      const sizes = { ...p.sizes }
+      apply(sizes)
+      return { ...p, sizes }
+    })
+    if (done) return
     const all = { ...state.value.charts.sizes }
-    const cur: ChartSize = { ...(all[chartId] ?? {}) }
-    if (patch.width !== undefined) {
-      if (patch.width === null) delete cur.width
-      else cur.width = Math.min(1600, Math.max(280, Math.round(patch.width)))
-    }
-    if (patch.height !== undefined) {
-      if (patch.height === null) delete cur.height
-      else cur.height = Math.min(1200, Math.max(200, Math.round(patch.height)))
-    }
-    if (Object.keys(cur).length) all[chartId] = cur
-    else delete all[chartId]
+    apply(all)
     state.value.charts.sizes = all
   }
 
   function clearChartSize(chartId: string): void {
+    mutateProfile((p) => {
+      const sizes = { ...p.sizes }
+      delete sizes[chartId]
+      return { ...p, sizes }
+    })
     const all = { ...state.value.charts.sizes }
     delete all[chartId]
     state.value.charts.sizes = all
@@ -218,25 +343,43 @@ export const useSettingsStore = defineStore('settings', () => {
   /* ---------------- 单图标题 ---------------- */
 
   function chartTitle(chartId: string): ChartTitle {
-    return state.value.charts.titles[chartId] ?? {}
+    return {
+      ...(state.value.charts.titles[chartId] ?? {}),
+      ...(activeProfile.value?.titles[chartId] ?? {}),
+    }
   }
 
   function setChartTitle(chartId: string, patch: Partial<ChartTitle>): void {
-    const all = { ...state.value.charts.titles }
-    const cur: ChartTitle = { ...(all[chartId] ?? {}) }
-    for (const key of ['title', 'xTitle', 'yTitle'] as const) {
-      const v = patch[key]
-      if (v === undefined) continue
-      const text = v.trim()
-      if (text) cur[key] = text.slice(0, 120)
-      else delete cur[key]
+    const apply = (all: Record<string, ChartTitle>): void => {
+      const cur: ChartTitle = { ...(all[chartId] ?? {}) }
+      for (const key of ['title', 'xTitle', 'yTitle'] as const) {
+        const v = patch[key]
+        if (v === undefined) continue
+        const text = v.trim()
+        if (text) cur[key] = text.slice(0, 120)
+        else delete cur[key]
+      }
+      if (Object.keys(cur).length) all[chartId] = cur
+      else delete all[chartId]
     }
-    if (Object.keys(cur).length) all[chartId] = cur
-    else delete all[chartId]
+
+    const done = mutateProfile((p) => {
+      const titles = { ...p.titles }
+      apply(titles)
+      return { ...p, titles }
+    })
+    if (done) return
+    const all = { ...state.value.charts.titles }
+    apply(all)
     state.value.charts.titles = all
   }
 
   function clearChartTitle(chartId: string): void {
+    mutateProfile((p) => {
+      const titles = { ...p.titles }
+      delete titles[chartId]
+      return { ...p, titles }
+    })
     const all = { ...state.value.charts.titles }
     delete all[chartId]
     state.value.charts.titles = all
@@ -245,29 +388,51 @@ export const useSettingsStore = defineStore('settings', () => {
   /* ---------------- 列名 / 取值显示映射 ---------------- */
 
   function columnLabel(name: string): string {
-    return state.value.data.columnAliases[name] || name
+    return (
+      activeProfile.value?.columnAliases[name] ||
+      state.value.data.columnAliases[name] ||
+      name
+    )
   }
 
   function valueLabel(column: string, value: string): string {
     const raw = String(value)
-    const map = state.value.data.valueAliases[column]
+    const map =
+      activeProfile.value?.valueAliases[column] ?? state.value.data.valueAliases[column]
     if (!map) return raw
     return map[raw] ?? map[raw.trim()] ?? raw
   }
 
   function setColumnAlias(name: string, label: string): void {
-    const next = { ...state.value.data.columnAliases }
     const text = label.trim().slice(0, 120)
+    const done = mutateProfile((p) => {
+      const columnAliases = { ...p.columnAliases }
+      if (text) columnAliases[name] = text
+      else delete columnAliases[name]
+      return { ...p, columnAliases }
+    })
+    if (done) return
+    const next = { ...state.value.data.columnAliases }
     if (text) next[name] = text
     else delete next[name]
     state.value.data.columnAliases = next
   }
 
   function setValueAlias(column: string, value: string, label: string): void {
-    const all = { ...state.value.data.valueAliases }
-    const cur = { ...(all[column] ?? {}) }
     const key = value.trim()
     const text = label.trim().slice(0, 120)
+    const done = mutateProfile((p) => {
+      const valueAliases = { ...p.valueAliases }
+      const cur = { ...(valueAliases[column] ?? {}) }
+      if (text) cur[key] = text
+      else delete cur[key]
+      if (Object.keys(cur).length) valueAliases[column] = cur
+      else delete valueAliases[column]
+      return { ...p, valueAliases }
+    })
+    if (done) return
+    const all = { ...state.value.data.valueAliases }
+    const cur = { ...(all[column] ?? {}) }
     if (text) cur[key] = text
     else delete cur[key]
     if (Object.keys(cur).length) all[column] = cur
@@ -276,6 +441,11 @@ export const useSettingsStore = defineStore('settings', () => {
   }
 
   function clearValueAliases(column: string): void {
+    mutateProfile((p) => {
+      const valueAliases = { ...p.valueAliases }
+      delete valueAliases[column]
+      return { ...p, valueAliases }
+    })
     const all = { ...state.value.data.valueAliases }
     delete all[column]
     state.value.data.valueAliases = all
@@ -296,12 +466,22 @@ export const useSettingsStore = defineStore('settings', () => {
   /* ---------------- 导入 / 导出 / 重置 ---------------- */
 
   function toJson(): string {
-    return JSON.stringify(state.value, null, 2)
+    return JSON.stringify({ ...state.value, profiles: profiles.value }, null, 2)
   }
 
   function importJson(text: string): boolean {
     try {
-      state.value = mergeSettings(JSON.parse(text))
+      const raw = JSON.parse(text)
+      const oldName = activeProfile.value?.name ?? ''
+      state.value = mergeSettings(raw)
+      if (raw && typeof raw === 'object' && 'profiles' in raw) {
+        profiles.value = sanitizeProfiles((raw as { profiles?: unknown }).profiles)
+        const key = activeProfileKey.value
+        if (key && !profiles.value[key]) {
+          profiles.value = { ...profiles.value, [key]: emptyProfile(oldName) }
+        }
+        saveProfilesNow()
+      }
       return true
     } catch {
       return false
@@ -318,6 +498,11 @@ export const useSettingsStore = defineStore('settings', () => {
 
   return {
     state,
+    profiles,
+    activeProfileKey,
+    activeProfile,
+    profileCount,
+    activeProfileName,
     isDark,
     palette,
     cssColor,
@@ -325,6 +510,9 @@ export const useSettingsStore = defineStore('settings', () => {
     paletteColor,
     init,
     toggleMode,
+    activateProfile,
+    clearCurrentProfile,
+    clearAllProfiles,
     chartSeries,
     setSeriesColor,
     clearChartSeries,

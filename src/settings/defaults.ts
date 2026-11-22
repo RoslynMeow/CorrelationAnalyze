@@ -96,6 +96,19 @@ export interface Settings {
   data: DataSettings
 }
 
+/** 按 CSV 表头保存的配置（列映射、单图尺寸/标题/配色） */
+export interface FileProfile {
+  name: string
+  updatedAt: number
+  columnAliases: Record<string, string>
+  valueAliases: Record<string, Record<string, string>>
+  series: Record<string, Record<string, string>>
+  sizes: Record<string, ChartSize>
+  titles: Record<string, ChartTitle>
+}
+
+export type Profiles = Record<string, FileProfile>
+
 export const TOKEN_VARS: Record<ColorToken, string> = {
   bg: '--bg',
   panel: '--panel',

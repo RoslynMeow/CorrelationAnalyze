@@ -51,6 +51,7 @@ Also included:
 - 4 palette presets + custom palette; per-chart and per-series colors
 - Per-chart width/height, presets, drag-to-resize, custom title / axis titles
 - Column and category value display aliases (display only; stats use raw values)
+- Per-file profiles keyed by CSV headers (aliases, sizes, titles, colors)
 - Copy chart image, download PNG / SVG, copy data as TSV, copy insights
 - Import / export settings as JSON; everything persisted locally
 
@@ -74,7 +75,7 @@ git clone https://github.com/RoslynMeow/CorrelationAnalyze.git
 cd CorrelationAnalyze
 npm install
 npm run dev          # http://localhost:5188
-npm test             # 55 tests
+npm test             # 59 tests
 npm run build        # -> dist/
 npm run build:single # -> dist-single/index.html (portable, offline)
 ```
@@ -92,7 +93,7 @@ src/
   workers/           # pairwise association worker
   components/        # PlotlyChart, SettingsDrawer, ...
   panels/            # 11 analysis tabs
-tests/               # 55 tests + CSV fixture
+tests/               # 59 tests + CSV fixture
 .github/             # CI, Pages, issue/PR templates
 ```
 
@@ -129,8 +130,8 @@ Full board: **https://github.com/users/RoslynMeow/projects/8**
 - [x] Appearance, palettes, per-chart sizes and titles, export, settings JSON
 - [x] Web Worker, GitHub Pages, single-file build
 - [x] Phase 2: column / value display aliases
+- [x] Phase 2: per-file profiles
 - [ ] Phase 2: editable UI text dictionary
-- [ ] Phase 2: per-file profiles
 - [x] Phase 3: per-chart title and axis title editing
 - [ ] Phase 3: full-page report export
 
