@@ -102,7 +102,7 @@ const built = computed(() => {
 
 <template>
   <section class="panel">
-    <div class="controls">
+    <div class="controls controls-chips">
       <SelectField v-model="colorName" :label="$t('颜色分组')" :options="colorOptions" />
       <div class="chipfield">
         <span class="chipfield-label">{{ $t('维度（最多 6 个）') }}</span>

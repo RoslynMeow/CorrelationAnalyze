@@ -931,13 +931,14 @@ html[data-theme='dark'] .dropcard.drag {
   cursor: default;
 }
 .chipfield {
-  flex: 1 1 100%;
+  flex: 1 1 420px;
   display: flex;
   flex-direction: column;
   gap: 6px;
   min-width: 0;
-  padding-top: 10px;
-  border-top: 1px dashed var(--border);
+}
+.controls-chips {
+  align-items: flex-start;
 }
 .chipfield-label {
   font-size: 11.5px;
@@ -2158,10 +2159,6 @@ input[type='color']::-webkit-color-swatch {
     width: 100%;
     order: 10;
     height: 28px;
-  }
-  .chipfield {
-    border-top: 0;
-    padding-top: 0;
   }
   .chips {
     max-height: 132px;

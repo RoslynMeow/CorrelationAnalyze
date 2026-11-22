@@ -89,7 +89,7 @@ const charts = computed(() => {
 
 <template>
   <section class="panel">
-    <div class="controls">
+    <div class="controls controls-chips">
       <SelectField
         v-model="groupName"
         :label="$t('分组列')"
