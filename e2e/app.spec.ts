@@ -14,6 +14,11 @@ async function openTab(page: Page, name: string): Promise<void> {
   await page.getByRole('button', { name, exact: true }).click()
 }
 
+async function openFilter(page: Page): Promise<void> {
+  await page.getByRole('button', { name: '设置', exact: true }).click()
+  await page.getByRole('button', { name: /筛选数据/ }).click()
+}
+
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
     localStorage.clear()
@@ -56,7 +61,7 @@ test('偏相关矩阵与 VIF', async ({ page }) => {
 
 test('行筛选影响数据与分析', async ({ page }) => {
   await openSample(page)
-  await page.getByRole('button', { name: '筛选', exact: true }).click()
+  await openFilter(page)
   const dialog = page.getByRole('dialog', { name: '筛选数据' })
   await expect(dialog).toBeVisible()
 
@@ -99,7 +104,7 @@ test('图表可下载 PNG', async ({ page }) => {
 test('弹窗焦点与 Esc 关闭', async ({ page }) => {
   await openSample(page)
 
-  await page.getByTitle('设置').click()
+  await page.getByRole('button', { name: '设置', exact: true }).click()
   const drawer = page.locator('.drawer')
   await expect(drawer).toBeVisible()
   await expect(drawer).toContainText('自动保存在本机')
@@ -110,7 +115,7 @@ test('弹窗焦点与 Esc 关闭', async ({ page }) => {
   await page.keyboard.press('Escape')
   await expect(drawer).toBeHidden()
 
-  await page.getByRole('button', { name: '筛选', exact: true }).click()
+  await openFilter(page)
   const filterDialog = page.getByRole('dialog', { name: '筛选数据' })
   await expect(filterDialog).toBeVisible()
   await page.keyboard.press('Escape')

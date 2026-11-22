@@ -24,6 +24,7 @@
 
 - Plotly is lazy-loaded (first-screen JS drops from ~4.9 MB to ~250 KB) and prefetched after CSV load
 - Mobile keeps natural page scrolling and fixed chart heights instead of compressing to one screen
+- The top bar keeps only the file name and settings button; filters, presets, sharing and changing CSV are grouped under Settings → Actions
 
 ### Removed
 
