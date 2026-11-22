@@ -35,7 +35,7 @@ from the test fixtures.
 | --- | --- |
 | Overview | Dataset KPIs, top-10 association pairs, automatic summary |
 | Matrix | Pearson / Spearman for numeric columns, Cramér's V for categorical ones, significance stars |
-| Partial / VIF | Partial correlation matrix controlling up to 5 variables; variance inflation factors for numeric columns |
+| Partial / VIF | Partial correlation matrix controlling up to 5 variables (collapsible picker); variance inflation factors for numeric columns |
 | Target | Rank every column against a chosen target; r / ρ / η / V with p values, 95% CI and FDR correction |
 | Scatter | X/Y/color/size, linear fit with R², slope CI and p value, date axis |
 | Group | Box plots for multiple numeric variables by any group |
@@ -48,10 +48,11 @@ from the test fixtures.
 
 Also included:
 
+- Top bar keeps only the file name and a settings button; filters, presets, sharing and changing CSV live under Settings → Actions
 - Global row filter (category values, numeric / date ranges, AND combined); all statistics, charts, preview and share links use the filtered rows
 - Settings drawer: theme tokens, density, radius, shadow, table styles
 - 4 palette presets + custom palette; per-chart and per-series colors
-- Per-chart width/height, presets, drag-to-resize, custom title / axis titles
+- Per-chart width/height, presets, drag-to-resize, custom title / axis titles; the plot resizes independently while its card keeps filling the available height
 - Column and category value display aliases (display only; stats use raw values)
 - Per-file profiles keyed by CSV headers (aliases, sizes, titles, colors)
 - All static UI text can be searched, edited and reset in Settings → Text

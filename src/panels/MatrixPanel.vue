@@ -101,7 +101,7 @@ const matrix = computed(() => {
 const chartH = computed(() => {
   const cell = narrow.value ? 26 : 36
   const needed = cols.value.length * cell + (narrow.value ? 80 : 130)
-  const max = vh.value - (narrow.value ? 230 : 250)
+  const max = vh.value - (narrow.value ? 230 : 270)
   return Math.max(narrow.value ? 260 : 300, Math.min(needed, Math.max(280, max)))
 })
 

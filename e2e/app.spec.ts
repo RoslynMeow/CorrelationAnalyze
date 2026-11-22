@@ -14,6 +14,11 @@ async function openTab(page: Page, name: string): Promise<void> {
   await page.getByRole('button', { name, exact: true }).click()
 }
 
+async function openFilter(page: Page): Promise<void> {
+  await page.getByRole('button', { name: '设置', exact: true }).click()
+  await page.getByRole('button', { name: /筛选数据/ }).click()
+}
+
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
     localStorage.clear()
@@ -48,15 +53,23 @@ test('偏相关矩阵与 VIF', async ({ page }) => {
   await openTab(page, '偏相关 / VIF')
   await expect(page.getByText('偏相关矩阵')).toBeVisible()
   await expect(page.locator('.vif-row').first()).toBeVisible()
+  const vifWidth = await page.locator('.vif-card').evaluate((el) => el.getBoundingClientRect().width)
+  expect(vifWidth).toBeLessThan(400)
 
+  await expect(page.locator('.chipfield-selected')).toHaveCount(0)
+  await page.locator('.chipfield-head').click()
+  await expect(page.locator('.chips')).toBeVisible()
   await page.locator('.chips label[title="sleep_hours"]').click()
+  await expect(page.getByText('控制：sleep_hours')).toBeVisible()
+  await page.locator('.chipfield-head').click()
+  await expect(page.locator('.chipfield-selected')).toContainText('sleep_hours')
   await expect(page.getByText('控制：sleep_hours')).toBeVisible()
   await expect(page.locator('[data-chart-id="partial"]')).toBeVisible()
 })
 
 test('行筛选影响数据与分析', async ({ page }) => {
   await openSample(page)
-  await page.getByRole('button', { name: '筛选', exact: true }).click()
+  await openFilter(page)
   const dialog = page.getByRole('dialog', { name: '筛选数据' })
   await expect(dialog).toBeVisible()
 
@@ -74,6 +87,36 @@ test('行筛选影响数据与分析', async ({ page }) => {
   await page.locator('.filter-banner').getByRole('button', { name: '清除' }).click()
   await expect(page.locator('.filter-banner')).toBeHidden()
   await expect(page.locator('.pinfo').first()).toContainText('共 30 行')
+})
+
+test('图表尺寸可独立于容器调整', async ({ page }) => {
+  await openSample(page)
+  await openTab(page, '分布分析')
+  const wrap = page.locator('[data-chart-id="distribution"]')
+  const card = page.locator('.panel > .chart-card')
+  const frame = page.locator('.panel > .chart-card > .chart-frame')
+  await expect(wrap).toBeVisible()
+  const before = await wrap.evaluate((el) => el.getBoundingClientRect().height)
+  expect(before).toBeGreaterThan(400)
+
+  await wrap.locator('.chart-tool[title^="图表设置"]').click()
+  const widthInput = page.locator('.chart-style .cs-size-row input').nth(0)
+  const heightInput = page.locator('.chart-style .cs-size-row input').nth(1)
+  await widthInput.fill('700')
+  await widthInput.press('Tab')
+  await heightInput.fill('320')
+  await heightInput.press('Tab')
+  await expect.poll(() => wrap.evaluate((el) => el.getBoundingClientRect().height)).toBeLessThan(360)
+  await expect.poll(() => wrap.evaluate((el) => el.getBoundingClientRect().width)).toBeLessThan(760)
+  // 容器仍占满剩余高度，只有图本身变小
+  expect(await card.evaluate((el) => el.getBoundingClientRect().height)).toBeGreaterThan(500)
+  expect(await frame.evaluate((el) => el.getBoundingClientRect().height)).toBeGreaterThan(500)
+
+  await widthInput.fill('')
+  await widthInput.press('Tab')
+  await heightInput.fill('')
+  await heightInput.press('Tab')
+  await expect.poll(() => wrap.evaluate((el) => el.getBoundingClientRect().height)).toBeGreaterThan(400)
 })
 
 test('数据搜索与导出', async ({ page }) => {
@@ -99,7 +142,7 @@ test('图表可下载 PNG', async ({ page }) => {
 test('弹窗焦点与 Esc 关闭', async ({ page }) => {
   await openSample(page)
 
-  await page.getByTitle('设置').click()
+  await page.getByRole('button', { name: '设置', exact: true }).click()
   const drawer = page.locator('.drawer')
   await expect(drawer).toBeVisible()
   await expect(drawer).toContainText('自动保存在本机')
@@ -110,7 +153,7 @@ test('弹窗焦点与 Esc 关闭', async ({ page }) => {
   await page.keyboard.press('Escape')
   await expect(drawer).toBeHidden()
 
-  await page.getByRole('button', { name: '筛选', exact: true }).click()
+  await openFilter(page)
   const filterDialog = page.getByRole('dialog', { name: '筛选数据' })
   await expect(filterDialog).toBeVisible()
   await page.keyboard.press('Escape')

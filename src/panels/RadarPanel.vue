@@ -27,7 +27,7 @@ const { radarGroup: groupName, radarDims: dims, radarNorm: norm } = storeToRefs(
 const chartH = computed(() =>
   Math.max(
     narrow.value ? 320 : 340,
-    Math.min(narrow.value ? 600 : 560, vh.value - (narrow.value ? 240 : 250)),
+    Math.min(narrow.value ? 600 : 520, vh.value - (narrow.value ? 240 : 360)),
   ),
 )
 

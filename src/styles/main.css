@@ -586,7 +586,7 @@ html[data-theme='dark'] .dropcard.drag {
   flex-direction: column;
   padding: 8px 8px 0;
 }
-.panel-fit > .chart-card > .chart-wrap {
+.panel-fit > .chart-card > .chart-frame {
   flex: 1 1 auto;
   min-height: 0;
 }
@@ -623,8 +623,9 @@ html[data-theme='dark'] .dropcard.drag {
   flex-direction: column;
   min-height: 0;
 }
-.panel-fit .grid-charts .chart-wrap.fill {
-  min-height: 140px;
+.panel-fit .grid-charts .chart-frame.fill {
+  flex: none;
+  overflow: visible;
 }
 @keyframes fade {
   from {
@@ -708,6 +709,10 @@ html[data-theme='dark'] .dropcard.drag {
 }
 .grid2 .card {
   margin-top: 0;
+}
+/* 偏相关页：矩阵占主宽度，VIF 列表收窄为侧栏 */
+.partial-grid {
+  grid-template-columns: minmax(0, 1fr) clamp(300px, 24vw, 380px);
 }
 /* 偏相关页：右侧 VIF 列表 */
 .vif-card {
@@ -1053,6 +1058,64 @@ html[data-theme='dark'] .dropcard.drag {
   font-size: 11.5px;
   color: var(--muted);
 }
+.chipfield-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.chipfield-head:hover .chipfield-label {
+  color: var(--text);
+}
+.chipfield-count {
+  font-size: 11.5px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.chipfield-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+  font-size: 11.5px;
+  color: var(--accent);
+  white-space: nowrap;
+}
+.chipfield-caret {
+  display: inline-block;
+  transition: transform 0.15s;
+  transform: rotate(-90deg);
+}
+.chipfield-caret.open {
+  transform: rotate(0);
+}
+.chipfield-body {
+  min-width: 0;
+}
+.chipfield-selected {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.chip-static {
+  padding: 3px 9px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--panel-2);
+  color: var(--text);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.chipfield-empty {
+  font-size: 11.5px;
+}
 .hint-wide {
   flex: 1 1 100%;
 }
@@ -1071,21 +1134,32 @@ html[data-theme='dark'] .dropcard.drag {
   position: relative;
   width: 100%;
   min-width: 0;
+  border: 1px solid color-mix(in srgb, var(--border) 85%, transparent);
+  border-radius: 8px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.chart-wrap:hover {
+  border-color: color-mix(in srgb, var(--accent) 38%, var(--border));
+}
+.chart-wrap.resizing {
+  border-color: var(--accent);
+  border-style: dashed;
+  box-shadow: 0 0 0 2px var(--accent-soft);
 }
 .chart-host {
   width: 100%;
   height: 100%;
   min-width: 0;
 }
-/* 填满父容器时，图表高度完全由 flex 决定，避免高度百分比循环 */
-.chart-wrap.fill {
-  min-height: 220px;
+/* 外层容器负责占满卡片；图表本身保持独立尺寸，超出时在容器内滚动 */
+.chart-frame {
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
 }
-.chart-wrap.fill .chart-host {
-  position: absolute;
-  inset: 0;
-  width: auto;
-  height: auto;
+.chart-frame.fill {
+  flex: 1 1 auto;
+  overflow: auto;
 }
 .chart-loading {
   position: absolute;
@@ -1318,8 +1392,6 @@ html[data-theme='dark'] .dropcard.drag {
 }
 .chart-wrap.resizing {
   user-select: none;
-  outline: 1px dashed var(--accent);
-  outline-offset: 2px;
 }
 .chart-wrap.resizing .chart-tools {
   opacity: 0;
@@ -1824,6 +1896,49 @@ html[data-theme='dark'] .badge.date {
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+.set-action-intro {
+  margin: 0;
+}
+.set-action-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.set-action {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 11px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--panel-2);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.set-action:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.set-action b {
+  display: block;
+  font-size: 13px;
+}
+.set-action small {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 11.5px;
+}
+.set-action-arrow {
+  color: var(--muted);
+  font-size: 18px;
+  line-height: 1;
 }
 .set-label {
   display: flex;
@@ -2335,7 +2450,7 @@ input[type='color']::-webkit-color-swatch {
 /* ================= 响应式 ================= */
 @media (max-width: 1280px) {
   .filechip {
-    display: none;
+    max-width: 150px;
   }
   .wide-only {
     display: none !important;
@@ -2367,7 +2482,7 @@ input[type='color']::-webkit-color-swatch {
     overflow: visible;
   }
   .filechip {
-    display: none;
+    max-width: 120px;
   }
 }
 @media (max-width: 900px) {

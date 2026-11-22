@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useDatasetStore } from '@/stores/dataset'
-import { useSettingsStore } from '@/stores/settings'
 import DropZone from '@/components/DropZone.vue'
 import AppBar from '@/components/AppBar.vue'
 import SettingsDrawer from '@/components/SettingsDrawer.vue'
@@ -43,7 +42,6 @@ const TABS = [
 ]
 
 const ds = useDatasetStore()
-const settings = useSettingsStore()
 const view = useViewStore()
 const settingsOpen = ref(false)
 const presetOpen = ref(false)
@@ -112,6 +110,14 @@ function clearFilter(): void {
   toast(t('已清除筛选'))
 }
 
+function settingsAction(kind: 'filter' | 'presets' | 'share' | 'change'): void {
+  settingsOpen.value = false
+  if (kind === 'filter') filterOpen.value = true
+  else if (kind === 'presets') presetOpen.value = true
+  else if (kind === 'share') void shareView()
+  else pick()
+}
+
 const fileInput = ref<HTMLInputElement | null>(null)
 function pick(): void {
   fileInput.value?.click()
@@ -178,14 +184,8 @@ onBeforeUnmount(() => {
       :active="active"
       :file-name="ds.fileName"
       :chip-title="ds.chipTitle"
-      :filter-active="ds.filterActive"
       @select="active = $event"
-      @change="pick"
-      @theme="settings.toggleMode()"
       @settings="settingsOpen = true"
-      @presets="presetOpen = true"
-      @share="shareView"
-      @filter="filterOpen = true"
     />
     <main ref="mainEl" class="wrap">
       <div v-if="ds.error" class="banner warn">⚠️ {{ ds.error }}</div>
@@ -221,7 +221,17 @@ onBeforeUnmount(() => {
   </div>
 
   <Toast />
-  <SettingsDrawer :open="settingsOpen" @close="settingsOpen = false" />
+  <SettingsDrawer
+    :open="settingsOpen"
+    :filter-active="ds.filterActive"
+    :filtered-rows="ds.n"
+    :total-rows="ds.sourceN"
+    @close="settingsOpen = false"
+    @filter="settingsAction('filter')"
+    @presets="settingsAction('presets')"
+    @share="settingsAction('share')"
+    @change="settingsAction('change')"
+  />
   <PresetDialog :open="presetOpen" @close="presetOpen = false" />
   <FilterDialog
     :open="filterOpen"

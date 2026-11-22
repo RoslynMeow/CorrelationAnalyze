@@ -6,24 +6,17 @@ const props = defineProps<{
   active: string
   fileName: string
   chipTitle: string
-  filterActive?: boolean
 }>()
 
 const emit = defineEmits<{
   (e: 'select', key: string): void
-  (e: 'change'): void
-  (e: 'theme'): void
   (e: 'settings'): void
-  (e: 'presets'): void
-  (e: 'share'): void
-  (e: 'filter'): void
 }>()
 
 const tabsEl = ref<HTMLElement | null>(null)
 const scrollable = ref(false)
 const atStart = ref(true)
 const atEnd = ref(true)
-const menuOpen = ref(false)
 const tabMenuOpen = ref(false)
 
 const activeLabel = computed(
@@ -46,41 +39,23 @@ function onScroll(): void {
 
 function onDocClick(e: MouseEvent): void {
   const target = e.target as HTMLElement | null
-  if (menuOpen.value && !target?.closest('.appmenu')) menuOpen.value = false
   if (tabMenuOpen.value && !target?.closest('.tab-select')) tabMenuOpen.value = false
 }
 
 function onKey(e: KeyboardEvent): void {
-  if (e.key !== 'Escape') return
-  if (menuOpen.value || tabMenuOpen.value) {
-    menuOpen.value = false
+  if (e.key === 'Escape' && tabMenuOpen.value) {
     tabMenuOpen.value = false
     e.stopPropagation()
   }
 }
 
-function toggleAppMenu(): void {
-  tabMenuOpen.value = false
-  menuOpen.value = !menuOpen.value
-}
-
 function toggleTabMenu(): void {
-  menuOpen.value = false
   tabMenuOpen.value = !tabMenuOpen.value
 }
 
 function selectTab(key: string): void {
   tabMenuOpen.value = false
   emit('select', key)
-}
-
-function act(kind: 'presets' | 'share' | 'filter' | 'change' | 'settings'): void {
-  menuOpen.value = false
-  if (kind === 'presets') emit('presets')
-  else if (kind === 'share') emit('share')
-  else if (kind === 'filter') emit('filter')
-  else if (kind === 'change') emit('change')
-  else emit('settings')
 }
 
 onMounted(() => {
@@ -158,30 +133,7 @@ watch(
     <div class="appactions">
       <span class="filechip" :title="chipTitle">{{ props.fileName }}</span>
 
-      <div class="appactions-inline wide-only">
-        <button
-          class="btn ghost filter-btn"
-          type="button"
-          :class="{ active: props.filterActive }"
-          @click="emit('filter')"
-        >
-          {{ $t('筛选') }}
-        </button>
-        <button class="btn ghost" type="button" @click="emit('presets')">{{ $t('预设') }}</button>
-        <button class="btn ghost" type="button" @click="emit('share')">{{ $t('分享') }}</button>
-        <button class="btn ghost" type="button" @click="emit('change')">{{ $t('更换 CSV') }}</button>
-      </div>
-
-      <button class="btn icon" type="button" :title="$t('切换深/浅色')" @click="emit('theme')">
-        ◐
-      </button>
-
-      <button
-        class="btn icon wide-only"
-        type="button"
-        :title="$t('设置')"
-        @click="emit('settings')"
-      >
+      <button class="btn icon" type="button" :title="$t('设置')" @click="emit('settings')">
         <svg
           viewBox="0 0 16 16"
           width="14"
@@ -195,41 +147,6 @@ watch(
           <path d="M8 1.7v1.4M8 12.9v1.4M1.7 8h1.4M12.9 8h1.4M3.55 3.55l1 1M11.45 11.45l1 1M12.45 3.55l-1 1M4.55 11.45l-1 1" />
         </svg>
       </button>
-
-      <div class="appmenu compact-only">
-        <button
-          class="btn icon"
-          type="button"
-          :title="$t('更多')"
-          :aria-expanded="menuOpen"
-          @click="toggleAppMenu"
-        >
-          ⋯
-        </button>
-        <div v-if="menuOpen" class="appmenu-panel" role="menu">
-          <button
-            class="appmenu-item"
-            type="button"
-            role="menuitem"
-            :class="{ active: props.filterActive }"
-            @click="act('filter')"
-          >
-            {{ $t('筛选') }}
-          </button>
-          <button class="appmenu-item" type="button" role="menuitem" @click="act('presets')">
-            {{ $t('预设') }}
-          </button>
-          <button class="appmenu-item" type="button" role="menuitem" @click="act('share')">
-            {{ $t('分享') }}
-          </button>
-          <button class="appmenu-item" type="button" role="menuitem" @click="act('change')">
-            {{ $t('更换 CSV') }}
-          </button>
-          <button class="appmenu-item" type="button" role="menuitem" @click="act('settings')">
-            {{ $t('设置') }}
-          </button>
-        </div>
-      </div>
     </div>
   </header>
 </template>

@@ -30,7 +30,7 @@ const ordered = computed(() => [...list.value].reverse())
 
 const chartH = computed(() => {
   const needed = list.value.length * (narrow.value ? 26 : 28) + (narrow.value ? 90 : 110)
-  const max = vh.value - (narrow.value ? 230 : 250)
+  const max = vh.value - (narrow.value ? 230 : 320)
   return Math.max(narrow.value ? 280 : 320, Math.min(needed, Math.max(300, max)))
 })
 
