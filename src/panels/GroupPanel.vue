@@ -25,6 +25,7 @@ const charts = computed(() => {
   const gcol = ds.column(groupName.value)
   if (!gcol) return []
   const order = groupLabels(gcol)
+  const groupTitle = settings.columnLabel(gcol.name)
   const labels = gcol.raw.map((v) => (isNull(v) ? '(缺失)' : String(v).trim()))
   const counts: Record<string, number> = {}
   labels.forEach((l) => {
@@ -42,10 +43,11 @@ const charts = computed(() => {
       }
       const color = settings.paletteColor(gi)
       const showAll = ys.length <= 5 || (showPts.value && ys.length <= 300)
+      const groupLabel = settings.valueLabel(gcol.name, lab)
       return {
         type: 'box',
         y: ys,
-        name: `${lab} (n=${counts[lab] || 0})`,
+        name: `${groupLabel} (n=${counts[lab] || 0})`,
         marker: { color, size: 3.5, opacity: 0.65 },
         line: { color, width: 1.5 },
         fillcolor: withAlpha(color, 0.2),
@@ -53,11 +55,13 @@ const charts = computed(() => {
         jitter: 0.35,
         pointpos: 0,
         width: 0.62,
-        hovertemplate: `${lab}<br>%{y:.4~f}<extra></extra>`,
+        hovertemplate: `${groupLabel}<br>%{y:.4~f}<extra></extra>`,
       }
     })
     return {
-      name,
+      key: name,
+      name: settings.columnLabel(name),
+      groupTitle,
       traces,
       layout: baseLayout({
         height: chartH.value,
@@ -78,11 +82,18 @@ const charts = computed(() => {
 <template>
   <section class="panel">
     <div class="controls">
-      <SelectField v-model="groupName" label="分组列" :options="ds.groups.map((c) => c.name)" />
+      <SelectField
+        v-model="groupName"
+        label="分组列"
+        :options="ds.groups.map((c) => ({ value: c.name, label: settings.columnLabel(c.name) }))"
+      />
       <label class="chk"><input v-model="showPts" type="checkbox" /> 叠加散点</label>
       <div class="chipfield">
         <span class="chipfield-label">对比数值变量（可多选）</span>
-        <ChipGroup v-model="vars" :options="ds.nums.map((c) => c.name)" />
+        <ChipGroup
+          v-model="vars"
+          :options="ds.nums.map((c) => ({ value: c.name, label: settings.columnLabel(c.name) }))"
+        />
       </div>
     </div>
 
@@ -91,16 +102,17 @@ const charts = computed(() => {
     </div>
     <div v-else-if="!vars.length" class="card hint">请至少勾选一个数值变量。</div>
     <div v-else class="grid-charts">
-      <div v-for="c in charts" :key="c.name" class="card mini">
+      <div v-for="c in charts" :key="c.key" class="card mini">
         <div class="minihead">
           <span class="mtitle" :title="c.name">{{ c.name }}</span>
-          <span class="mmuted">按 {{ groupName }}</span>
+          <span class="mmuted">按 {{ c.groupTitle }}</span>
         </div>
         <PlotlyChart
           :traces="c.traces"
           :layout="c.layout"
           :height="chartH"
-          chart-id="group"
+          :chart-id="'group:' + c.key"
+          style-id="group"
         />
       </div>
     </div>

@@ -87,7 +87,7 @@ const cards = computed<InsCard[]>(() => {
     title: '🔗 最强关联（所有变量对）',
     items: top5.map((p) => ({
       key: p.a + '|' + p.b,
-      strong: `${p.a} ↔ ${p.b}`,
+      strong: `${settings.columnLabel(p.a)} ↔ ${settings.columnLabel(p.b)}`,
       text: '：',
       value: p.strength.toFixed(2),
       cls: p.signed === null ? '' : p.signed >= 0 ? 'pos' : 'neg',
@@ -101,12 +101,12 @@ const cards = computed<InsCard[]>(() => {
     const list = ds.assocWithTarget(target.value, 'pearson').slice(0, 6)
     const maxS = Math.max(...list.map((x) => x.strength), 1e-9)
     out.push({
-      title: `🎯 与「${target.value.name}」的关联`,
+      title: `🎯 与「${settings.columnLabel(target.value.name)}」的关联`,
       items: list.map((x) => ({
         key: x.name,
         bar: Math.max(6, (x.strength / maxS) * 50),
         barColor: settings.assocColor(x.signed),
-        strong: x.name,
+        strong: settings.columnLabel(x.name),
         text: '：' + x.strength.toFixed(2),
         tag: x.type,
         meta: ' ' + (x.strength >= 0.6 ? '强' : x.strength >= 0.3 ? '中等' : '弱'),
@@ -121,7 +121,7 @@ const cards = computed<InsCard[]>(() => {
       title: '🧩 类别维度关联（V / η）',
       items: catPairs.map((p) => ({
         key: p.a + '|' + p.b,
-        strong: `${p.a} ↔ ${p.b}`,
+        strong: `${settings.columnLabel(p.a)} ↔ ${settings.columnLabel(p.b)}`,
         text: '：' + p.strength.toFixed(2),
         tag: p.type,
       })),
@@ -137,7 +137,7 @@ const cards = computed<InsCard[]>(() => {
     items: redundant.length
       ? redundant.map((p) => ({
           key: p.a + '|' + p.b,
-          strong: `${p.a} ↔ ${p.b}`,
+          strong: `${settings.columnLabel(p.a)} ↔ ${settings.columnLabel(p.b)}`,
           text: '：',
           value: `r = ${(p.signed ?? 0).toFixed(2)}`,
           cls: (p.signed ?? 0) >= 0 ? 'pos' : 'neg',
@@ -157,11 +157,11 @@ const cards = computed<InsCard[]>(() => {
     items: [
       {
         text: missCols.length
-          ? '缺失最多：' + missCols.map((c) => `${c.name} ${((c.missing / d.n) * 100).toFixed(1)}%`).join(' · ')
+          ? '缺失最多：' + missCols.map((c) => `${settings.columnLabel(c.name)} ${((c.missing / d.n) * 100).toFixed(1)}%`).join(' · ')
           : '没有缺失值 👍',
       },
       {
-        text: '常量列：' + (consts.length ? consts.map((c) => c.name).join('、') : '0 个'),
+        text: '常量列：' + (consts.length ? consts.map((c) => settings.columnLabel(c.name)).join('、') : '0 个'),
       },
       {
         text: `重复行：${fmtInt(dupCount.value)} 行（${d.n ? ((dupCount.value / d.n) * 100).toFixed(1) : 0}%）`,
@@ -198,7 +198,11 @@ async function copyInsights(): Promise<void> {
 <template>
   <section class="panel">
     <div class="controls">
-      <SelectField v-model="targetName" label="分析目标" :options="ds.targets.map((c) => c.name)" />
+      <SelectField
+        v-model="targetName"
+        label="分析目标"
+        :options="ds.targets.map((c) => ({ value: c.name, label: settings.columnLabel(c.name) }))"
+      />
       <button class="btn" type="button" @click="copyInsights">复制结论</button>
       <span class="hint">自动汇总最强关联、目标因素、类别关联与数据质量</span>
     </div>

@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useDatasetStore } from '@/stores/dataset'
+import { useSettingsStore } from '@/stores/settings'
 import SelectField from '@/components/SelectField.vue'
 import { downloadCsv, fmt, fmtInt, isNull, toNum } from '@/lib/format'
 import { toast } from '@/composables/useToast'
 
 const ds = useDatasetStore()
+const settings = useSettingsStore()
 const query = ref('')
 const pageSize = ref('50')
 const page = ref(0)
@@ -39,6 +41,8 @@ const visibleRows = computed(() => {
     d.rows[i].map((v, ci) => {
       const c = d.columns[ci]
       if (isNull(v)) return { text: '—', empty: true }
+      const mapped = c ? settings.valueLabel(c.name, v) : v
+      if (c && mapped !== v) return { text: mapped, empty: false }
       if (c?.type === 'number') {
         const num = toNum(v)
         return { text: num === null ? v : fmt(num, 4), empty: false }
@@ -79,11 +83,12 @@ const profile = computed(() => {
         Object.entries(counts)
           .sort((a, b) => b[1] - a[1])
           .slice(0, 3)
-          .map(([k, v]) => `${k}(${v})`)
+          .map(([k, v]) => `${settings.valueLabel(c.name, k)}(${v})`)
           .join('、') || '—'
     }
     return {
       name: c.name,
+      displayName: settings.columnLabel(c.name),
       type: c.type,
       label: typeLabel(c.type),
       nonNull: c.total - c.missing,
@@ -125,7 +130,7 @@ function exportCsv(): void {
           <thead>
             <tr>
               <th v-for="c in ds.dataset?.columns || []" :key="c.name">
-                {{ c.name }}<span class="badge" :class="c.type">{{ typeLabel(c.type) }}</span>
+                {{ settings.columnLabel(c.name) }}<span class="badge" :class="c.type">{{ typeLabel(c.type) }}</span>
                 <span v-if="c.missing" class="missdot" :title="`${c.missing} 个缺失`">●</span>
               </th>
             </tr>
@@ -136,7 +141,7 @@ function exportCsv(): void {
                 v-for="(cell, ci) in row"
                 :key="ci"
                 :class="{ null: cell.empty }"
-                :data-label="ds.dataset?.columns[ci]?.name"
+                :data-label="settings.columnLabel(ds.dataset?.columns[ci]?.name || '')"
               >
                 {{ cell.text }}
               </td>
@@ -184,7 +189,7 @@ function exportCsv(): void {
           </thead>
           <tbody>
             <tr v-for="p in profile" :key="p.name">
-              <td data-label="列名"><b>{{ p.name }}</b></td>
+              <td data-label="列名"><b>{{ p.displayName }}</b></td>
               <td data-label="类型"><span class="badge" :class="p.type">{{ p.label }}</span></td>
               <td data-label="非空">{{ fmtInt(p.nonNull) }}</td>
               <td data-label="缺失">

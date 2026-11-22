@@ -49,7 +49,8 @@ Also included:
 
 - Settings drawer: theme tokens, density, radius, shadow, table styles
 - 4 palette presets + custom palette; per-chart and per-series colors
-- Per-chart width/height, presets, drag-to-resize
+- Per-chart width/height, presets, drag-to-resize, custom title / axis titles
+- Column and category value display aliases (display only; stats use raw values)
 - Copy chart image, download PNG / SVG, copy data as TSV, copy insights
 - Import / export settings as JSON; everything persisted locally
 
@@ -73,7 +74,7 @@ git clone https://github.com/RoslynMeow/CorrelationAnalyze.git
 cd CorrelationAnalyze
 npm install
 npm run dev          # http://localhost:5188
-npm test             # 53 tests
+npm test             # 55 tests
 npm run build        # -> dist/
 npm run build:single # -> dist-single/index.html (portable, offline)
 ```
@@ -91,7 +92,7 @@ src/
   workers/           # pairwise association worker
   components/        # PlotlyChart, SettingsDrawer, ...
   panels/            # 11 analysis tabs
-tests/               # 53 tests + CSV fixture
+tests/               # 55 tests + CSV fixture
 .github/             # CI, Pages, issue/PR templates
 ```
 
@@ -125,12 +126,12 @@ Full board: **https://github.com/users/RoslynMeow/projects/8**
 - [x] CSV import: encodings, delimiters, type inference
 - [x] r / ρ / V / η and target ranking
 - [x] 11 analysis tabs
-- [x] Appearance, palettes, per-chart sizes, export, settings JSON
+- [x] Appearance, palettes, per-chart sizes and titles, export, settings JSON
 - [x] Web Worker, GitHub Pages, single-file build
+- [x] Phase 2: column / value display aliases
 - [ ] Phase 2: editable UI text dictionary
-- [ ] Phase 2: column / value display aliases
 - [ ] Phase 2: per-file profiles
-- [ ] Phase 3: per-chart title and axis title editing
+- [x] Phase 3: per-chart title and axis title editing
 - [ ] Phase 3: full-page report export
 
 ## Privacy

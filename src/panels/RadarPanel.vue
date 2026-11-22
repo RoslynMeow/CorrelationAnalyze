@@ -29,6 +29,7 @@ const built = computed(() => {
   if (!gcol) return null
   const names = dims.value.slice(0, 12)
   if (names.length < 3) return null
+  const displayNames = names.map((n) => settings.columnLabel(n))
 
   const groups = groupLabels(gcol)
   const labels = gcol.raw.map((v) => (isNull(v) ? '(缺失)' : String(v).trim()))
@@ -60,17 +61,18 @@ const built = computed(() => {
       return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : 0
     })
     const color = settings.paletteColor(gi) || PALETTE_FALLBACK
+    const groupLabel = settings.valueLabel(gcol.name, g)
     return {
       type: 'scatterpolar',
       mode: 'lines+markers',
       r: [...r, r[0]],
-      theta: [...names, names[0]],
-      name: g,
+      theta: [...displayNames, displayNames[0]],
+      name: groupLabel,
       fill: 'toself',
       fillcolor: withAlpha(color, 0.12),
       line: { color, width: 2 },
       marker: { color, size: 5 },
-      hovertemplate: '%{theta}<br>%{r:.3f}<extra>' + g + '</extra>',
+      hovertemplate: '%{theta}<br>%{r:.3f}<extra>' + groupLabel + '</extra>',
     }
   })
 
@@ -106,7 +108,11 @@ const built = computed(() => {
 <template>
   <section class="panel">
     <div class="controls">
-      <SelectField v-model="groupName" label="分组列" :options="ds.groups.map((c) => c.name)" />
+      <SelectField
+        v-model="groupName"
+        label="分组列"
+        :options="ds.groups.map((c) => ({ value: c.name, label: settings.columnLabel(c.name) }))"
+      />
       <SelectField
         v-model="norm"
         label="标准化"
@@ -117,7 +123,11 @@ const built = computed(() => {
       />
       <div class="chipfield">
         <span class="chipfield-label">画像维度（3–12 个）</span>
-        <ChipGroup v-model="dims" :options="ds.nums.map((c) => c.name)" :max="12" />
+        <ChipGroup
+          v-model="dims"
+          :options="ds.nums.map((c) => ({ value: c.name, label: settings.columnLabel(c.name) }))"
+          :max="12"
+        />
       </div>
     </div>
 

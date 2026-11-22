@@ -8,6 +8,8 @@
 - 11 analysis tabs, including the 3 views v1 was missing (distribution, category counts, radar)
 - Settings drawer: color tokens, density, radius, shadow, table styles, chart width cap
 - 4 palette presets + custom palette, heatmap colors, per-chart size and per-series colors
+- Per-chart title / axis title overrides
+- Column and category value display aliases (display only)
 - Drag-to-resize charts with live CSS preview
 - Per-chart toolbar: copy image, PNG, SVG, TSV, reset zoom, chart settings
 - Copy insights as plain text; import/export settings as JSON

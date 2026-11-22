@@ -53,15 +53,17 @@ const traces = computed(() => [
     orientation: 'h',
     x: top.value.map((p) => p.strength),
     y: top.value.map((p) =>
-      narrow.value ? `${shortName(p.a, 11)} ↔ ${shortName(p.b, 11)}` : `${p.a} ↔ ${p.b}`,
+      narrow.value
+        ? `${shortName(settings.columnLabel(p.a), 11)} ↔ ${shortName(settings.columnLabel(p.b), 11)}`
+        : `${settings.columnLabel(p.a)} ↔ ${settings.columnLabel(p.b)}`,
     ),
     marker: { color: top.value.map((p) => settings.assocColor(p.signed)), line: { width: 0 } },
     text: top.value.map((p) => `${p.strength.toFixed(2)} ${p.type}`),
     textposition: 'outside',
     cliponaxis: false,
     customdata: top.value.map((p) => [
-      p.a,
-      p.b,
+      settings.columnLabel(p.a),
+      settings.columnLabel(p.b),
       p.type,
       p.signed === null ? '—' : p.signed.toFixed(2),
       p.n,
@@ -124,7 +126,8 @@ const top3 = computed(() => pairs.value.slice(0, 3))
           <h4>最强关联</h4>
           <ul>
             <li v-for="p in top3" :key="p.a + p.b">
-              <b>{{ p.a }}</b> ↔ <b>{{ p.b }}</b>：
+              <b>{{ settings.columnLabel(p.a) }}</b> ↔
+              <b>{{ settings.columnLabel(p.b) }}</b>：
               <span :class="p.signed === null ? '' : p.signed >= 0 ? 'pos' : 'neg'">
                 {{ p.strength.toFixed(2) }}
               </span>

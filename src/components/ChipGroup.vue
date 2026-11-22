@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 
+type ChipOption = string | { value: string; label: string }
+
 const props = defineProps<{
   modelValue: string[]
-  options: string[]
+  options: ChipOption[]
   max?: number
   /** 选项超过该数量时显示搜索框 */
   searchThreshold?: number
@@ -12,17 +14,25 @@ const props = defineProps<{
 const emit = defineEmits<{ (e: 'update:modelValue', v: string[]): void }>()
 
 const keyword = ref('')
-const showSearch = computed(() => props.options.length > (props.searchThreshold ?? 10))
+
+const opts = computed(() =>
+  props.options.map((o) => (typeof o === 'string' ? { value: o, label: o } : o)),
+)
+
+const showSearch = computed(() => opts.value.length > (props.searchThreshold ?? 10))
 
 const shown = computed(() => {
   const q = keyword.value.trim().toLowerCase()
-  return q ? props.options.filter((o) => o.toLowerCase().includes(q)) : props.options
+  if (!q) return opts.value
+  return opts.value.filter(
+    (o) => o.label.toLowerCase().includes(q) || o.value.toLowerCase().includes(q),
+  )
 })
 
 const selectedCount = computed(() => props.modelValue.length)
-const limit = computed(() => props.max ?? props.options.length)
+const limit = computed(() => props.max ?? opts.value.length)
 const allShownSelected = computed(
-  () => shown.value.length > 0 && shown.value.every((o) => props.modelValue.includes(o)),
+  () => shown.value.length > 0 && shown.value.every((o) => props.modelValue.includes(o.value)),
 )
 
 function toggle(option: string): void {
@@ -41,18 +51,18 @@ function selectAll(): void {
   const next = [...props.modelValue]
   for (const o of shown.value) {
     if (next.length >= limit.value) break
-    if (!next.includes(o)) next.push(o)
+    if (!next.includes(o.value)) next.push(o.value)
   }
   emit('update:modelValue', next)
 }
 
 /** 反选当前筛选结果（受 max 限制） */
 function invert(): void {
-  const visible = new Set(shown.value)
+  const visible = new Set(shown.value.map((o) => o.value))
   const next = props.modelValue.filter((o) => !visible.has(o))
   for (const o of shown.value) {
     if (next.length >= limit.value) break
-    if (!props.modelValue.includes(o)) next.push(o)
+    if (!props.modelValue.includes(o.value)) next.push(o.value)
   }
   emit('update:modelValue', next)
 }
@@ -66,7 +76,7 @@ function clear(): void {
   <div class="chipgroup">
     <div class="chipbar">
       <span class="chipcount">
-        已选 <b>{{ selectedCount }}</b> / {{ props.options.length
+        已选 <b>{{ selectedCount }}</b> / {{ opts.length
         }}<template v-if="props.max"> · 最多 {{ props.max }} 个</template>
       </span>
       <input
@@ -108,18 +118,18 @@ function clear(): void {
     </div>
 
     <div class="chips">
-      <label v-for="o in shown" :key="o" class="chip" :title="o">
+      <label v-for="o in shown" :key="o.value" class="chip" :title="o.label">
         <input
           type="checkbox"
-          :value="o"
-          :checked="props.modelValue.includes(o)"
-          :disabled="!props.modelValue.includes(o) && selectedCount >= limit"
-          @change="toggle(o)"
+          :value="o.value"
+          :checked="props.modelValue.includes(o.value)"
+          :disabled="!props.modelValue.includes(o.value) && selectedCount >= limit"
+          @change="toggle(o.value)"
         />
-        <span>{{ o }}</span>
+        <span>{{ o.label }}</span>
       </label>
       <span v-if="!shown.length" class="hint">
-        {{ props.options.length ? '没有匹配的变量，试试其他关键字' : '没有可选变量' }}
+        {{ opts.length ? '没有匹配的变量，试试其他关键字' : '没有可选变量' }}
       </span>
     </div>
   </div>

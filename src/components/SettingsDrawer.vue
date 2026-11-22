@@ -2,6 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import ColorField from '@/components/ColorField.vue'
 import { PALETTES, DEFAULT_HEATMAP } from '@/settings/defaults'
+import { useDatasetStore } from '@/stores/dataset'
 import { useSettingsStore } from '@/stores/settings'
 import { toast } from '@/composables/useToast'
 import { downloadDataUrl } from '@/lib/exportChart'
@@ -10,16 +11,64 @@ const props = defineProps<{ open: boolean }>()
 const emit = defineEmits<{ (e: 'close'): void }>()
 
 const settings = useSettingsStore()
-const tab = ref<'appearance' | 'charts' | 'table' | 'export' | 'config'>('appearance')
+const ds = useDatasetStore()
+const tab = ref<'appearance' | 'charts' | 'table' | 'data' | 'export' | 'config'>('appearance')
 const fileInput = ref<HTMLInputElement | null>(null)
+const colQuery = ref('')
+const valueColumn = ref('')
 
 const TABS = [
   { id: 'appearance', label: '外观' },
   { id: 'charts', label: '图表' },
   { id: 'table', label: '表格' },
+  { id: 'data', label: '数据' },
   { id: 'export', label: '导出' },
   { id: 'config', label: '配置' },
 ] as const
+
+const aliasColumns = computed(() => ds.dataset?.columns ?? [])
+
+const filteredColumns = computed(() => {
+  const q = colQuery.value.trim().toLowerCase()
+  if (!q) return aliasColumns.value
+  return aliasColumns.value.filter(
+    (c) =>
+      c.name.toLowerCase().includes(q) || settings.columnLabel(c.name).toLowerCase().includes(q),
+  )
+})
+
+const valueColumns = computed(() =>
+  aliasColumns.value.filter((c) => c.uniqueCount >= 2 && c.uniqueCount <= 80),
+)
+
+watch(
+  () => ds.datasetId,
+  () => {
+    const first =
+      valueColumns.value.find((c) => c.type === 'category') || valueColumns.value[0]
+    valueColumn.value = first?.name ?? ''
+  },
+  { immediate: true },
+)
+
+watch(valueColumns, (list) => {
+  if (!list.some((c) => c.name === valueColumn.value)) {
+    valueColumn.value = list[0]?.name ?? ''
+  }
+})
+
+const valueCol = computed(() => (valueColumn.value ? ds.column(valueColumn.value) : undefined))
+const valueAliasCount = computed(
+  () => Object.keys(settings.state.data.valueAliases[valueColumn.value] ?? {}).length,
+)
+
+function onColAlias(name: string, e: Event): void {
+  settings.setColumnAlias(name, (e.target as HTMLInputElement).value)
+}
+
+function onValAlias(value: string, e: Event): void {
+  settings.setValueAlias(valueColumn.value, value, (e.target as HTMLInputElement).value)
+}
 
 const radius = computed(() => settings.state.appearance.radius ?? 14)
 const tableHeaderFallback = computed(() => settings.cssColor('--panel-2') || '#f8fafc')
@@ -416,6 +465,70 @@ onBeforeUnmount(() => {
           <label class="chk"><input v-model="settings.state.table.zebra" type="checkbox" /> 斑马纹（隔行浅底）</label>
         </section>
 
+        <!-- ================= 数据 ================= -->
+        <section v-else-if="tab === 'data'" class="set-section">
+          <p class="hint">
+            映射只改显示，统计、缓存与导出仍使用原始列名和取值。当前为全局配置；按文件配置在 Issue #3。
+          </p>
+
+          <template v-if="aliasColumns.length">
+            <div class="set-block">
+              <div class="set-label">列显示名</div>
+              <input
+                v-model="colQuery"
+                class="alias-search"
+                type="search"
+                placeholder="搜索列名…"
+              />
+              <div class="alias-list">
+                <div v-for="c in filteredColumns" :key="c.name" class="alias-row">
+                  <span class="alias-orig" :title="c.name">{{ c.name }}</span>
+                  <input
+                    class="alias-input"
+                    :value="settings.columnLabel(c.name) === c.name ? '' : settings.columnLabel(c.name)"
+                    :placeholder="c.name"
+                    @change="onColAlias(c.name, $event)"
+                  />
+                </div>
+                <p v-if="!filteredColumns.length" class="hint alias-empty">没有匹配的列</p>
+              </div>
+            </div>
+
+            <div class="set-block">
+              <div class="set-label">
+                类别取值显示名
+                <span class="hint">{{ valueAliasCount }} 条映射</span>
+              </div>
+              <select v-model="valueColumn" class="set-select">
+                <option v-for="c in valueColumns" :key="c.name" :value="c.name">
+                  {{ settings.columnLabel(c.name) }}（{{ c.uniqueCount }} 个取值）
+                </option>
+              </select>
+              <div v-if="valueCol" class="alias-list">
+                <div v-for="v in valueCol.unique" :key="v" class="alias-row">
+                  <span class="alias-orig" :title="v">{{ v }}</span>
+                  <input
+                    class="alias-input"
+                    :value="settings.valueLabel(valueColumn, v) === v ? '' : settings.valueLabel(valueColumn, v)"
+                    :placeholder="v"
+                    @change="onValAlias(v, $event)"
+                  />
+                </div>
+              </div>
+              <button
+                v-if="valueAliasCount"
+                class="linkbtn"
+                type="button"
+                style="align-self: flex-start"
+                @click="settings.clearValueAliases(valueColumn)"
+              >
+                清除本列映射
+              </button>
+            </div>
+          </template>
+          <p v-else class="hint">载入 CSV 后可以编辑列名与类别取值。</p>
+        </section>
+
         <!-- ================= 导出 ================= -->
         <section v-else-if="tab === 'export'" class="set-section">
           <div class="set-block">
@@ -461,7 +574,7 @@ onBeforeUnmount(() => {
         <!-- ================= 配置 ================= -->
         <section v-else class="set-section">
           <p class="hint">
-            当前版本只保存全局设置。列名映射、界面文案与按文件配置会在第 2 期加入。
+            当前版本保存全局设置；列显示名与取值映射已加入「数据」页。界面文案与按文件配置会在后续 Issue 中完成。
           </p>
           <div class="set-actions">
             <button class="btn" type="button" @click="exportConfig">导出配置 JSON</button>

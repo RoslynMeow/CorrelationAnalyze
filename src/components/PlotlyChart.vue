@@ -20,8 +20,10 @@ const props = withDefaults(
     layout?: Record<string, unknown>
     config?: Record<string, unknown>
     height?: number | string
-    /** 稳定图表 ID，用于保存本图配色/尺寸与导出文件名 */
+    /** 稳定图表 ID，用于保存本图配色/尺寸/标题与导出文件名 */
     chartId?: string
+    /** 系列配色使用的 ID；默认为 chartId（分组对比的多张小图共享一套分组颜色） */
+    styleId?: string
     /** 面板给这张图算出的默认最大宽度（可被单图设置覆盖） */
     maxWidth?: number
   }>(),
@@ -37,6 +39,11 @@ const preview = ref<{ width: number; height: number } | null>(null)
 const dragBase = ref<{ w: number; h: number } | null>(null)
 
 const size = computed(() => settings.chartSize(props.chartId))
+const titleOverride = computed(() => settings.chartTitle(props.chartId))
+const hasTitleOverride = computed(() => Object.keys(titleOverride.value).length > 0)
+const isPolar = computed(() =>
+  props.traces.some((raw) => (raw as Record<string, unknown>).type === 'scatterpolar'),
+)
 const effectiveHeight = computed<number | null>(() => {
   if (size.value.height) return size.value.height
   return typeof props.height === 'number' ? props.height : null
@@ -67,8 +74,34 @@ const wrapStyle = computed(() => {
 const styledLayout = computed(() => {
   const base = { ...(props.layout || {}) }
   if (effectiveHeight.value) base.height = effectiveHeight.value
+  const t = titleOverride.value
+  if (t.title) {
+    base.title = { ...(base.title as Record<string, unknown> | undefined), text: t.title }
+    const m = base.margin as Record<string, unknown> | undefined
+    base.margin = { ...m, t: Math.max(34, Number(m?.t) || 0) }
+  }
+  if (t.xTitle) {
+    const x = base.xaxis as Record<string, unknown> | undefined
+    base.xaxis = {
+      ...x,
+      title: { ...(x?.title as Record<string, unknown> | undefined), text: t.xTitle },
+    }
+  }
+  if (t.yTitle) {
+    const y = base.yaxis as Record<string, unknown> | undefined
+    base.yaxis = {
+      ...y,
+      title: { ...(y?.title as Record<string, unknown> | undefined), text: t.yTitle },
+    }
+  }
   return base
 })
+
+function onTitle(key: 'title' | 'xTitle' | 'yTitle', e: Event): void {
+  settings.setChartTitle(props.chartId, {
+    [key]: (e.target as HTMLInputElement).value,
+  })
+}
 
 /**
  * 拖动时不做真实重绘：把图表按原尺寸渲染后整体 CSS 缩放，
@@ -218,7 +251,8 @@ function applyOverrides(
   })
 }
 
-const overrides = computed(() => settings.chartSeries(props.chartId))
+const overrides = computed(() => settings.chartSeries(props.styleId || props.chartId))
+const colorChartId = computed(() => props.styleId || props.chartId)
 const styledTraces = computed(() => applyOverrides(props.traces, overrides.value))
 
 const seriesList = computed(() => {
@@ -392,7 +426,7 @@ async function copyData(): Promise<void> {
 }
 
 function onSeriesColor(key: string, e: Event): void {
-  settings.setSeriesColor(props.chartId, key, (e.target as HTMLInputElement).value)
+  settings.setSeriesColor(colorChartId.value, key, (e.target as HTMLInputElement).value)
 }
 </script>
 
@@ -494,6 +528,39 @@ function onSeriesColor(key: string, e: Event): void {
             也可以直接拖动图表右下角的手柄实时缩放；双击手柄恢复自动尺寸。
           </p>
 
+          <div class="cs-sub">标题</div>
+          <div class="cs-title-row">
+            <input
+              :value="titleOverride.title ?? ''"
+              placeholder="图表标题（可选）"
+              maxlength="120"
+              @change="onTitle('title', $event)"
+            />
+            <input
+              v-if="!isPolar"
+              :value="titleOverride.xTitle ?? ''"
+              placeholder="X 轴标题"
+              maxlength="120"
+              @change="onTitle('xTitle', $event)"
+            />
+            <input
+              v-if="!isPolar"
+              :value="titleOverride.yTitle ?? ''"
+              placeholder="Y 轴标题"
+              maxlength="120"
+              @change="onTitle('yTitle', $event)"
+            />
+          </div>
+          <button
+            v-if="hasTitleOverride"
+            class="linkbtn"
+            type="button"
+            style="align-self: flex-start"
+            @click="settings.clearChartTitle(chartId)"
+          >
+            恢复默认标题
+          </button>
+
           <template v-if="seriesList.length">
             <div class="cs-sub">配色</div>
             <div v-for="s in seriesList" :key="s.key" class="cs-row">
@@ -508,7 +575,7 @@ function onSeriesColor(key: string, e: Event): void {
                 class="linkbtn"
                 type="button"
                 :disabled="!overrides[s.key]"
-                @click="settings.setSeriesColor(chartId, s.key, '')"
+                @click="settings.setSeriesColor(colorChartId, s.key, '')"
               >
                 重置
               </button>
@@ -521,7 +588,7 @@ function onSeriesColor(key: string, e: Event): void {
             class="btn ghost"
             type="button"
             :disabled="!hasOverrides"
-            @click="settings.clearChartSeries(chartId)"
+            @click="settings.clearChartSeries(colorChartId)"
           >
             恢复全局配色
           </button>

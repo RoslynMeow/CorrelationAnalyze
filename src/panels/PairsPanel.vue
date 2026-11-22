@@ -19,7 +19,7 @@ const dims = ref(preferredNums(ds.nums, 4))
 
 const colorOptions = computed(() => [
   { value: '', label: '（不分组）' },
-  ...ds.groups.map((c) => c.name),
+  ...ds.groups.map((c) => ({ value: c.name, label: settings.columnLabel(c.name) })),
 ])
 const chartH = computed(() => (narrow.value ? 430 : 620))
 
@@ -37,7 +37,10 @@ const built = computed(() => {
   if (!idx.length) return null
   const sample = idx.length > 3000 ? idx.slice(0, 3000) : idx
 
-  const dimensions = use.map((c) => ({ label: c.name, values: sample.map((i) => c.num?.[i]) }))
+  const dimensions = use.map((c) => ({
+    label: settings.columnLabel(c.name),
+    values: sample.map((i) => c.num?.[i]),
+  }))
   const ccol = colorName.value ? ds.column(colorName.value) : null
 
   const trace: Record<string, unknown> = {
@@ -62,7 +65,7 @@ const built = computed(() => {
         mode: 'markers',
         x: [null],
         y: [null],
-        name: l,
+        name: settings.valueLabel(ccol.name, l),
         marker: { color: map.get(l), size: 8 },
         showlegend: true,
         hoverinfo: 'skip',
@@ -93,7 +96,11 @@ const built = computed(() => {
       <SelectField v-model="colorName" label="颜色分组" :options="colorOptions" />
       <div class="chipfield">
         <span class="chipfield-label">维度（最多 6 个）</span>
-        <ChipGroup v-model="dims" :options="ds.nums.map((c) => c.name)" :max="6" />
+        <ChipGroup
+          v-model="dims"
+          :options="ds.nums.map((c) => ({ value: c.name, label: settings.columnLabel(c.name) }))"
+          :max="6"
+        />
       </div>
     </div>
 

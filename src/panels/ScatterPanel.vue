@@ -27,14 +27,16 @@ const sizeName = ref('')
 const trend = ref(true)
 const logX = ref(false)
 
-const xOptions = computed(() => [...ds.nums.map((c) => c.name), ...ds.dates.map((c) => c.name)])
+const xOptions = computed(() =>
+  [...ds.nums, ...ds.dates].map((c) => ({ value: c.name, label: settings.columnLabel(c.name) })),
+)
 const colorOptions = computed(() => [
   { value: '', label: '（不分组）' },
-  ...ds.groups.map((c) => c.name),
+  ...ds.groups.map((c) => ({ value: c.name, label: settings.columnLabel(c.name) })),
 ])
 const sizeOptions = computed(() => [
   { value: '', label: '（固定大小）' },
-  ...ds.nums.map((c) => c.name),
+  ...ds.nums.map((c) => ({ value: c.name, label: settings.columnLabel(c.name) })),
 ])
 
 const chartH = computed(() => (narrow.value ? 380 : 520))
@@ -46,6 +48,8 @@ const built = computed(() => {
 
   const xv = axisValues(xc)
   const yv = axisValues(yc)
+  const xLabel = settings.columnLabel(xName.value)
+  const yLabel = settings.columnLabel(yName.value)
   let idx: number[] = []
   for (let i = 0; i < ds.n; i++) {
     const x = xv[i]
@@ -73,10 +77,11 @@ const built = computed(() => {
       const ii = idx.filter((i) => labels[i] === lab)
       if (!ii.length) return
       const color = settings.paletteColor(gi)
+      const groupLabel = settings.valueLabel(ccol.name, lab)
       const tr: Record<string, unknown> = {
         type: 'scattergl',
         mode: 'markers',
-        name: `${lab} (${ii.length})`,
+        name: `${groupLabel} (${ii.length})`,
         x: ii.map((i) => xv[i]),
         y: ii.map((i) => yv[i]),
         marker: {
@@ -85,7 +90,7 @@ const built = computed(() => {
           opacity: 0.75,
           line: { width: 0 },
         },
-        hovertemplate: `${lab}<br>${xName.value}: %{x}<br>${yName.value}: %{y}<extra></extra>`,
+        hovertemplate: `${groupLabel}<br>${xLabel}: %{x}<br>${yLabel}: %{y}<extra></extra>`,
       }
       if (sv) {
         ;(tr.marker as Record<string, unknown>).sizemode = 'area'
@@ -105,7 +110,7 @@ const built = computed(() => {
         color: withAlpha(settings.paletteColor(0), 0.7),
         size: sv ? idx.map((i) => sv[i] || 0) : 8,
       },
-      hovertemplate: `${xName.value}: %{x}<br>${yName.value}: %{y}<extra></extra>`,
+      hovertemplate: `${xLabel}: %{x}<br>${yLabel}: %{y}<extra></extra>`,
     }
     if (sv) {
       ;(tr.marker as Record<string, unknown>).sizemode = 'area'
@@ -148,10 +153,10 @@ const built = computed(() => {
     layout: baseLayout({
       height: chartH.value,
       xaxis: {
-        title: { text: xName.value },
+        title: { text: xLabel },
         type: logX.value ? 'log' : xc.type === 'date' ? 'date' : 'linear',
       },
-      yaxis: { title: { text: yName.value } },
+      yaxis: { title: { text: yLabel } },
       legend: { orientation: 'h', y: -0.14 },
     }),
   }
@@ -162,7 +167,11 @@ const built = computed(() => {
   <section class="panel">
     <div class="controls">
       <SelectField v-model="xName" label="X 轴" :options="xOptions" />
-      <SelectField v-model="yName" label="Y 轴" :options="ds.nums.map((c) => c.name)" />
+      <SelectField
+        v-model="yName"
+        label="Y 轴"
+        :options="ds.nums.map((c) => ({ value: c.name, label: settings.columnLabel(c.name) }))"
+      />
       <SelectField v-model="colorName" label="颜色分组" :options="colorOptions" />
       <SelectField v-model="sizeName" label="气泡大小" :options="sizeOptions" />
       <label class="chk"><input v-model="trend" type="checkbox" /> 拟合线</label>

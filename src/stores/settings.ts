@@ -1,7 +1,7 @@
 import { computed, ref, watch } from 'vue'
 import { defineStore } from 'pinia'
 import { chartThemeTick, bumpTheme } from '@/lib/themeBus'
-import { defaultSettings, TOKEN_VARS, type ChartSize, type ColorToken, type Settings } from '@/settings/defaults'
+import { defaultSettings, TOKEN_VARS, type ChartSize, type ChartTitle, type ColorToken, type Settings } from '@/settings/defaults'
 import { mergeSettings } from '@/settings/merge'
 
 const STORAGE_KEY = 'ca-settings-v1'
@@ -215,6 +215,72 @@ export const useSettingsStore = defineStore('settings', () => {
     state.value.charts.sizes = all
   }
 
+  /* ---------------- 单图标题 ---------------- */
+
+  function chartTitle(chartId: string): ChartTitle {
+    return state.value.charts.titles[chartId] ?? {}
+  }
+
+  function setChartTitle(chartId: string, patch: Partial<ChartTitle>): void {
+    const all = { ...state.value.charts.titles }
+    const cur: ChartTitle = { ...(all[chartId] ?? {}) }
+    for (const key of ['title', 'xTitle', 'yTitle'] as const) {
+      const v = patch[key]
+      if (v === undefined) continue
+      const text = v.trim()
+      if (text) cur[key] = text.slice(0, 120)
+      else delete cur[key]
+    }
+    if (Object.keys(cur).length) all[chartId] = cur
+    else delete all[chartId]
+    state.value.charts.titles = all
+  }
+
+  function clearChartTitle(chartId: string): void {
+    const all = { ...state.value.charts.titles }
+    delete all[chartId]
+    state.value.charts.titles = all
+  }
+
+  /* ---------------- 列名 / 取值显示映射 ---------------- */
+
+  function columnLabel(name: string): string {
+    return state.value.data.columnAliases[name] || name
+  }
+
+  function valueLabel(column: string, value: string): string {
+    const raw = String(value)
+    const map = state.value.data.valueAliases[column]
+    if (!map) return raw
+    return map[raw] ?? map[raw.trim()] ?? raw
+  }
+
+  function setColumnAlias(name: string, label: string): void {
+    const next = { ...state.value.data.columnAliases }
+    const text = label.trim().slice(0, 120)
+    if (text) next[name] = text
+    else delete next[name]
+    state.value.data.columnAliases = next
+  }
+
+  function setValueAlias(column: string, value: string, label: string): void {
+    const all = { ...state.value.data.valueAliases }
+    const cur = { ...(all[column] ?? {}) }
+    const key = value.trim()
+    const text = label.trim().slice(0, 120)
+    if (text) cur[key] = text
+    else delete cur[key]
+    if (Object.keys(cur).length) all[column] = cur
+    else delete all[column]
+    state.value.data.valueAliases = all
+  }
+
+  function clearValueAliases(column: string): void {
+    const all = { ...state.value.data.valueAliases }
+    delete all[column]
+    state.value.data.valueAliases = all
+  }
+
   /* ---------------- 色板 ---------------- */
 
   function setPalette(colors: string[]): void {
@@ -265,6 +331,14 @@ export const useSettingsStore = defineStore('settings', () => {
     chartSize,
     setChartSize,
     clearChartSize,
+    chartTitle,
+    setChartTitle,
+    clearChartTitle,
+    columnLabel,
+    valueLabel,
+    setColumnAlias,
+    setValueAlias,
+    clearValueAliases,
     setPalette,
     setPaletteColor,
     toJson,

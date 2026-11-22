@@ -3,6 +3,7 @@ import {
   defaultSettings,
   DEFAULT_HEATMAP,
   type ChartSize,
+  type ChartTitle,
   type ColorToken,
   type Settings,
   TOKEN_VARS,
@@ -117,6 +118,27 @@ export function mergeSettings(raw: unknown): Settings {
     }
   }
 
+  const titlesIn = isRec(ch.titles) ? ch.titles : {}
+  const titles: Record<string, ChartTitle> = {}
+  let titleSeen = 0
+  for (const [chartId, rawTitle] of Object.entries(titlesIn)) {
+    if (titleSeen >= 40 || !isRec(rawTitle)) continue
+    const clean: ChartTitle = {}
+    if (typeof rawTitle.title === 'string' && rawTitle.title.trim()) {
+      clean.title = rawTitle.title.slice(0, 120)
+    }
+    if (typeof rawTitle.xTitle === 'string' && rawTitle.xTitle.trim()) {
+      clean.xTitle = rawTitle.xTitle.slice(0, 120)
+    }
+    if (typeof rawTitle.yTitle === 'string' && rawTitle.yTitle.trim()) {
+      clean.yTitle = rawTitle.yTitle.slice(0, 120)
+    }
+    if (Object.keys(clean).length) {
+      titles[chartId.slice(0, 80)] = clean
+      titleSeen++
+    }
+  }
+
   /* ---------- export ---------- */
   const ex = isRec(r.exportSettings) ? r.exportSettings : {}
   const exportSettings: Settings['exportSettings'] = {
@@ -160,6 +182,7 @@ export function mergeSettings(raw: unknown): Settings {
           ? null
           : clamped(ch.defaultWidth, 280, 1600),
       sizes,
+      titles,
       series,
     },
     exportSettings,

@@ -29,6 +29,7 @@ const built = computed(() => {
 
   const values = col.num.filter((v): v is number => v !== null && Number.isFinite(v))
   if (!values.length) return null
+  const varLabel = settings.columnLabel(varName.value)
 
   const min = Math.min(...values)
   const max = Math.max(...values)
@@ -48,10 +49,11 @@ const built = computed(() => {
       const vals = col.num!.filter((v, i) => v !== null && labels[i] === lab) as number[]
       if (!vals.length) return
       const color = settings.paletteColor(gi) || PALETTE_FALLBACK
+      const groupLabel = settings.valueLabel(gcol.name, lab)
       traces.push({
         type: 'histogram',
         x: vals,
-        name: lab,
+        name: groupLabel,
         histnorm: 'probability density',
         marker: { color, opacity: 0.5, line: { width: 0 } },
         ...histExtra,
@@ -62,7 +64,7 @@ const built = computed(() => {
           mode: 'lines',
           x: grid,
           y: kde(vals, grid),
-          name: `${lab} KDE`,
+          name: `${groupLabel} KDE`,
           line: { color, width: 2 },
           hoverinfo: 'skip',
           showlegend: false,
@@ -73,7 +75,7 @@ const built = computed(() => {
     traces.push({
       type: 'histogram',
       x: values,
-      name: varName.value,
+      name: varLabel,
       histnorm: 'probability density',
       marker: { color: settings.paletteColor(0) || PALETTE_FALLBACK, opacity: 0.6, line: { width: 0 } },
       ...histExtra,
@@ -98,7 +100,7 @@ const built = computed(() => {
       height: chartH.value,
       barmode: 'overlay',
       bargap: 0.02,
-      xaxis: { title: { text: varName.value } },
+      xaxis: { title: { text: varLabel } },
       yaxis: { title: { text: '密度' } },
       legend: { orientation: 'h', y: -0.16 },
       showlegend: !!gcol,
@@ -124,11 +126,18 @@ const stats = computed(() => {
 <template>
   <section class="panel">
     <div class="controls">
-      <SelectField v-model="varName" label="数值变量" :options="ds.nums.map((c) => c.name)" />
+      <SelectField
+        v-model="varName"
+        label="数值变量"
+        :options="ds.nums.map((c) => ({ value: c.name, label: settings.columnLabel(c.name) }))"
+      />
       <SelectField
         v-model="groupName"
         label="分组叠加"
-        :options="[{ value: '', label: '（不分组）' }, ...ds.groups.map((c) => c.name)]"
+        :options="[
+          { value: '', label: '（不分组）' },
+          ...ds.groups.map((c) => ({ value: c.name, label: settings.columnLabel(c.name) })),
+        ]"
       />
       <SelectField
         v-model="bins"

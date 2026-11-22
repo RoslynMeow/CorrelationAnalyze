@@ -21,13 +21,16 @@ const chartH = computed(() => (narrow.value ? 380 : 480))
 
 const PALETTE_FALLBACK = '#4c6ef5'
 
-const categoryOptions = computed(() => [
-  ...new Set([...ds.cats.map((c) => c.name), ...ds.groups.map((c) => c.name)]),
-])
+const categoryOptions = computed(() => {
+  const names = [...new Set([...ds.cats.map((c) => c.name), ...ds.groups.map((c) => c.name)])]
+  return names.map((name) => ({ value: name, label: settings.columnLabel(name) }))
+})
 
 const stackOptions = computed(() => [
   { value: '', label: '（不堆叠）' },
-  ...ds.groups.filter((c) => c.name !== catName.value).map((c) => c.name),
+  ...ds.groups
+    .filter((c) => c.name !== catName.value)
+    .map((c) => ({ value: c.name, label: settings.columnLabel(c.name) })),
 ])
 
 const built = computed(() => {
@@ -47,6 +50,9 @@ const built = computed(() => {
   const stackLabels = scol
     ? scol.raw.map((v) => (isNull(v) ? '(缺失)' : String(v).trim()))
     : null
+  const orderDisplay = order.map((v) =>
+    v === '(缺失)' ? v : settings.valueLabel(col.name, v),
+  )
 
   const traces = stackOrder.map((sl, si) => {
     const ys = order.map((main) => {
@@ -60,8 +66,11 @@ const built = computed(() => {
     })
     return {
       type: 'bar',
-      name: sl === null ? col.name : sl,
-      x: order,
+      name:
+        sl === null || !scol
+          ? settings.columnLabel(col.name)
+          : settings.valueLabel(scol.name, sl),
+      x: orderDisplay,
       y: ys,
       marker: { color: settings.paletteColor(si) || PALETTE_FALLBACK },
       hovertemplate: percent.value ? '%{x}<br>%{y:.1f}%<extra></extra>' : '%{x}<br>%{y} 行<extra></extra>',
@@ -79,7 +88,10 @@ const built = computed(() => {
     layout: baseLayout({
       height: chartH.value,
       barmode: 'stack',
-      xaxis: { title: { text: catName.value }, tickangle: order.length > 6 ? -30 : 0 },
+      xaxis: {
+        title: { text: settings.columnLabel(catName.value) },
+        tickangle: order.length > 6 ? -30 : 0,
+      },
       yaxis: { title: { text: percent.value ? '百分比 (%)' : '行数' } },
       legend: { orientation: 'h', y: -0.2 },
       showlegend: !!scol,

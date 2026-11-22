@@ -32,14 +32,16 @@ const traces = computed(() => [
     type: 'bar',
     orientation: 'h',
     x: ordered.value.map((d) => d.strength),
-    y: ordered.value.map((d) => (narrow.value ? shortName(d.name, 16) : d.name)),
+    y: ordered.value.map((d) =>
+      narrow.value ? shortName(settings.columnLabel(d.name), 16) : settings.columnLabel(d.name),
+    ),
     marker: { color: ordered.value.map((d) => settings.assocColor(d.signed)) },
     text: ordered.value.map((d) => `${d.strength.toFixed(2)} ${d.type}`),
     textposition: 'outside',
     cliponaxis: false,
     bargap: 0.32,
     customdata: ordered.value.map((d) => [
-      d.name,
+      settings.columnLabel(d.name),
       d.type,
       d.signed === null ? '—' : d.signed.toFixed(2),
       d.n,
@@ -70,7 +72,7 @@ const stats = computed(() => {
   return [
     { k: '目标类型', v: target.value?.type === 'number' ? '数值目标' : '类别目标' },
     { k: '参与分析', v: `${list.value.length} 个变量` },
-    { k: '关联最强', v: `${strongest.name}（${strongest.strength.toFixed(2)} ${strongest.type}）` },
+    { k: '关联最强', v: `${settings.columnLabel(strongest.name)}（${strongest.strength.toFixed(2)} ${strongest.type}）` },
     { k: '强度 ≥ 0.5', v: `${list.value.filter((d) => d.strength >= 0.5).length} 个` },
     { k: '完整样本', v: fmtInt(strongest.n) },
   ]
@@ -83,7 +85,7 @@ const stats = computed(() => {
       <SelectField
         v-model="targetName"
         label="目标变量"
-        :options="ds.targets.map((c) => c.name)"
+        :options="ds.targets.map((c) => ({ value: c.name, label: settings.columnLabel(c.name) }))"
       />
       <SelectField
         v-model="method"

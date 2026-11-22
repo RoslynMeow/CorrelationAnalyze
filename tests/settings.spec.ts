@@ -99,6 +99,19 @@ describe('配置合并与校验', () => {
     expect(s.charts.sizes.bad).toBeUndefined()
   })
 
+  it('单图标题覆盖只保留非空文本', () => {
+    const s = mergeSettings({
+      charts: {
+        titles: {
+          scatter: { title: '压力 vs 心理健康', xTitle: '   ', yTitle: '指数' },
+          bad: 'x',
+        },
+      },
+    })
+    expect(s.charts.titles.scatter).toEqual({ title: '压力 vs 心理健康', yTitle: '指数' })
+    expect(s.charts.titles.bad).toBeUndefined()
+  })
+
   it('Plotly 原生工具栏默认关闭，可手动开启', () => {
     expect(mergeSettings({}).charts.showModeBar).toBe(false)
     expect(mergeSettings({ charts: { showModeBar: true } }).charts.showModeBar).toBe(true)
@@ -134,5 +147,16 @@ describe('配置合并与校验', () => {
     expect(s.text.overrides['tab.overview']).toBe('总览')
     expect(s.data.columnAliases.age).toBe('年龄')
     expect(s.data.valueAliases.risk.Low).toBe('低')
+  })
+
+  it('列名与取值映射保留合法字符串，丢弃空值', () => {
+    const s = mergeSettings({
+      data: {
+        columnAliases: { age: '年龄', empty: '   ', bad: 42 },
+        valueAliases: { risk: { Low: '低', High: '' } },
+      },
+    })
+    expect(s.data.columnAliases).toEqual({ age: '年龄' })
+    expect(s.data.valueAliases).toEqual({ risk: { Low: '低' } })
   })
 })

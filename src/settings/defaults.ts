@@ -45,6 +45,12 @@ export interface ChartSize {
   height?: number
 }
 
+export interface ChartTitle {
+  title?: string
+  xTitle?: string
+  yTitle?: string
+}
+
 export interface ChartSettings {
   palette: string[]
   heatmap: HeatmapColors
@@ -56,6 +62,8 @@ export interface ChartSettings {
   defaultWidth: number | null
   /** chartId → 单图尺寸覆盖 */
   sizes: Record<string, ChartSize>
+  /** chartId → 单图标题覆盖 */
+  titles: Record<string, ChartTitle>
   /** chartId → 系列名（无名为 __default__）→ 颜色 */
   series: Record<string, Record<string, string>>
 }
@@ -174,6 +182,7 @@ export function defaultSettings(): Settings {
       showModeBar: false,
       defaultWidth: null,
       sizes: {},
+      titles: {},
       series: {},
     },
     exportSettings: {

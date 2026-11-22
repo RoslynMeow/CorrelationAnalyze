@@ -25,7 +25,7 @@ const cols = computed<Column[]>(() =>
     : ds.cats.filter((c) => c.uniqueCount <= 25).slice(0, 20),
 )
 
-const names = computed(() => cols.value.map((c) => c.name))
+const names = computed(() => cols.value.map((c) => settings.columnLabel(c.name)))
 
 function valueOf(a: Column, b: Column): number | null {
   if (mode.value === 'num') {
