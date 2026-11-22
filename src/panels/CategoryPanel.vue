@@ -7,8 +7,10 @@ import { baseLayout } from '@/lib/chartTheme'
 import { groupLabels } from '@/lib/infer'
 import { isNull } from '@/lib/format'
 import { useNarrow } from '@/composables/useNarrow'
+import { useSettingsStore } from '@/stores/settings'
 
 const ds = useDatasetStore()
+const settings = useSettingsStore()
 const narrow = useNarrow()
 
 const catName = ref(ds.cats[0]?.name || ds.groups[0]?.name || '')
@@ -17,10 +19,7 @@ const percent = ref(false)
 
 const chartH = computed(() => (narrow.value ? 380 : 480))
 
-const PALETTE = [
-  '#66c2a5', '#fc8d62', '#8da0cb', '#e78ac3', '#a6d854', '#ffd92f', '#e5c494',
-  '#b3b3b3', '#80b1d3', '#fb8072', '#bebada', '#ffffb3', '#1b9e77', '#d95f02',
-]
+const PALETTE_FALLBACK = '#4c6ef5'
 
 const categoryOptions = computed(() => [
   ...new Set([...ds.cats.map((c) => c.name), ...ds.groups.map((c) => c.name)]),
@@ -64,7 +63,7 @@ const built = computed(() => {
       name: sl === null ? col.name : sl,
       x: order,
       y: ys,
-      marker: { color: PALETTE[si % PALETTE.length] },
+      marker: { color: settings.paletteColor(si) || PALETTE_FALLBACK },
       hovertemplate: percent.value ? '%{x}<br>%{y:.1f}%<extra></extra>' : '%{x}<br>%{y} 行<extra></extra>',
     }
   })
@@ -98,7 +97,13 @@ const built = computed(() => {
     </div>
 
     <div class="card" style="padding: 8px 8px 0">
-      <PlotlyChart v-if="built" :traces="built.traces" :layout="built.layout" :height="chartH" />
+      <PlotlyChart
+        v-if="built"
+        chart-id="category"
+        :traces="built.traces"
+        :layout="built.layout"
+        :height="chartH"
+      />
       <div v-else class="empty-chart">该数据集没有可用的类别列</div>
     </div>
 

@@ -84,9 +84,3 @@ export function pairsFromSlim(slim: WorkerColumn[], method: AssocMethod, limit =
   })) as Column[]
   return computePairs(cols, method, limit)
 }
-
-/** r / ρ 的符号决定颜色，V / η 用中性蓝 */
-export function strengthColor(a: { signed: number | null }): string {
-  if (a.signed === null) return '#4c6ef5'
-  return a.signed >= 0 ? '#2f9e6e' : '#d64545'
-}

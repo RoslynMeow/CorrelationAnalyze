@@ -5,11 +5,14 @@ import PlotlyChart from '@/components/PlotlyChart.vue'
 import SelectField from '@/components/SelectField.vue'
 import ChipGroup from '@/components/ChipGroup.vue'
 import { baseLayout } from '@/lib/chartTheme'
+import { withAlpha } from '@/lib/color'
 import { groupLabels, pickGroup, preferredNums } from '@/lib/infer'
-import { hexA, isNull } from '@/lib/format'
+import { isNull } from '@/lib/format'
 import { useNarrow } from '@/composables/useNarrow'
+import { useSettingsStore } from '@/stores/settings'
 
 const ds = useDatasetStore()
+const settings = useSettingsStore()
 const narrow = useNarrow()
 
 const groupName = ref(pickGroup(ds.groups))
@@ -37,10 +40,7 @@ const charts = computed(() => {
         const y = col?.num?.[j]
         if (y !== null && y !== undefined && Number.isFinite(y)) ys.push(y)
       }
-      const color = [
-        '#66c2a5', '#fc8d62', '#8da0cb', '#e78ac3', '#a6d854', '#ffd92f', '#e5c494',
-        '#b3b3b3', '#80b1d3', '#fb8072', '#bebada', '#ffffb3', '#1b9e77', '#d95f02',
-      ][gi % 14]
+      const color = settings.paletteColor(gi)
       const showAll = ys.length <= 5 || (showPts.value && ys.length <= 300)
       return {
         type: 'box',
@@ -48,7 +48,7 @@ const charts = computed(() => {
         name: `${lab} (n=${counts[lab] || 0})`,
         marker: { color, size: 3.5, opacity: 0.65 },
         line: { color, width: 1.5 },
-        fillcolor: hexA(color, 0.2),
+        fillcolor: withAlpha(color, 0.2),
         boxpoints: showAll ? 'all' : 'outliers',
         jitter: 0.35,
         pointpos: 0,
@@ -96,7 +96,12 @@ const charts = computed(() => {
           <span class="mtitle" :title="c.name">{{ c.name }}</span>
           <span class="mmuted">按 {{ groupName }}</span>
         </div>
-        <PlotlyChart :traces="c.traces" :layout="c.layout" :height="chartH" />
+        <PlotlyChart
+          :traces="c.traces"
+          :layout="c.layout"
+          :height="chartH"
+          chart-id="group"
+        />
       </div>
     </div>
   </section>

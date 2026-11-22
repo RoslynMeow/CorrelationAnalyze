@@ -4,11 +4,14 @@ import { useDatasetStore } from '@/stores/dataset'
 import PlotlyChart from '@/components/PlotlyChart.vue'
 import SelectField from '@/components/SelectField.vue'
 import { baseLayout } from '@/lib/chartTheme'
+import { divergingScale, sequentialScale } from '@/lib/color'
 import { cramersV, pearson, ranks } from '@/lib/stats'
 import { useNarrow } from '@/composables/useNarrow'
+import { useSettingsStore } from '@/stores/settings'
 import type { Column } from '@/types'
 
 const ds = useDatasetStore()
+const settings = useSettingsStore()
 const narrow = useNarrow()
 
 const mode = ref<'num' | 'cat'>('num')
@@ -70,32 +73,26 @@ const chartH = computed(() => {
 
 const showText = computed(() => annot.value && cols.value.length <= 22)
 
+const numScale = computed(() => {
+  const hm = settings.state.charts.heatmap
+  return divergingScale(hm.neg, hm.mid, hm.pos)
+})
+const catScale = computed(() => {
+  const hm = settings.state.charts.heatmap
+  return sequentialScale(hm.low, hm.high)
+})
+
 const trace = computed(() => {
   const num = mode.value === 'num'
   const vmin = num ? -1 : 0
   const vmax = 1
-  const scale = num
-    ? [
-        [0, '#60a5fa'],
-        [0.25, '#bfdbfe'],
-        [0.5, '#f8fafc'],
-        [0.75, '#fecaca'],
-        [1, '#f87171'],
-      ]
-    : [
-        [0, '#f8fafc'],
-        [0.25, '#dbeafe'],
-        [0.5, '#bfdbfe'],
-        [0.75, '#93c5fd'],
-        [1, '#60a5fa'],
-      ]
   return [
     {
       type: 'heatmap',
       z: matrix.value.z,
       x: names.value,
       y: names.value,
-      colorscale: scale,
+      colorscale: num ? numScale.value : catScale.value,
       zmin: vmin,
       zmax: vmax,
       text: showText.value ? matrix.value.text : undefined,
@@ -164,7 +161,13 @@ const note = computed(() => {
     </div>
 
     <div class="card" style="padding: 8px 8px 0">
-      <PlotlyChart v-if="cols.length >= 2" :traces="trace" :layout="layout" :height="chartH" />
+      <PlotlyChart
+        v-if="cols.length >= 2"
+        chart-id="matrix"
+        :traces="trace"
+        :layout="layout"
+        :height="chartH"
+      />
       <div v-else class="empty-chart">
         {{ mode === 'num' ? '数值列不足 2 个' : '类别列不足 2 个' }}，无法计算矩阵
       </div>

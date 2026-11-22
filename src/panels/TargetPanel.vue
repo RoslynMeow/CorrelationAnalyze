@@ -4,13 +4,14 @@ import { useDatasetStore } from '@/stores/dataset'
 import PlotlyChart from '@/components/PlotlyChart.vue'
 import SelectField from '@/components/SelectField.vue'
 import { baseLayout } from '@/lib/chartTheme'
-import { strengthColor } from '@/lib/associations'
 import { pickTarget } from '@/lib/infer'
 import { fmtInt, shortName } from '@/lib/format'
 import { useNarrow } from '@/composables/useNarrow'
+import { useSettingsStore } from '@/stores/settings'
 import type { AssocMethod } from '@/types'
 
 const ds = useDatasetStore()
+const settings = useSettingsStore()
 const narrow = useNarrow()
 
 const targetName = ref(pickTarget(ds.targets))
@@ -32,7 +33,7 @@ const traces = computed(() => [
     orientation: 'h',
     x: ordered.value.map((d) => d.strength),
     y: ordered.value.map((d) => (narrow.value ? shortName(d.name, 16) : d.name)),
-    marker: { color: ordered.value.map(strengthColor) },
+    marker: { color: ordered.value.map((d) => settings.assocColor(d.signed)) },
     text: ordered.value.map((d) => `${d.strength.toFixed(2)} ${d.type}`),
     textposition: 'outside',
     cliponaxis: false,
@@ -99,7 +100,13 @@ const stats = computed(() => {
     </div>
 
     <div class="card" style="padding: 8px 8px 0">
-      <PlotlyChart v-if="list.length" :traces="traces" :layout="layout" :height="chartH" />
+      <PlotlyChart
+        v-if="list.length"
+        chart-id="target"
+        :traces="traces"
+        :layout="layout"
+        :height="chartH"
+      />
       <div v-else class="empty-chart">目标变量与其他列没有足够的完整数据</div>
     </div>
 

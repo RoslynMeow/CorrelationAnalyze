@@ -4,6 +4,9 @@ import { useDatasetStore } from '@/stores/dataset'
 import SelectField from '@/components/SelectField.vue'
 import { pickTarget } from '@/lib/infer'
 import { fmtInt, isNull } from '@/lib/format'
+import { copyText } from '@/lib/exportChart'
+import { useSettingsStore } from '@/stores/settings'
+import { toast } from '@/composables/useToast'
 
 interface InsItem {
   key?: string
@@ -24,6 +27,7 @@ interface InsCard {
 }
 
 const ds = useDatasetStore()
+const settings = useSettingsStore()
 const targetName = ref(pickTarget(ds.targets))
 
 onMounted(() => {
@@ -101,7 +105,7 @@ const cards = computed<InsCard[]>(() => {
       items: list.map((x) => ({
         key: x.name,
         bar: Math.max(6, (x.strength / maxS) * 50),
-        barColor: x.signed === null ? '#4c6ef5' : x.signed >= 0 ? '#2f9e6e' : '#d64545',
+        barColor: settings.assocColor(x.signed),
         strong: x.name,
         text: '：' + x.strength.toFixed(2),
         tag: x.type,
@@ -168,12 +172,34 @@ const cards = computed<InsCard[]>(() => {
 
   return out
 })
+
+function insightsText(): string {
+  return cards.value
+    .map((c) => {
+      const lines = c.items.map((it) => {
+        const parts = [it.strong, it.text, it.value, it.tag ? `[${it.tag}]` : '', it.meta]
+          .filter(Boolean)
+          .join(' ')
+          .replace(/\s+/g, ' ')
+          .trim()
+        return '· ' + parts
+      })
+      return `${c.title}\n${lines.join('\n')}${c.note ? '\n' + c.note : ''}`
+    })
+    .join('\n\n')
+}
+
+async function copyInsights(): Promise<void> {
+  const ok = await copyText(insightsText())
+  toast(ok ? '分析结论已复制' : '复制失败，请重试')
+}
 </script>
 
 <template>
   <section class="panel">
     <div class="controls">
       <SelectField v-model="targetName" label="分析目标" :options="ds.targets.map((c) => c.name)" />
+      <button class="btn" type="button" @click="copyInsights">复制结论</button>
       <span class="hint">自动汇总最强关联、目标因素、类别关联与数据质量</span>
     </div>
 

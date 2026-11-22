@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useDatasetStore } from '@/stores/dataset'
-import { useThemeStore } from '@/stores/theme'
+import { useSettingsStore } from '@/stores/settings'
 import DropZone from '@/components/DropZone.vue'
 import AppBar from '@/components/AppBar.vue'
+import SettingsDrawer from '@/components/SettingsDrawer.vue'
 import Toast from '@/components/Toast.vue'
 import OverviewPanel from '@/panels/OverviewPanel.vue'
 import MatrixPanel from '@/panels/MatrixPanel.vue'
@@ -32,7 +33,8 @@ const TABS = [
 ]
 
 const ds = useDatasetStore()
-const theme = useThemeStore()
+const settings = useSettingsStore()
+const settingsOpen = ref(false)
 
 const active = ref(readHash())
 function readHash(): string {
@@ -116,7 +118,8 @@ onBeforeUnmount(() => {
       :chip-title="ds.chipTitle"
       @select="active = $event"
       @change="pick"
-      @theme="theme.toggle()"
+      @theme="settings.toggleMode()"
+      @settings="settingsOpen = true"
     />
     <main class="wrap">
       <div v-if="ds.error" class="banner warn">⚠️ {{ ds.error }}</div>
@@ -145,4 +148,5 @@ onBeforeUnmount(() => {
   </div>
 
   <Toast />
+  <SettingsDrawer :open="settingsOpen" @close="settingsOpen = false" />
 </template>

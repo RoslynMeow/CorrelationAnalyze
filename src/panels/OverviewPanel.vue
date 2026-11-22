@@ -4,11 +4,12 @@ import { useDatasetStore } from '@/stores/dataset'
 import KpiCards from '@/components/KpiCards.vue'
 import PlotlyChart from '@/components/PlotlyChart.vue'
 import { baseLayout } from '@/lib/chartTheme'
-import { strengthColor } from '@/lib/associations'
 import { fmtInt, shortName } from '@/lib/format'
 import { useNarrow } from '@/composables/useNarrow'
+import { useSettingsStore } from '@/stores/settings'
 
 const ds = useDatasetStore()
+const settings = useSettingsStore()
 const narrow = useNarrow()
 
 onMounted(() => {
@@ -54,7 +55,7 @@ const traces = computed(() => [
     y: top.value.map((p) =>
       narrow.value ? `${shortName(p.a, 11)} ↔ ${shortName(p.b, 11)}` : `${p.a} ↔ ${p.b}`,
     ),
-    marker: { color: top.value.map(strengthColor), line: { width: 0 } },
+    marker: { color: top.value.map((p) => settings.assocColor(p.signed)), line: { width: 0 } },
     text: top.value.map((p) => `${p.strength.toFixed(2)} ${p.type}`),
     textposition: 'outside',
     cliponaxis: false,
@@ -101,7 +102,13 @@ const top3 = computed(() => pairs.value.slice(0, 3))
           <h3>关联强度 Top 10</h3>
           <span class="hint">{{ note }}</span>
         </div>
-        <PlotlyChart v-if="pairs.length" :traces="traces" :layout="layout" :height="chartH" />
+        <PlotlyChart
+          v-if="pairs.length"
+          chart-id="overview"
+          :traces="traces"
+          :layout="layout"
+          :height="chartH"
+        />
         <div v-else class="empty-chart">
           数据中可分析的变量不足（至少需要 2 个数值或类别列）
         </div>

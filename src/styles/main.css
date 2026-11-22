@@ -1,3 +1,29 @@
+:root {
+  --radius-card: 14px;
+  --radius-ctl: 8px;
+  --card-pad: 15px;
+  --control-pad: 11px 13px;
+  --cell-pad: 6px 10px;
+  --grid-gap: 14px;
+  --thead-bg: var(--panel-2);
+  --table-border: var(--border);
+  --table-font: 12.5px;
+}
+
+html[data-density='compact'] {
+  --card-pad: 10px;
+  --control-pad: 8px 10px;
+  --cell-pad: 4px 8px;
+  --grid-gap: 10px;
+}
+
+html[data-density='comfortable'] {
+  --card-pad: 20px;
+  --control-pad: 14px 16px;
+  --cell-pad: 9px 12px;
+  --grid-gap: 18px;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -56,7 +82,7 @@ p {
   gap: 6px;
   height: 32px;
   padding: 0 12px;
-  border-radius: 8px;
+  border-radius: var(--radius-ctl);
   cursor: pointer;
   border: 1px solid var(--border);
   background: var(--panel);
@@ -383,7 +409,7 @@ html[data-theme='dark'] .dropcard.drag {
 .kpi {
   background: var(--panel);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: calc(var(--radius-card) - 2px);
   padding: 11px 14px;
   box-shadow: var(--shadow);
   min-width: 0;
@@ -406,16 +432,16 @@ html[data-theme='dark'] .dropcard.drag {
 .card {
   background: var(--panel);
   border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 15px;
+  border-radius: var(--radius-card);
+  padding: var(--card-pad);
   box-shadow: var(--shadow);
   min-width: 0;
 }
 .card + .card {
-  margin-top: 14px;
+  margin-top: var(--grid-gap);
 }
 .card.mini {
-  padding: 12px;
+  padding: calc(var(--card-pad) - 3px);
 }
 .cardhead {
   display: flex;
@@ -439,7 +465,7 @@ html[data-theme='dark'] .dropcard.drag {
 .grid2 {
   display: grid;
   grid-template-columns: 1.55fr 1fr;
-  gap: 14px;
+  gap: var(--grid-gap);
 }
 .grid2 > * {
   min-width: 0;
@@ -464,11 +490,11 @@ html[data-theme='dark'] .dropcard.drag {
   flex-wrap: wrap;
   gap: 12px 16px;
   align-items: flex-end;
-  padding: 11px 13px;
+  padding: var(--control-pad);
   margin-bottom: 13px;
   background: var(--panel);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: var(--radius-ctl);
   box-shadow: var(--shadow);
 }
 .field {
@@ -690,9 +716,130 @@ html[data-theme='dark'] .dropcard.drag {
   height: auto;
   min-height: 420px;
 }
-.chart-host {
+.chart-wrap {
+  position: relative;
   width: 100%;
   min-width: 0;
+}
+.chart-host {
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+}
+
+/* 图表左上角工具条 */
+.chart-tools {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  z-index: 12;
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  padding: 2px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-ctl);
+  background: var(--panel);
+  opacity: 0.42;
+  transition: opacity 0.15s, border-color 0.15s, box-shadow 0.15s;
+}
+.chart-wrap:hover .chart-tools,
+.chart-tools:focus-within {
+  opacity: 1;
+  border-color: var(--border);
+  box-shadow: var(--shadow);
+}
+.chart-tool {
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 22px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font: inherit;
+  padding: 0;
+}
+.chart-tool:hover {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.chart-tool.active {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.chart-tool.text {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+/* 单图配色浮层 */
+.chart-style-veil {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  background: transparent;
+}
+.chart-style {
+  position: absolute;
+  top: 32px;
+  left: 4px;
+  z-index: 31;
+  width: min(270px, calc(100vw - 40px));
+  max-height: min(360px, 65vh);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow);
+}
+.cs-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+}
+.cs-head .hint {
+  flex: 1;
+  font-size: 10.5px;
+}
+.cs-body {
+  overflow: auto;
+  min-height: 0;
+}
+.cs-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+}
+.cs-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11.5px;
+}
+.cs-color {
+  width: 28px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: transparent;
+  cursor: pointer;
+  flex: none;
+}
+.cs-foot {
+  display: flex;
+  justify-content: flex-end;
 }
 .grid-charts {
   display: grid;
@@ -789,7 +936,7 @@ html[data-theme='dark'] .dropcard.drag {
 .insights {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(340px, 100%), 1fr));
-  gap: 14px;
+  gap: var(--grid-gap);
 }
 .insights > * {
   min-width: 0;
@@ -797,8 +944,8 @@ html[data-theme='dark'] .dropcard.drag {
 .ins-card {
   background: var(--panel);
   border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 15px;
+  border-radius: var(--radius-card);
+  padding: var(--card-pad);
   box-shadow: var(--shadow);
 }
 .ins-card h4 {
@@ -840,7 +987,7 @@ html[data-theme='dark'] .dropcard.drag {
   overflow: auto;
   max-height: 600px;
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: var(--radius-ctl);
   background: var(--panel);
 }
 .tablewrap.compact {
@@ -850,25 +997,31 @@ table {
   border-collapse: separate;
   border-spacing: 0;
   width: 100%;
-  font-size: 12.5px;
+  font-size: var(--table-font);
 }
 thead th {
   position: sticky;
   top: 0;
   z-index: 2;
-  background: var(--panel-2);
+  background: var(--thead-bg);
   text-align: left;
   white-space: nowrap;
-  padding: 8px 10px;
+  padding: var(--cell-pad);
   font-weight: 650;
   font-size: 12px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--table-border);
 }
 tbody td {
-  padding: 6px 10px;
-  border-bottom: 1px solid var(--border);
+  padding: var(--cell-pad);
+  border-bottom: 1px solid var(--table-border);
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
+}
+html[data-zebra='true'] tbody tr:nth-child(even):not(:hover) td {
+  background: var(--panel-2);
+}
+tbody tr:hover td {
+  background: var(--panel-2);
 }
 tbody tr:hover td {
   background: var(--panel-2);
@@ -973,6 +1126,222 @@ html[data-theme='dark'] .badge.date {
   border: 1px solid rgba(217, 119, 6, 0.25);
 }
 
+/* ================= 设置抽屉 ================= */
+.drawer-veil {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(10, 15, 25, 0.32);
+}
+.drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 101;
+  width: min(440px, 100vw);
+  display: flex;
+  flex-direction: column;
+  background: var(--panel);
+  border-left: 1px solid var(--border);
+  box-shadow: -12px 0 40px rgba(0, 0, 0, 0.18);
+  animation: drawer-in 0.18s ease;
+}
+@keyframes drawer-in {
+  from {
+    transform: translateX(24px);
+    opacity: 0.6;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+.drawer-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.drawer-head h3 {
+  font-size: 15px;
+  flex: none;
+}
+.drawer-head .hint {
+  flex: 1;
+  font-size: 11px;
+}
+.drawer-tabs {
+  display: flex;
+  gap: 2px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+}
+.drawer-tabs button {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 12.5px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.drawer-tabs button.active {
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 650;
+}
+.drawer-body {
+  flex: 1;
+  overflow: auto;
+  padding: 14px 16px 32px;
+}
+.set-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.set-block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.set-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 650;
+  color: var(--text);
+}
+.set-value {
+  color: var(--muted);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.set-select {
+  height: 30px;
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-ctl);
+  background: var(--panel);
+  color: var(--text);
+  font: inherit;
+  font-size: 12.5px;
+  outline: none;
+}
+.set-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.seg.full {
+  display: flex;
+  width: 100%;
+}
+.seg.full button {
+  flex: 1;
+}
+.range {
+  width: 100%;
+  accent-color: var(--accent);
+}
+.color-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1px;
+}
+.colorfield {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 30px;
+}
+.cf-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  color: var(--muted);
+}
+.cf-swatch {
+  position: relative;
+  flex: none;
+  width: 26px;
+  height: 22px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+}
+.cf-swatch input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+.cf-hex {
+  width: 78px;
+  height: 24px;
+  padding: 0 6px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: var(--panel-2);
+  color: var(--text);
+  font-size: 11px;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  text-transform: lowercase;
+}
+.palette-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+.palette-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-ctl);
+  background: var(--panel-2);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.palette-card.active {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+.palette-name {
+  font-size: 11.5px;
+  font-weight: 650;
+}
+.palette-swatches {
+  display: flex;
+  gap: 2px;
+}
+.palette-swatches i {
+  flex: 1;
+  height: 10px;
+  border-radius: 2px;
+}
+input[type='color']::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+input[type='color']::-webkit-color-swatch {
+  border: 0;
+  border-radius: 4px;
+}
+
 /* ================= 响应式 ================= */
 @media (max-width: 1100px) {
   .grid2 {
@@ -1017,10 +1386,13 @@ html[data-theme='dark'] .badge.date {
     padding: 0 10px;
   }
   .card {
-    padding: 12px;
+    padding: min(12px, var(--card-pad));
   }
   .card.mini {
-    padding: 10px;
+    padding: min(10px, var(--card-pad));
+  }
+  .chart-tools {
+    opacity: 0.82;
   }
   .controls {
     padding: 10px;

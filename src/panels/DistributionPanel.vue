@@ -8,8 +8,10 @@ import { groupLabels } from '@/lib/infer'
 import { isNull } from '@/lib/format'
 import { describe, kde } from '@/lib/stats'
 import { useNarrow } from '@/composables/useNarrow'
+import { useSettingsStore } from '@/stores/settings'
 
 const ds = useDatasetStore()
+const settings = useSettingsStore()
 const narrow = useNarrow()
 
 const varName = ref(ds.nums[0]?.name || '')
@@ -19,10 +21,7 @@ const bins = ref('0')
 
 const chartH = computed(() => (narrow.value ? 360 : 460))
 
-const PALETTE = [
-  '#66c2a5', '#fc8d62', '#8da0cb', '#e78ac3', '#a6d854', '#ffd92f', '#e5c494',
-  '#b3b3b3', '#80b1d3', '#fb8072', '#bebada', '#ffffb3', '#1b9e77', '#d95f02',
-]
+const PALETTE_FALLBACK = '#4c6ef5'
 
 const built = computed(() => {
   const col = ds.column(varName.value)
@@ -48,7 +47,7 @@ const built = computed(() => {
     groupLabels(gcol).forEach((lab, gi) => {
       const vals = col.num!.filter((v, i) => v !== null && labels[i] === lab) as number[]
       if (!vals.length) return
-      const color = PALETTE[gi % PALETTE.length]
+      const color = settings.paletteColor(gi) || PALETTE_FALLBACK
       traces.push({
         type: 'histogram',
         x: vals,
@@ -76,7 +75,7 @@ const built = computed(() => {
       x: values,
       name: varName.value,
       histnorm: 'probability density',
-      marker: { color: PALETTE[0], opacity: 0.6, line: { width: 0 } },
+      marker: { color: settings.paletteColor(0) || PALETTE_FALLBACK, opacity: 0.6, line: { width: 0 } },
       ...histExtra,
     })
     if (showKde.value && values.length >= 3) {
@@ -86,7 +85,7 @@ const built = computed(() => {
         x: grid,
         y: kde(values, grid),
         name: 'KDE',
-        line: { color: '#d64545', width: 2 },
+        line: { color: settings.paletteColor(1) || '#d64545', width: 2 },
         hoverinfo: 'skip',
         showlegend: false,
       })
@@ -146,7 +145,13 @@ const stats = computed(() => {
     </div>
 
     <div class="card" style="padding: 8px 8px 0">
-      <PlotlyChart v-if="built" :traces="built.traces" :layout="built.layout" :height="chartH" />
+      <PlotlyChart
+        v-if="built"
+        chart-id="distribution"
+        :traces="built.traces"
+        :layout="built.layout"
+        :height="chartH"
+      />
       <div v-else class="empty-chart">该列没有可用的数值，无法绘制分布</div>
     </div>
 

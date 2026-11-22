@@ -42,7 +42,22 @@ npm run preview      # 预览构建产物 → http://localhost:5188
 | 分析结论 | 数据概况、最强关联、目标因素、类别关联、冗余变量、数据质量 |
 | 数据预览 | 表格分页、全列搜索、列画像、导出当前数据 CSV |
 
-全局：深浅色主题、响应式（320px 起）、图表缩放/悬停/图例开关、单图导出 PNG、拖拽换文件、URL 记住当前页签（`#matrix` 等）。多选变量支持关键字筛选、全选 / 反选 / 清空，并显示已选数量与上限。
+全局：深浅色主题、响应式（320px 起）、图表缩放/悬停/图例开关、单图导出 PNG/SVG、复制图片、复制数据 TSV、拖拽换文件、URL 记住当前页签（`#matrix` 等）。多选变量支持关键字筛选、全选 / 反选 / 清空，并显示已选数量与上限。右上角齿轮打开设置抽屉，可自定义颜色、色板、表格、密度与导出。
+
+### 2.1 设置与自定义（第 1 期）
+
+| 范围 | 可调项 |
+|---|---|
+| 外观 | 浅色 / 深色 / 跟随系统；背景、面板、文字、次要文字、边框、强调色、正负相关色共 10 项；圆角；密度；阴影 |
+| 图表 | 4 套色板预设（默认 / 柔和 / 鲜明 / 色盲友好）+ 12 色自定义；热力图 5 个颜色；坐标轴网格开关；透明背景 |
+| 单图 | 每张图左上角调色板：逐序列改色、单个重置、恢复全局色板 |
+| 表格 | 表头背景、边框颜色、字号、斑马纹 |
+| 导出 | 默认 PNG / SVG、PNG 1x / 2x / 3x |
+| 配置 | 导出 / 导入 JSON、恢复默认 |
+
+每张图左上角工具条：**复制图片、下载 PNG、下载 SVG、复制数据（TSV）**。分析结论页提供「复制结论」。
+
+配置自动保存在 localStorage（`ca-settings-v1`），可导出 JSON 换电脑或分享。全界面文案、列名/类别映射与按文件配置属于第 2 期。
 
 ---
 
@@ -76,25 +91,31 @@ CorrelationAnalyze/
 │  ├─ main.ts
 │  ├─ App.vue                  # 页签骨架 + 全局拖拽
 │  ├─ types.ts
+│  ├─ settings/
+│  │  ├─ defaults.ts           # 配置模型、色板与默认值
+│  │  └─ merge.ts              # 配置校验 / 合并（纯函数）
 │  ├─ styles/
 │  │  ├─ tokens.css            # 颜色/阴影变量（深浅色）
-│  │  └─ main.css              # 组件与响应式样式（从 v1 迁移）
+│  │  └─ main.css              # 组件与响应式样式
 │  ├─ lib/
 │  │  ├─ csv.ts                # 解析 + 编码探测（UTF-8/GB18030/UTF-16）
 │  │  ├─ infer.ts              # 类型 / ID / 分组列推断、默认列选择
 │  │  ├─ stats.ts              # r / ρ / V / η / 回归 / KDE
-│  │  ├─ associations.ts       # 变量对组合与缓存、颜色
+│  │  ├─ associations.ts       # 变量对组合与缓存
 │  │  ├─ chartTheme.ts         # Plotly 基础布局、主题联动
+│  │  ├─ color.ts              # 颜色混合、色阶、透明度
+│  │  ├─ exportChart.ts        # 图片 / SVG / TSV 导出与剪贴板
+│  │  ├─ themeBus.ts           # 主题变化通知
 │  │  └─ format.ts             # 数字格式、缺失值、CSV 导出
 │  ├─ stores/
 │  │  ├─ dataset.ts            # 数据 + 变量对缓存 + Worker 调用
-│  │  └─ theme.ts              # 深浅色 + localStorage
+│  │  └─ settings.ts           # 外观 / 色板 / 表格 / 导出 / 单图配色
 │  ├─ workers/
 │  │  └─ associations.worker.ts
 │  ├─ composables/
 │  │  ├─ useNarrow.ts          # <760px 断点共享状态
 │  │  └─ useToast.ts
-│  ├─ components/              # PlotlyChart / DropZone / AppBar / KpiCards / ChipGroup / SelectField / Toast
+│  ├─ components/              # PlotlyChart / SettingsDrawer / ColorField / DropZone / AppBar / KpiCards / ChipGroup / SelectField / Toast
 │  └─ panels/                  # 11 个页签，与 v1 的 render 函数一一对应
 ├─ tests/                      # 单元测试 + fixtures/sample.csv（仅测试用）
 └─ .github/workflows/deploy.yml
@@ -120,10 +141,11 @@ CorrelationAnalyze/
 - 散点：最多 6,000 点；SPLOM：最多 3,000 行
 - 目标列类别数 ≤ 50
 
-### 主题与响应式
+### 设置、主题与响应式
 
-- `stores/theme.ts` 切换 `html[data-theme]`，图表布局通过 `chartThemeTick` 订阅主题变化自动重算。
-- 断点：`≤900px` 双栏变单栏；`≤760px` 表格卡片化、图表缩小；`≤420px` KPI 两列。
+- `stores/settings.ts` 负责：主题模式（浅 / 深 / 系统）、CSS 颜色变量、圆角、密度、阴影、表格样式、图表色板与单图配色。任意改动写入 localStorage，并通过 `themeBus` 的 `chartThemeTick` 让图表自动重绘。
+- 颜色只写入用户改过的 token（内联 CSS 变量），其余继续用 `tokens.css` 的深浅色默认值，因此切换主题不会丢掉自定义项。
+- 断点：`≤1100px` 关联总览双栏变单栏、隐藏文件名；`≤900px` 页面留白收紧；`≤760px` 表格卡片化、图表缩小、工具条常显；`≤420px` KPI 两列。
 - 跨 760px 时 `useNarrow` 触发图表重排。
 
 ### 页签缓存（改代码时注意）
@@ -138,11 +160,12 @@ CorrelationAnalyze/
 npm test
 ```
 
-当前 **36 个测试全部通过**，分三组：
+当前 **50 个测试全部通过**，分四组：
 
 - `tests/stats.spec.ts`：基础统计 + 用 `tests/fixtures/sample.csv` 与 pandas / scipy 对照（容差 1e-9；该文件仅用于测试，不随应用打包）
 - `tests/csv.spec.ts`：引号、CRLF、BOM、重复列名、GB18030 / UTF-16
 - `tests/infer.spec.ts`：类型推断、ID 列、分组列、有序等级、行数截断
+- `tests/settings.spec.ts`：配置合并、非法值回退、颜色校验、导出倍数限幅、JSON 往返
 
 对照基准示例：
 
@@ -206,10 +229,17 @@ npx serve dist   # 或任意静态服务器 / Nginx
 
 ---
 
-## 9. 后续可做
+## 9. 路线图
+
+**第 1 期（已完成）**：设置抽屉、颜色与色板自定义、单图 / 单序列配色、表格与卡片样式、图表工具条（复制图片 / PNG / SVG / TSV）、结论复制、配置导入导出。
+
+**第 2 期（待做）**：全界面文案可编辑；列名与类别取值映射；按 CSV 文件保存配置（表头签名）。
+
+**第 3 期（待做）**：单图标题 / 轴标题编辑；低对比度提示；一键整页报告（HTML / PDF）；批量导出全部图表。
+
+其他：
 
 - 预设模板（学生心理健康模板等）与自定义预设保存
-- 一键整页报告导出（HTML / PDF）
 - URL 分享完整筛选状态（目前只同步页签）
 - 大文件虚拟滚动表格
 - 数据筛选器（按条件过滤后再分析）
@@ -224,4 +254,5 @@ npx serve dist   # 或任意静态服务器 / Nginx
 - **2026-11-22**：迁移到 Vue 3 + Vite + TypeScript 工程；统计逻辑拆成纯函数并加 36 个测试；补上分布 / 类别计数 / 雷达 3 个视图；加入 Web Worker、GitHub Pages 工作流与单文件构建
 - **2026-11-22**：多选工具条（搜索 / 全选 / 反选 / 清空）；响应式与视觉优化；删除 v1 的 legacy 文件
 - **2026-11-22**：移除内置示例数据，改为完全由用户提供 CSV
+- **2026-11-22**：第 1 期设置系统：外观 / 色板 / 单图配色 / 表格样式 / 密度；图表工具条与复制；配置导入导出；测试增至 50 个
 

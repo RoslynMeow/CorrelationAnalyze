@@ -5,12 +5,15 @@ import PlotlyChart from '@/components/PlotlyChart.vue'
 import SelectField from '@/components/SelectField.vue'
 import ChipGroup from '@/components/ChipGroup.vue'
 import { baseLayout, cssv } from '@/lib/chartTheme'
+import { withAlpha } from '@/lib/color'
 import { groupLabels, pickGroup, preferredNums } from '@/lib/infer'
-import { hexA, isNull } from '@/lib/format'
+import { isNull } from '@/lib/format'
 import { describe } from '@/lib/stats'
 import { useNarrow } from '@/composables/useNarrow'
+import { useSettingsStore } from '@/stores/settings'
 
 const ds = useDatasetStore()
+const settings = useSettingsStore()
 const narrow = useNarrow()
 
 const groupName = ref(pickGroup(ds.groups))
@@ -19,10 +22,7 @@ const norm = ref('minmax')
 
 const chartH = computed(() => (narrow.value ? 380 : 560))
 
-const PALETTE = [
-  '#66c2a5', '#fc8d62', '#8da0cb', '#e78ac3', '#a6d854', '#ffd92f', '#e5c494',
-  '#b3b3b3', '#80b1d3', '#fb8072', '#bebada', '#ffffb3', '#1b9e77', '#d95f02',
-]
+const PALETTE_FALLBACK = '#4c6ef5'
 
 const built = computed(() => {
   const gcol = groupName.value ? ds.column(groupName.value) : null
@@ -59,7 +59,7 @@ const built = computed(() => {
       )
       return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : 0
     })
-    const color = PALETTE[gi % PALETTE.length]
+    const color = settings.paletteColor(gi) || PALETTE_FALLBACK
     return {
       type: 'scatterpolar',
       mode: 'lines+markers',
@@ -67,7 +67,7 @@ const built = computed(() => {
       theta: [...names, names[0]],
       name: g,
       fill: 'toself',
-      fillcolor: hexA(color, 0.12),
+      fillcolor: withAlpha(color, 0.12),
       line: { color, width: 2 },
       marker: { color, size: 5 },
       hovertemplate: '%{theta}<br>%{r:.3f}<extra>' + g + '</extra>',
@@ -122,7 +122,13 @@ const built = computed(() => {
     </div>
 
     <div class="card" style="padding: 8px 8px 0">
-      <PlotlyChart v-if="built" :traces="built.traces" :layout="built.layout" :height="chartH" />
+      <PlotlyChart
+        v-if="built"
+        chart-id="radar"
+        :traces="built.traces"
+        :layout="built.layout"
+        :height="chartH"
+      />
       <div v-else class="empty-chart">
         {{
           !groupName

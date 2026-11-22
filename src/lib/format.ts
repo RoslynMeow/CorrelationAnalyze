@@ -1,8 +1,3 @@
-export const PALETTE = [
-  '#66c2a5', '#fc8d62', '#8da0cb', '#e78ac3', '#a6d854', '#ffd92f', '#e5c494',
-  '#b3b3b3', '#80b1d3', '#fb8072', '#bebada', '#ffffb3', '#1b9e77', '#d95f02',
-]
-
 const NULLS = new Set(['', 'na', 'n/a', 'nan', 'null', 'none', 'nil', '-', '--', '?', '#n/a'])
 
 export const DATE_RE =
@@ -39,9 +34,6 @@ export function fmt(v: number | null | undefined, d = 3): string {
 }
 
 export const fmtInt = (n: number): string => Number(n).toLocaleString('zh-CN')
-
-export const hexA = (hex: string, a: number): string =>
-  hex + Math.round(a * 255).toString(16).padStart(2, '0')
 
 export function countBy<T extends string | number>(arr: T[]): Record<string, number> {
   const m: Record<string, number> = Object.create(null)

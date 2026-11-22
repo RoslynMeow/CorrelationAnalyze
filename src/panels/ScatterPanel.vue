@@ -4,12 +4,15 @@ import { useDatasetStore } from '@/stores/dataset'
 import PlotlyChart from '@/components/PlotlyChart.vue'
 import SelectField from '@/components/SelectField.vue'
 import { axisValues, baseLayout } from '@/lib/chartTheme'
+import { withAlpha } from '@/lib/color'
 import { groupLabels, pickDefault, pickGroup } from '@/lib/infer'
-import { fmt, hexA, isNull } from '@/lib/format'
+import { fmt, isNull } from '@/lib/format'
 import { linreg, pearson, spearman } from '@/lib/stats'
 import { useNarrow } from '@/composables/useNarrow'
+import { useSettingsStore } from '@/stores/settings'
 
 const ds = useDatasetStore()
+const settings = useSettingsStore()
 const narrow = useNarrow()
 
 const xName = ref(pickDefault(ds.nums, /stress|hours|score/i))
@@ -69,10 +72,7 @@ const built = computed(() => {
     order.forEach((lab, gi) => {
       const ii = idx.filter((i) => labels[i] === lab)
       if (!ii.length) return
-      const color = [
-        '#66c2a5', '#fc8d62', '#8da0cb', '#e78ac3', '#a6d854', '#ffd92f', '#e5c494',
-        '#b3b3b3', '#80b1d3', '#fb8072', '#bebada', '#ffffb3', '#1b9e77', '#d95f02',
-      ][gi % 14]
+      const color = settings.paletteColor(gi)
       const tr: Record<string, unknown> = {
         type: 'scattergl',
         mode: 'markers',
@@ -102,7 +102,7 @@ const built = computed(() => {
       x: idx.map((i) => xv[i]),
       y: idx.map((i) => yv[i]),
       marker: {
-        color: hexA('#4c6ef5', 0.7),
+        color: withAlpha(settings.paletteColor(0), 0.7),
         size: sv ? idx.map((i) => sv[i] || 0) : 8,
       },
       hovertemplate: `${xName.value}: %{x}<br>${yName.value}: %{y}<extra></extra>`,
@@ -172,6 +172,7 @@ const built = computed(() => {
     <div class="card" style="padding: 8px 8px 0">
       <PlotlyChart
         v-if="built"
+        chart-id="scatter"
         :traces="built.traces"
         :layout="built.layout"
         :height="chartH"
