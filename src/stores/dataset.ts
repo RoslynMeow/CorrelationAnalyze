@@ -17,6 +17,7 @@ import type { AssocMethod, Column, Dataset, PairAssoc } from '@/types'
 import { toast } from '@/composables/useToast'
 import { t } from '@/i18n'
 import { useSettingsStore } from './settings'
+import { useViewStore } from './view'
 
 interface PendingCall {
   resolve: (pairs: PairAssoc[]) => void
@@ -60,7 +61,11 @@ export const useDatasetStore = defineStore('dataset', () => {
     const ds = buildDataset(name, headers, rows)
     dataset.value = ds
     fileName.value = name
-    useSettingsStore().activateProfile(ds.headers, name)
+    const settings = useSettingsStore()
+    const view = useViewStore()
+    settings.activateProfile(ds.headers, name)
+    view.init(ds)
+    if (settings.activeProfile?.view) view.apply(settings.activeProfile.view, ds)
     datasetId.value++
     pairCache.value = {}
     error.value = ''
@@ -103,6 +108,7 @@ export const useDatasetStore = defineStore('dataset', () => {
     pairCache.value = {}
     error.value = ''
     useSettingsStore().activateProfile(null)
+    useViewStore().reset()
     document.title = t('关联性分析')
   }
 

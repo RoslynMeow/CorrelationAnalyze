@@ -28,6 +28,7 @@ describe('按文件配置', () => {
         series: { scatter: { A: '#ff0000', B: 'nope' } },
         sizes: { scatter: { width: 400, height: 9999 } },
         titles: { scatter: { title: ' 标题 ', xTitle: ' ' } },
+        view: { target: 'risk_level', groupVars: ['stress_level', 'stress_level'] },
       },
       bad: 1,
     })
@@ -39,6 +40,7 @@ describe('按文件配置', () => {
     expect(p.series).toEqual({ scatter: { A: '#ff0000' } })
     expect(p.sizes).toEqual({ scatter: { width: 400, height: 1200 } })
     expect(p.titles).toEqual({ scatter: { title: '标题' } })
+    expect(p.view).toEqual({ target: 'risk_level', groupVars: ['stress_level'] })
     expect(profiles.bad).toBeUndefined()
   })
 

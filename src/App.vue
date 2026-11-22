@@ -6,6 +6,7 @@ import DropZone from '@/components/DropZone.vue'
 import AppBar from '@/components/AppBar.vue'
 import SettingsDrawer from '@/components/SettingsDrawer.vue'
 import ReportDialog from '@/components/ReportDialog.vue'
+import PresetDialog from '@/components/PresetDialog.vue'
 import {
   buildReportHtml,
   capturePanel,
@@ -47,6 +48,7 @@ const ds = useDatasetStore()
 const settings = useSettingsStore()
 const settingsOpen = ref(false)
 const reportOpen = ref(false)
+const presetOpen = ref(false)
 
 const active = ref(readHash())
 function readHash(): string {
@@ -175,6 +177,7 @@ onBeforeUnmount(() => {
       @theme="settings.toggleMode()"
       @settings="settingsOpen = true"
       @report="reportOpen = true"
+      @presets="presetOpen = true"
     />
     <main class="wrap">
       <div v-if="ds.error" class="banner warn">⚠️ {{ ds.error }}</div>
@@ -210,4 +213,5 @@ onBeforeUnmount(() => {
     @close="reportOpen = false"
     @generate="generateReport"
   />
+  <PresetDialog :open="presetOpen" @close="presetOpen = false" />
 </template>

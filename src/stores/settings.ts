@@ -4,6 +4,7 @@ import { chartThemeTick, bumpTheme } from '@/lib/themeBus'
 import { defaultSettings, TOKEN_VARS, type ChartSize, type ChartTitle, type ColorToken, type FileProfile, type Profiles, type Settings } from '@/settings/defaults'
 import { mergeSettings } from '@/settings/merge'
 import { emptyProfile, profileKey, sanitizeProfiles } from '@/settings/profiles'
+import type { PresetConfig } from '@/presets/types'
 
 const STORAGE_KEY = 'ca-settings-v1'
 const PROFILES_KEY = 'ca-profiles-v1'
@@ -173,6 +174,10 @@ export const useSettingsStore = defineStore('settings', () => {
     profiles.value = { ...profiles.value, [key]: { ...next, updatedAt: Date.now() } }
     scheduleProfilesSave()
     return true
+  }
+
+  function saveProfileView(view: PresetConfig): void {
+    mutateProfile((p) => ({ ...p, view }))
   }
 
   /** 载入新数据时切换当前文件的配置；headers 为 null 时停用 */
@@ -527,6 +532,7 @@ export const useSettingsStore = defineStore('settings', () => {
     init,
     toggleMode,
     activateProfile,
+    saveProfileView,
     clearCurrentProfile,
     clearAllProfiles,
     chartSeries,

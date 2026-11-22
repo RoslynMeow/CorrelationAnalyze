@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
+import { storeToRefs } from 'pinia'
 import { useDatasetStore } from '@/stores/dataset'
+import { useViewStore } from '@/stores/view'
 import PlotlyChart from '@/components/PlotlyChart.vue'
 import SelectField from '@/components/SelectField.vue'
 import { baseLayout } from '@/lib/chartTheme'
@@ -12,13 +14,16 @@ import { t } from '@/i18n'
 import type { Column } from '@/types'
 
 const ds = useDatasetStore()
+const view = useViewStore()
 const settings = useSettingsStore()
 const narrow = useNarrow()
 
-const mode = ref<'num' | 'cat'>('num')
-const method = ref('pearson')
-const mask = ref(true)
-const annot = ref(true)
+const {
+  matrixMode: mode,
+  matrixMethod: method,
+  matrixMask: mask,
+  matrixAnnot: annot,
+} = storeToRefs(view)
 
 const cols = computed<Column[]>(() =>
   mode.value === 'num'

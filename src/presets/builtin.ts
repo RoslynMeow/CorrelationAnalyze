@@ -1,0 +1,60 @@
+import type { Preset } from './types'
+
+/** 内置模板。列名匹配不到时只会应用存在的字段。 */
+export const BUILTIN_PRESETS: Preset[] = [
+  {
+    id: 'auto',
+    name: '自动推荐',
+    description: '根据列名与类型自动选择目标、分组、散点与雷达维度',
+    builtin: true,
+    config: {},
+  },
+  {
+    id: 'mental-health',
+    name: '学生心理健康',
+    description: '风险等级为目标与分组，重点关注压力、焦虑、抑郁、倦怠与睡眠',
+    builtin: true,
+    config: {
+      target: 'risk_level',
+      insightTarget: 'risk_level',
+      groupCol: 'risk_level',
+      scatterX: 'stress_level',
+      scatterY: 'mental_health_index',
+      scatterColor: 'risk_level',
+      scatterSize: 'burnout_score',
+      groupVars: [
+        'stress_level',
+        'anxiety_score',
+        'depression_score',
+        'burnout_score',
+        'mental_health_index',
+        'sleep_hours',
+        'study_hours_per_day',
+        'dropout_risk',
+      ],
+      pairColor: 'risk_level',
+      pairDims: [
+        'stress_level',
+        'sleep_hours',
+        'mental_health_index',
+        'dropout_risk',
+        'anxiety_score',
+      ],
+      distributionVar: 'stress_level',
+      categoryCol: 'risk_level',
+      radarGroup: 'risk_level',
+      radarDims: [
+        'study_hours_per_day',
+        'exam_pressure',
+        'stress_level',
+        'anxiety_score',
+        'depression_score',
+        'burnout_score',
+        'sleep_hours',
+        'social_support',
+        'mental_health_index',
+      ],
+      matrixMethod: 'pearson',
+    },
+  },
+]

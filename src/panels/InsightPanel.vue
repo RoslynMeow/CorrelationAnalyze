@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted } from 'vue'
+import { storeToRefs } from 'pinia'
 import { useDatasetStore } from '@/stores/dataset'
+import { useViewStore } from '@/stores/view'
 import SelectField from '@/components/SelectField.vue'
-import { pickTarget } from '@/lib/infer'
 import { fmtInt, isNull } from '@/lib/format'
 import { copyText } from '@/lib/exportChart'
 import { useSettingsStore } from '@/stores/settings'
@@ -28,8 +29,9 @@ interface InsCard {
 }
 
 const ds = useDatasetStore()
+const view = useViewStore()
 const settings = useSettingsStore()
-const targetName = ref(pickTarget(ds.targets))
+const { insightTarget: targetName } = storeToRefs(view)
 
 onMounted(() => {
   void ds.ensurePairs('pearson')

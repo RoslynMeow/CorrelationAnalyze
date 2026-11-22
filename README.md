@@ -22,7 +22,7 @@
   <img alt="Vite" src="https://img.shields.io/badge/Vite-8-646cff?style=flat-square&logo=vite&logoColor=white">
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5-3178c6?style=flat-square&logo=typescript&logoColor=white">
   <img alt="Plotly" src="https://img.shields.io/badge/Plotly-4-3f4f75?style=flat-square&logo=plotly&logoColor=white">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-65%20passed-3fb950?style=flat-square">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-71%20passed-3fb950?style=flat-square">
 </p>
 
 <p align="center"><strong>简体中文</strong> · <a href="./README.en.md">English</a></p>
@@ -71,6 +71,7 @@
 每张图左上角工具条：**复制图片、下载 PNG、下载 SVG、复制数据（TSV）、重置缩放、图表设置**。
 分析结论页提供「复制结论」。导出按当前显示尺寸生成，适合直接放进论文或报告。
 右上角「报告」可把所选页签与图表导出为独立 HTML，浏览器打印即可另存为 PDF。
+右上角「预设」内置「自动推荐」「学生心理健康」模板，也可保存 / 导入 / 导出自定义预设。
 
 > 复制图片需要 localhost 或 HTTPS；`file://` 下会自动回退为下载。
 > WebGL 散点图导出 SVG 时会自动改为 PNG。
@@ -100,7 +101,7 @@ cd CorrelationAnalyze
 npm install
 
 npm run dev          # http://localhost:5188
-npm test             # 65 个单元测试
+npm test             # 71 个单元测试
 npm run typecheck
 npm run build        # 常规构建 -> dist/
 npm run build:single # 单文件便携版 -> dist-single/index.html
@@ -142,9 +143,15 @@ CorrelationAnalyze/
 │  │  ├─ defaults.ts           # 配置模型、色板与默认值
 │  │  ├─ merge.ts              # 配置校验 / 合并（纯函数）
 │  │  └─ profiles.ts           # 按 CSV 表头保存的文件配置
+│  ├─ presets/
+│  │  ├─ types.ts              # 预设结构
+│  │  ├─ builtin.ts            # 内置模板
+│  │  └─ sanitize.ts           # 自定义预设校验
 │  ├─ stores/
 │  │  ├─ dataset.ts            # 数据 + 变量对缓存 + Worker 调用
-│  │  └─ settings.ts           # 外观 / 色板 / 尺寸 / 表格 / 文案 / 导出
+│  │  ├─ settings.ts           # 外观 / 色板 / 尺寸 / 表格 / 文案 / 导出
+│  │  ├─ view.ts               # 各面板当前选择（预设可整体套用）
+│  │  └─ presets.ts            # 内置 / 自定义预设
 │  ├─ i18n/
 │  │  ├─ index.ts              # t() / 占位符替换
 │  │  ├─ catalog.ts            # 自动生成的文案词典
@@ -163,7 +170,7 @@ CorrelationAnalyze/
 │  ├─ workers/associations.worker.ts
 │  ├─ components/              # PlotlyChart / SettingsDrawer / 图表工具条等
 │  └─ panels/                  # 11 个页签
-├─ tests/                      # 63 个测试 + fixtures/sample.csv（仅测试用）
+├─ tests/                      # 71 个测试 + fixtures/sample.csv（仅测试用）
 └─ .github/                    # CI、Pages、Issue/PR 模板
 ```
 
@@ -185,7 +192,7 @@ CorrelationAnalyze/
 npm test
 ```
 
-当前 **65 个测试全部通过**：
+当前 **71 个测试全部通过**：
 
 - `tests/stats.spec.ts`：基础统计 + 与 pandas / scipy 对照（容差 1e-9）
 - `tests/csv.spec.ts`：引号、CRLF、BOM、重复列名、GB18030 / UTF-16
@@ -194,6 +201,7 @@ npm test
 - `tests/profiles.spec.ts`：文件签名、按文件配置校验、颜色 / 尺寸 / 标题清洗
 - `tests/i18n.spec.ts`：占位符替换、文案覆盖与恢复
 - `tests/report.spec.ts`：报告 HTML 结构、章节与转义
+- `tests/presets.spec.ts`：内置模板、列匹配、快照与导入校验
 
 对照基准示例：
 
@@ -229,7 +237,7 @@ npm test
 - [x] 第 2 期：全界面文案可编辑（i18n 词典）
 - [x] 第 3 期：单图标题 / 轴标题编辑
 - [x] 第 3 期：整页报告导出（HTML / PDF）
-- [ ] 常见数据集预设模板
+- [x] 常见数据集预设模板（自动推荐 / 心理健康 / 自定义）
 
 ## 数据与隐私
 

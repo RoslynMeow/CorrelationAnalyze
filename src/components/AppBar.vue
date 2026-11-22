@@ -12,6 +12,7 @@ const emit = defineEmits<{
   (e: 'theme'): void
   (e: 'settings'): void
   (e: 'report'): void
+  (e: 'presets'): void
 }>()
 </script>
 
@@ -31,6 +32,7 @@ const emit = defineEmits<{
     </nav>
     <div class="appactions">
       <span class="filechip" :title="chipTitle">{{ fileName }}</span>
+      <button class="btn ghost" type="button" @click="emit('presets')">{{ $t('预设') }}</button>
       <button class="btn ghost" type="button" @click="emit('report')">{{ $t('报告') }}</button>
       <button class="btn ghost" type="button" @click="emit('change')">{{ $t('更换 CSV') }}</button>
       <button class="btn icon" type="button" :title="$t('切换深/浅色')" @click="emit('theme')">◐</button>

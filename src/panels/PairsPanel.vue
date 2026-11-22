@@ -1,22 +1,24 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
+import { storeToRefs } from 'pinia'
 import { useDatasetStore } from '@/stores/dataset'
+import { useViewStore } from '@/stores/view'
 import PlotlyChart from '@/components/PlotlyChart.vue'
 import SelectField from '@/components/SelectField.vue'
 import ChipGroup from '@/components/ChipGroup.vue'
 import { baseLayout } from '@/lib/chartTheme'
-import { groupLabels, pickGroup, preferredNums } from '@/lib/infer'
+import { groupLabels } from '@/lib/infer'
 import { isNull } from '@/lib/format'
 import { useNarrow } from '@/composables/useNarrow'
 import { useSettingsStore } from '@/stores/settings'
 import { t } from '@/i18n'
 
 const ds = useDatasetStore()
+const view = useViewStore()
 const settings = useSettingsStore()
 const narrow = useNarrow()
 
-const colorName = ref(pickGroup(ds.groups))
-const dims = ref(preferredNums(ds.nums, 4))
+const { pairColor: colorName, pairDims: dims } = storeToRefs(view)
 
 const colorOptions = computed(() => [
   { value: '', label: t('（不分组）') },

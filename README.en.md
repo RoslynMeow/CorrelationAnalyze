@@ -55,6 +55,7 @@ Also included:
 - All static UI text can be searched, edited and reset in Settings → Text
 - Copy chart image, download PNG / SVG, copy data as TSV, copy insights
 - Full-page HTML report of selected tabs; print to PDF
+- Built-in presets (auto, student mental health) plus save / import / export
 - Import / export settings as JSON; everything persisted locally
 
 ## Statistics
@@ -77,7 +78,7 @@ git clone https://github.com/RoslynMeow/CorrelationAnalyze.git
 cd CorrelationAnalyze
 npm install
 npm run dev          # http://localhost:5188
-npm test             # 65 tests
+npm test             # 71 tests
 npm run build        # -> dist/
 npm run build:single # -> dist-single/index.html (portable, offline)
 ```
@@ -95,7 +96,7 @@ src/
   workers/           # pairwise association worker
   components/        # PlotlyChart, SettingsDrawer, ...
   panels/            # 11 analysis tabs
-tests/               # 65 tests + CSV fixture
+tests/               # 71 tests + CSV fixture
 .github/             # CI, Pages, issue/PR templates
 ```
 
@@ -136,7 +137,7 @@ Full board: **https://github.com/users/RoslynMeow/projects/8**
 - [x] Phase 2: editable UI text dictionary
 - [x] Phase 3: per-chart title and axis title editing
 - [x] Phase 3: full-page report export
-- [ ] Preset templates
+- [x] Common dataset presets (auto / mental health / custom)
 
 ## Privacy
 

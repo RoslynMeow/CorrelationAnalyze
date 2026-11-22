@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
+import { storeToRefs } from 'pinia'
 import { useDatasetStore } from '@/stores/dataset'
+import { useViewStore } from '@/stores/view'
 import PlotlyChart from '@/components/PlotlyChart.vue'
 import SelectField from '@/components/SelectField.vue'
 import { axisValues, baseLayout } from '@/lib/chartTheme'
 import { withAlpha } from '@/lib/color'
-import { groupLabels, pickDefault, pickGroup } from '@/lib/infer'
+import { groupLabels } from '@/lib/infer'
 import { fmt, isNull } from '@/lib/format'
 import { linreg, pearson, spearman } from '@/lib/stats'
 import { useNarrow } from '@/composables/useNarrow'
@@ -13,20 +15,18 @@ import { useSettingsStore } from '@/stores/settings'
 import { t } from '@/i18n'
 
 const ds = useDatasetStore()
+const view = useViewStore()
 const settings = useSettingsStore()
 const narrow = useNarrow()
 
-const xName = ref(pickDefault(ds.nums, /stress|hours|score/i))
-const yName = ref(
-  pickDefault(
-    ds.nums.filter((c) => c.name !== xName.value),
-    /index|performance|score|value|rate/i,
-  ),
-)
-const colorName = ref(pickGroup(ds.groups))
-const sizeName = ref('')
-const trend = ref(true)
-const logX = ref(false)
+const {
+  scatterX: xName,
+  scatterY: yName,
+  scatterColor: colorName,
+  scatterSize: sizeName,
+  scatterTrend: trend,
+  scatterLogX: logX,
+} = storeToRefs(view)
 
 const xOptions = computed(() =>
   [...ds.nums, ...ds.dates].map((c) => ({ value: c.name, label: settings.columnLabel(c.name) })),

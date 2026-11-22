@@ -1637,6 +1637,72 @@ input[type='color']::-webkit-color-swatch {
   padding: 12px 16px;
   border-top: 1px solid var(--border);
 }
+.preset-dialog {
+  width: min(620px, 100%);
+}
+.preset-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 300px;
+  overflow: auto;
+}
+.preset-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel-2);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.preset-item.active {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.preset-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.preset-main b {
+  font-size: 12.5px;
+}
+.preset-main .hint {
+  font-size: 11px;
+}
+.preset-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+}
+.preset-divider {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 11px;
+}
+.preset-divider::before,
+.preset-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+.preset-dialog .alias-search {
+  flex: 1;
+  width: auto;
+}
 @media (max-width: 520px) {
   .report-checks {
     grid-template-columns: 1fr;

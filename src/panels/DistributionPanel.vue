@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
+import { storeToRefs } from 'pinia'
 import { useDatasetStore } from '@/stores/dataset'
+import { useViewStore } from '@/stores/view'
 import PlotlyChart from '@/components/PlotlyChart.vue'
 import SelectField from '@/components/SelectField.vue'
 import { baseLayout } from '@/lib/chartTheme'
@@ -12,13 +14,16 @@ import { useSettingsStore } from '@/stores/settings'
 import { t } from '@/i18n'
 
 const ds = useDatasetStore()
+const view = useViewStore()
 const settings = useSettingsStore()
 const narrow = useNarrow()
 
-const varName = ref(ds.nums[0]?.name || '')
-const groupName = ref('')
-const showKde = ref(true)
-const bins = ref('0')
+const {
+  distributionVar: varName,
+  distributionGroup: groupName,
+  distributionKde: showKde,
+  distributionBins: bins,
+} = storeToRefs(view)
 
 const chartH = computed(() => (narrow.value ? 360 : 460))
 

@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
+import { storeToRefs } from 'pinia'
 import { useDatasetStore } from '@/stores/dataset'
+import { useViewStore } from '@/stores/view'
 import PlotlyChart from '@/components/PlotlyChart.vue'
 import SelectField from '@/components/SelectField.vue'
 import { baseLayout } from '@/lib/chartTheme'
-import { pickTarget } from '@/lib/infer'
 import { fmtInt, shortName } from '@/lib/format'
 import { useNarrow } from '@/composables/useNarrow'
 import { useSettingsStore } from '@/stores/settings'
@@ -12,11 +13,11 @@ import { t } from '@/i18n'
 import type { AssocMethod } from '@/types'
 
 const ds = useDatasetStore()
+const view = useViewStore()
 const settings = useSettingsStore()
 const narrow = useNarrow()
 
-const targetName = ref(pickTarget(ds.targets))
-const method = ref('pearson')
+const { targetCol: targetName, targetMethod: method } = storeToRefs(view)
 
 const target = computed(() => ds.column(targetName.value))
 const list = computed(() =>

@@ -1,4 +1,6 @@
 import { isHexColor } from '@/lib/color'
+import { sanitizePresets } from '@/presets/sanitize'
+import type { PresetConfig } from '@/presets/types'
 import type { ChartSize, ChartTitle, FileProfile, Profiles } from './defaults'
 
 const MAX_PROFILES = 80
@@ -98,9 +100,14 @@ function sanitizeSeries(v: unknown): Record<string, Record<string, string>> {
   return out
 }
 
+function sanitizeView(v: unknown): PresetConfig | undefined {
+  if (!isRec(v)) return undefined
+  const parsed = sanitizePresets([{ id: 'view', name: 'view', config: v }])
+  return parsed[0]?.config
+}
+
 /** 校验从 localStorage / 配置 JSON 读取的文件配置 */
-export function sanitizeProfiles(raw: unknown): Profiles {
-  if (!isRec(raw)) return {}
+export function sanitizeProfiles(raw: unknown): Profiles {  if (!isRec(raw)) return {}
   const out: Profiles = {}
   let n = 0
   for (const [key, val] of Object.entries(raw)) {
@@ -119,6 +126,7 @@ export function sanitizeProfiles(raw: unknown): Profiles {
       series: sanitizeSeries(val.series),
       sizes: sanitizeSizes(val.sizes),
       titles: sanitizeTitles(val.titles),
+      view: sanitizeView(val.view),
     }
     n++
   }

@@ -1,3 +1,5 @@
+import type { PresetConfig } from '@/presets/types'
+
 export type ThemeMode = 'light' | 'dark' | 'system'
 export type Density = 'compact' | 'normal' | 'comfortable'
 export type ShadowPreset = 'none' | 'soft' | 'strong'
@@ -105,6 +107,8 @@ export interface FileProfile {
   series: Record<string, Record<string, string>>
   sizes: Record<string, ChartSize>
   titles: Record<string, ChartTitle>
+  /** 面板选择快照（目标、分组、散点、雷达等） */
+  view?: PresetConfig
 }
 
 export type Profiles = Record<string, FileProfile>
