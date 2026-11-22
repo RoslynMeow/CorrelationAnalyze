@@ -1,4 +1,4 @@
-/** 由 scripts/i18n-catalog.mjs 生成；请勿手改。共 426 条。 */
+/** 由 scripts/i18n-catalog.mjs 生成；请勿手改。共 425 条。 */
 export const TEXT_CATALOG: string[] = [
   " · 最多 {max} 个",
   "（不堆叠）",
@@ -96,7 +96,6 @@ export const TEXT_CATALOG: string[] = [
   "分析结论",
   "分析结论已复制",
   "分析目标",
-  "分析页签",
   "分箱数",
   "分享当前视图",
   "分组叠加",

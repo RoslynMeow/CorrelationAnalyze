@@ -46,6 +46,9 @@ from the test fixtures.
 | Insights | Data quality, strongest links, target drivers, redundancy |
 | Data | Search, pagination, header hover/tap column profiles, CSV export |
 
+Tab navigation is always a dropdown, including wide screens, so long file names and narrow
+windows no longer squeeze the tab bar.
+
 Also included:
 
 - Top bar keeps only the file name and a settings button; filters, presets, sharing and changing CSV live under Settings → Actions

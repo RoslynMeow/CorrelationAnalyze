@@ -7,11 +7,12 @@ async function openSample(page: Page): Promise<void> {
   await page.goto('/')
   await page.locator('input[type="file"]').setInputFiles(csv)
   await expect(page.getByText('已载入 30 行')).toBeVisible()
-  await expect(page.getByRole('button', { name: '目标关联' })).toBeVisible()
+  await expect(page.locator('.tab-current')).toBeVisible()
 }
 
 async function openTab(page: Page, name: string): Promise<void> {
-  await page.getByRole('button', { name, exact: true }).click()
+  await page.locator('.tab-current').click()
+  await page.getByRole('menuitem', { name, exact: true }).click()
 }
 
 async function openFilter(page: Page): Promise<void> {
