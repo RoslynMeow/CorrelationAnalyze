@@ -28,8 +28,8 @@ const colorOptions = computed(() => [
 ])
 const chartH = computed(() =>
   Math.max(
-    narrow.value ? 340 : 360,
-    Math.min(narrow.value ? 480 : 620, vh.value - (narrow.value ? 210 : 220)),
+    narrow.value ? 360 : 360,
+    Math.min(narrow.value ? 640 : 620, vh.value - (narrow.value ? 230 : 220)),
   ),
 )
 

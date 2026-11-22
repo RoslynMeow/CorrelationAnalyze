@@ -22,8 +22,8 @@ onMounted(() => {
 const pairs = computed(() => ds.cachedPairs('pearson'))
 const chartH = computed(() =>
   Math.max(
-    narrow.value ? 280 : 320,
-    Math.min(narrow.value ? 360 : 460, vh.value - (narrow.value ? 250 : 300)),
+    narrow.value ? 300 : 320,
+    Math.min(narrow.value ? 520 : 460, vh.value - (narrow.value ? 270 : 300)),
   ),
 )
 

@@ -2311,10 +2311,271 @@ input[type='color']::-webkit-color-swatch {
     padding: 28px 18px 26px;
   }
   .chip {
-    font-size: 11px;
-    padding: 3px 8px;
+    font-size: 12.5px;
+    padding: 5px 9px;
+  }
+  .kpi .value {
+    font-size: 20px;
   }
   .appactions {
     gap: 5px;
+  }
+}
+
+/* ================= 移动端字号与触控 ================= */
+@media (max-width: 760px) {
+  body {
+    font-size: 15px;
+  }
+  .appbar {
+    padding-top: max(6px, env(safe-area-inset-top));
+  }
+  .wrap {
+    padding: 12px 12px calc(28px + env(safe-area-inset-bottom));
+  }
+  .btn {
+    height: 36px;
+    padding: 0 12px;
+    font-size: 13px;
+  }
+  .btn.icon {
+    width: 36px;
+  }
+  .tab-current {
+    height: 38px;
+    font-size: 13.5px;
+  }
+  .tab-menu-item,
+  .appmenu-item {
+    font-size: 13.5px;
+    padding: 10px 12px;
+  }
+  .controls {
+    padding: 12px;
+    gap: 12px 14px;
+  }
+  .field {
+    font-size: 12.5px;
+  }
+  .field select,
+  .field input[type='text'] {
+    height: 36px;
+    font-size: 13.5px;
+  }
+  .chk {
+    height: 36px;
+    font-size: 13.5px;
+    gap: 8px;
+  }
+  .chk input {
+    width: 16px;
+    height: 16px;
+  }
+  .seg button {
+    font-size: 13px;
+    padding: 7px 8px;
+  }
+  .chip {
+    font-size: 13px;
+    padding: 6px 11px;
+    gap: 7px;
+  }
+  .chip input {
+    width: 14px;
+    height: 14px;
+  }
+  .chips {
+    gap: 8px;
+    max-height: 170px;
+  }
+  .chipcount {
+    font-size: 12.5px;
+  }
+  .chipsearch {
+    height: 34px;
+    font-size: 13px;
+  }
+  .linkbtn {
+    font-size: 12.5px;
+    padding: 4px 7px;
+  }
+  .card {
+    padding: min(14px, var(--card-pad));
+  }
+  .cardhead h3 {
+    font-size: 15px;
+  }
+  .hint {
+    font-size: 13px;
+  }
+  .kpi {
+    padding: 10px 12px;
+  }
+  .kpi .label {
+    font-size: 12.5px;
+  }
+  .kpi .value {
+    font-size: 22px;
+  }
+  .kpi .sub {
+    font-size: 12px;
+  }
+  .stat {
+    font-size: 12.5px;
+    padding: 6px 10px;
+  }
+  .searchbox {
+    height: 36px;
+  }
+  .searchbox input {
+    font-size: 13.5px;
+  }
+  .compact-select {
+    height: 36px;
+    font-size: 13px;
+  }
+  .export-btn {
+    width: 36px;
+    height: 36px;
+  }
+  .data-toolbar {
+    gap: 8px;
+  }
+  html {
+    --table-font: 13px;
+  }
+  thead th {
+    font-size: 12.5px;
+    padding: 8px 10px;
+  }
+  tbody td {
+    padding: 8px 10px;
+  }
+  .th-name {
+    font-size: 13px;
+  }
+  .colpop {
+    width: min(340px, calc(100vw - 16px));
+    padding: 14px;
+    font-size: 12.5px;
+  }
+  .colpop-head b {
+    font-size: 14px;
+  }
+  .colpop-grid {
+    font-size: 12.5px;
+    padding: 4px 0;
+  }
+  .colpop-close {
+    font-size: 14px;
+    padding: 4px 6px;
+  }
+  .chart-tool {
+    width: 28px;
+    height: 26px;
+  }
+  .chart-tool.text {
+    font-size: 10px;
+  }
+  .chart-tools {
+    opacity: 0.82;
+  }
+  .chart-style {
+    width: min(300px, calc(100vw - 20px));
+  }
+  .cs-row {
+    height: 34px;
+  }
+  .cs-size-row input,
+  .cs-title-row input {
+    height: 30px;
+    font-size: 13px;
+  }
+  .cs-presets .linkbtn {
+    font-size: 12px;
+  }
+  /* 手机端忽略桌面保存的单图固定宽度，始终铺满（拖动时除外） */
+  .chart-wrap:not(.resizing) {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+  .toast {
+    font-size: 13px;
+  }
+  .banner {
+    font-size: 13px;
+  }
+  .summary {
+    font-size: 13px;
+  }
+  .ins-card ul {
+    font-size: 13px;
+  }
+  .drawer-head h3 {
+    font-size: 16px;
+  }
+  .drawer-tabs button {
+    font-size: 13px;
+  }
+  .drawer-body {
+    padding: 12px 14px 28px;
+  }
+  .set-label {
+    font-size: 13px;
+  }
+  .set-select {
+    height: 34px;
+    font-size: 13px;
+  }
+  .colorfield {
+    height: 34px;
+  }
+  .cf-label {
+    font-size: 12.5px;
+  }
+  .cf-swatch {
+    width: 30px;
+    height: 26px;
+  }
+  .cf-hex {
+    height: 26px;
+    font-size: 11.5px;
+  }
+  .palette-name {
+    font-size: 12.5px;
+  }
+  .text-key,
+  .text-input {
+    font-size: 12px;
+  }
+  .report-dialog {
+    max-height: 90dvh;
+  }
+  .report-dialog-body {
+    font-size: 13px;
+  }
+  .report-dialog-foot .btn {
+    height: 36px;
+  }
+  .preset-item {
+    padding: 10px;
+  }
+  .preset-main b {
+    font-size: 13.5px;
+  }
+  .preset-meta .hint,
+  .preset-meta .sumtag {
+    font-size: 12px;
+  }
+  .dropcard h1 {
+    font-size: 20px;
+  }
+  .dropcard .sub {
+    font-size: 14px;
+  }
+  .feats span {
+    font-size: 12px;
   }
 }

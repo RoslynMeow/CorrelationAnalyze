@@ -78,7 +78,7 @@ git clone https://github.com/RoslynMeow/CorrelationAnalyze.git
 cd CorrelationAnalyze
 npm install
 npm run dev          # http://localhost:5188
-npm test             # 71 tests
+npm test             # 72 tests
 npm run build        # -> dist/
 npm run build:single # -> dist-single/index.html (portable, offline)
 ```
@@ -96,7 +96,7 @@ src/
   workers/           # pairwise association worker
   components/        # PlotlyChart, SettingsDrawer, ...
   panels/            # 11 analysis tabs
-tests/               # 71 tests + CSV fixture
+tests/               # 72 tests + CSV fixture
 .github/             # CI, Pages, issue/PR templates
 ```
 

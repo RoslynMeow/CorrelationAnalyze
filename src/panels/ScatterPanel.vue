@@ -44,8 +44,8 @@ const sizeOptions = computed(() => [
 
 const chartH = computed(() =>
   Math.max(
-    narrow.value ? 300 : 340,
-    Math.min(narrow.value ? 420 : 560, vh.value - (narrow.value ? 220 : 240)),
+    narrow.value ? 320 : 340,
+    Math.min(narrow.value ? 600 : 560, vh.value - (narrow.value ? 240 : 240)),
   ),
 )
 

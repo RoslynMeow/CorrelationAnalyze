@@ -24,9 +24,9 @@ const vh = useViewportHeight()
 const { groupCol: groupName, groupVars: vars, groupShowPoints: showPts } = storeToRefs(view)
 
 const chartH = computed(() => {
-  const base = narrow.value ? 215 : 245
+  const base = narrow.value ? 230 : 245
   const fit = (vh.value - (narrow.value ? 300 : 320)) / 2
-  return Math.round(Math.max(narrow.value ? 170 : 185, Math.min(base, fit || base)))
+  return Math.round(Math.max(narrow.value ? 180 : 185, Math.min(base, fit || base)))
 })
 
 const charts = computed(() => {

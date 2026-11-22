@@ -309,8 +309,24 @@ async function resetZoom(): Promise<void> {
   }
 }
 
+function isDisplayed(element: HTMLElement | null): element is HTMLElement {
+  return (
+    !!element &&
+    element.isConnected &&
+    element.offsetWidth > 0 &&
+    element.offsetHeight > 0
+  )
+}
+
+let needsDraw = false
+
 async function draw(): Promise<void> {
   if (!el.value) return
+  // 隐藏的页签 / 被折叠的图表不能被 Plotly.resize 处理
+  if (!isDisplayed(el.value)) {
+    needsDraw = true
+    return
+  }
   const config = {
     ...CHART_CONFIG,
     ...(props.config || {}),
@@ -320,6 +336,7 @@ async function draw(): Promise<void> {
     const data = styledTraces.value as Parameters<typeof Plotly.react>[1]
     const layout = styledLayout.value as Parameters<typeof Plotly.react>[2]
     await Plotly.react(el.value, data, layout, config)
+    needsDraw = false
   } catch (err) {
     console.error('Plotly 渲染失败', err)
   }
@@ -327,7 +344,9 @@ async function draw(): Promise<void> {
 
 onMounted(draw)
 onActivated(() => {
-  void draw()
+  requestAnimationFrame(() => {
+    void draw()
+  })
 })
 onDeactivated(() => {
   styleOpen.value = false
@@ -341,11 +360,22 @@ onMounted(() => {
     if (resizeRaf || resizing.value) return
     resizeRaf = requestAnimationFrame(() => {
       resizeRaf = 0
-      if (!el.value) return
+      if (!isDisplayed(el.value)) {
+        needsDraw = true
+        return
+      }
+      if (needsDraw) {
+        void draw()
+        return
+      }
       try {
-        Plotly.Plots.resize(el.value)
+        // Plotly 4 的 resize 可能返回 Promise，需显式捕获
+        const result = Plotly.Plots.resize(el.value) as unknown
+        if (result && typeof (result as Promise<unknown>).catch === 'function') {
+          ;(result as Promise<unknown>).catch(() => {})
+        }
       } catch {
-        /* 忽略 */
+        /* 忽略隐藏 / 未初始化的情况 */
       }
     })
   })

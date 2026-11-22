@@ -29,8 +29,8 @@ const {
 
 const chartH = computed(() =>
   Math.max(
-    narrow.value ? 280 : 300,
-    Math.min(narrow.value ? 380 : 480, vh.value - (narrow.value ? 250 : 260)),
+    narrow.value ? 300 : 300,
+    Math.min(narrow.value ? 580 : 480, vh.value - (narrow.value ? 260 : 260)),
   ),
 )
 

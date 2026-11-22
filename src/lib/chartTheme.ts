@@ -1,5 +1,6 @@
 import { chartThemeTick } from './themeBus'
 import { useSettingsStore } from '@/stores/settings'
+import { useNarrow } from '@/composables/useNarrow'
 import type { Column } from '@/types'
 
 export function cssv(name: string): string {
@@ -21,9 +22,13 @@ export function baseLayout(extra: AnyRec = {}): AnyRec {
   void chartThemeTick.value
 
   const settings = useSettingsStore()
+  const narrow = useNarrow()
   const text = cssv('--text')
   const grid = cssv('--border')
   const muted = cssv('--muted')
+  const baseFont = narrow.value ? 13 : 12
+  const tickFont = narrow.value ? 12 : 11
+  const titleFont = narrow.value ? 13 : 12
   const transparent = settings.state.charts.transparent
   const showGrid = settings.state.charts.grid
   const legendPos = settings.state.charts.legendPosition
@@ -57,26 +62,26 @@ export function baseLayout(extra: AnyRec = {}): AnyRec {
   const lay: AnyRec = {
     paper_bgcolor: bg,
     plot_bgcolor: bg,
-    font: { family: "'Segoe UI','Microsoft YaHei','PingFang SC',sans-serif", size: 12, color: text },
+    font: { family: "'Segoe UI','Microsoft YaHei','PingFang SC',sans-serif", size: baseFont, color: text },
     colorway: [...settings.palette],
     margin: { l: 64, r: 24, t: 46, b: 56 },
-    hoverlabel: { bgcolor: cssv('--panel'), bordercolor: grid, font: { color: text, size: 12 } },
-    legend: { ...legendLayout, font: { size: 11, color: muted } },
+    hoverlabel: { bgcolor: cssv('--panel'), bordercolor: grid, font: { color: text, size: baseFont } },
+    legend: { ...legendLayout, font: { size: narrow.value ? 12 : 11, color: muted } },
     xaxis: {
       gridcolor: grid,
       showgrid: showGrid,
       zerolinecolor: grid,
       linecolor: grid,
-      tickfont: { size: 11, color: muted },
-      title: { font: { size: 12, color: text } },
+      tickfont: { size: tickFont, color: muted },
+      title: { font: { size: titleFont, color: text } },
     },
     yaxis: {
       gridcolor: grid,
       showgrid: showGrid,
       zerolinecolor: grid,
       linecolor: grid,
-      tickfont: { size: 11, color: muted },
-      title: { font: { size: 12, color: text } },
+      tickfont: { size: tickFont, color: muted },
+      title: { font: { size: titleFont, color: text } },
     },
   }
 

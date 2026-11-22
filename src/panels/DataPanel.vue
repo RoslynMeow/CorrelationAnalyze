@@ -8,16 +8,48 @@ import { t } from '@/i18n'
 
 const ds = useDatasetStore()
 const settings = useSettingsStore()
+const searchInput = ref('')
 const query = ref('')
 const pageSize = ref('50')
 const page = ref(0)
+let searchTimer: ReturnType<typeof setTimeout> | undefined
+
+watch(searchInput, (v) => {
+  if (searchTimer) clearTimeout(searchTimer)
+  searchTimer = setTimeout(() => {
+    query.value = v
+  }, 180)
+})
+
+watch(() => ds.datasetId, () => {
+  searchInput.value = ''
+  query.value = ''
+  page.value = 0
+  closeProfile()
+})
 
 const filtered = computed(() => {
-  const rows = ds.dataset?.rows || []
+  const d = ds.dataset
+  if (!d) return []
+  const rows = d.rows
   const q = query.value.trim().toLowerCase()
+  if (!q) return rows.map((_, i) => i)
+
+  // 列显示名 / 原始列名命中时，直接显示全部行
+  const columnHit = d.columns.some(
+    (c) =>
+      c.name.toLowerCase().includes(q) || settings.columnLabel(c.name).toLowerCase().includes(q),
+  )
+  if (columnHit) return rows.map((_, i) => i)
+
   const idx: number[] = []
   for (let i = 0; i < rows.length; i++) {
-    if (!q || rows[i].some((v) => String(v).toLowerCase().includes(q))) idx.push(i)
+    const hit = rows[i].some((v, ci) => {
+      if (String(v).toLowerCase().includes(q)) return true
+      const c = d.columns[ci]
+      return c ? settings.valueLabel(c.name, v).toLowerCase().includes(q) : false
+    })
+    if (hit) idx.push(i)
   }
   return idx
 })
@@ -192,6 +224,7 @@ onBeforeUnmount(() => {
   document.removeEventListener('click', onDocClick)
   window.removeEventListener('scroll', closeProfile, true)
   window.removeEventListener('resize', closeProfile)
+  if (searchTimer) clearTimeout(searchTimer)
   cancelClose()
 })
 onDeactivated(() => {
@@ -216,7 +249,7 @@ onDeactivated(() => {
           <path d="m10.2 10.2 3 3" />
         </svg>
         <input
-          v-model="query"
+          v-model="searchInput"
           type="search"
           :placeholder="$t('搜索所有列…')"
           :aria-label="$t('搜索')"

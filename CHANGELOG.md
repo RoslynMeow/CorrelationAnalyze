@@ -15,6 +15,7 @@
 - Full-page HTML report of selected tabs with 2x chart images; print to PDF
 - Built-in presets, custom preset save/import/export
 - Responsive app bar: secondary actions collapse below 1280px; tabs become a dropdown navigator below 900px
+- Mobile typography and touch targets scale up below 760px; charts use full width and viewport heights
 - Data preview fills the viewport with an internally scrolling table; column profiles open from header hover/tap
 - Legend position setting (bottom / top / right / hidden) with automatic margins to avoid axis-title overlap
 - Drag-to-resize charts with live CSS preview
