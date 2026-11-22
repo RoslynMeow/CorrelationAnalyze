@@ -336,9 +336,28 @@ html[data-theme='dark'] .dropcard.drag {
   flex: 1;
   min-width: 0;
   scrollbar-width: none;
+  overscroll-behavior-x: contain;
 }
 .tabs::-webkit-scrollbar {
   display: none;
+}
+.tabs.scrollable {
+  mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    #000 14px,
+    #000 calc(100% - 14px),
+    transparent 100%
+  );
+}
+.tabs.scrollable.at-start {
+  mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 14px), transparent 100%);
+}
+.tabs.scrollable.at-end {
+  mask-image: linear-gradient(to right, transparent 0, #000 14px, #000 100%);
+}
+.tabs.scrollable.at-start.at-end {
+  mask-image: none;
 }
 .tab {
   flex: none;
@@ -368,6 +387,50 @@ html[data-theme='dark'] .dropcard.drag {
   gap: 8px;
   flex: none;
 }
+.appactions-inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.wide-only {
+  display: inline-flex;
+}
+.compact-only {
+  display: none;
+}
+.appmenu {
+  position: relative;
+}
+.appmenu-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 70;
+  min-width: 160px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-ctl);
+  box-shadow: var(--shadow);
+}
+.appmenu-item {
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 12.5px;
+  text-align: left;
+  padding: 7px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.appmenu-item:hover {
+  background: var(--panel-2);
+}
 .filechip {
   font-size: 11.5px;
   color: var(--muted);
@@ -375,7 +438,7 @@ html[data-theme='dark'] .dropcard.drag {
   border: 1px solid var(--border);
   border-radius: 999px;
   padding: 3px 10px;
-  max-width: 260px;
+  max-width: 180px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1710,6 +1773,17 @@ input[type='color']::-webkit-color-swatch {
 }
 
 /* ================= 响应式 ================= */
+@media (max-width: 1280px) {
+  .filechip {
+    display: none;
+  }
+  .wide-only {
+    display: none !important;
+  }
+  .compact-only {
+    display: block;
+  }
+}
 @media (max-width: 1100px) {
   .grid2 {
     grid-template-columns: 1fr;
@@ -1745,7 +1819,6 @@ input[type='color']::-webkit-color-swatch {
     font-size: 12px;
   }
   .tabs {
-    mask-image: linear-gradient(to right, #000 calc(100% - 16px), transparent);
     overscroll-behavior-x: contain;
   }
   .btn {

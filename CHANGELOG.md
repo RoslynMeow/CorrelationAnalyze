@@ -14,6 +14,7 @@
 - Editable UI text catalog with search, per-key overrides and reset
 - Full-page HTML report of selected tabs with 2x chart images; print to PDF
 - Built-in presets, custom preset save/import/export
+- Responsive app bar: secondary actions collapse into a menu below 1280px; tabs get scroll fades
 - Drag-to-resize charts with live CSS preview
 - Per-chart toolbar: copy image, PNG, SVG, TSV, reset zoom, chart settings
 - Copy insights as plain text; import/export settings as JSON

@@ -1,4 +1,4 @@
-/** 由 scripts/i18n-catalog.mjs 生成；请勿手改。共 379 条。 */
+/** 由 scripts/i18n-catalog.mjs 生成；请勿手改。共 380 条。 */
 export const TEXT_CATALOG: string[] = [
   " · 最多 {max} 个",
   "（不堆叠）",
@@ -114,6 +114,7 @@ export const TEXT_CATALOG: string[] = [
   "各维度先按全样本标准化（{mode}），再按组求均值。标准化后 0.5 附近的差异不代表原始量级，仅用于形状对比。",
   "根据列名与类型自动选择目标、分组、散点与雷达维度",
   "跟随系统",
+  "更多",
   "更换 CSV",
   "共 {total} 行",
   "关闭",
