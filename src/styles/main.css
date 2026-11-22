@@ -1133,6 +1133,17 @@ html[data-theme='dark'] .dropcard.drag {
   position: relative;
   width: 100%;
   min-width: 0;
+  border: 1px solid color-mix(in srgb, var(--border) 85%, transparent);
+  border-radius: 8px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.chart-wrap:hover {
+  border-color: color-mix(in srgb, var(--accent) 38%, var(--border));
+}
+.chart-wrap.resizing {
+  border-color: var(--accent);
+  border-style: dashed;
+  box-shadow: 0 0 0 2px var(--accent-soft);
 }
 .chart-host {
   width: 100%;
@@ -1380,8 +1391,6 @@ html[data-theme='dark'] .dropcard.drag {
 }
 .chart-wrap.resizing {
   user-select: none;
-  outline: 1px dashed var(--accent);
-  outline-offset: 2px;
 }
 .chart-wrap.resizing .chart-tools {
   opacity: 0;
