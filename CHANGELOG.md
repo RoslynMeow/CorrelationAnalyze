@@ -25,6 +25,11 @@
 - Plotly is lazy-loaded (first-screen JS drops from ~4.9 MB to ~250 KB) and prefetched after CSV load
 - Mobile keeps natural page scrolling and fixed chart heights instead of compressing to one screen
 
+### Fixed
+
+- Partial correlation page: the VIF list is now a compact sidebar (300–380 px) so the matrix gets the main width
+- Partial correlation page: the control-variable picker is collapsible and shows the selected variables when folded
+
 ### Removed
 
 - Full-page HTML / PDF report export, its dialog and `src/lib/report.ts` (feature temporarily removed)

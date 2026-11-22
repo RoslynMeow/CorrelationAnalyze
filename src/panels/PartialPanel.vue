@@ -24,6 +24,7 @@ const wide = useWide()
 const { partialControls: controls } = storeToRefs(view)
 const mask = ref(true)
 const annot = ref(true)
+const controlsOpen = ref(false)
 
 const vars = computed<Column[]>(() =>
   ds.nums.filter((c) => !controls.value.includes(c.name)).slice(0, 20),
@@ -179,13 +180,35 @@ const vifNote = computed(() =>
 <template>
   <section class="panel panel-fit partial-panel">
     <div class="controls controls-chips">
-      <div class="chipfield">
-        <span class="chipfield-label">{{ $t('控制变量（可多选，最多 5 个）') }}</span>
-        <ChipGroup
-          v-model="controls"
-          :options="ds.nums.map((c) => ({ value: c.name, label: settings.columnLabel(c.name) }))"
-          :max="5"
-        />
+      <div class="chipfield collapsible">
+        <button
+          class="chipfield-head"
+          type="button"
+          :aria-expanded="controlsOpen"
+          @click="controlsOpen = !controlsOpen"
+        >
+          <span class="chipfield-label">{{ $t('控制变量（可多选，最多 5 个）') }}</span>
+          <span class="chipfield-count">{{ $t('已选 {n} 个', { n: controls.length }) }}</span>
+          <span class="chipfield-toggle">
+            {{ controlsOpen ? $t('收起') : $t('展开') }}
+            <span class="chipfield-caret" :class="{ open: controlsOpen }">▾</span>
+          </span>
+        </button>
+        <div v-show="controlsOpen" class="chipfield-body">
+          <ChipGroup
+            v-model="controls"
+            :options="ds.nums.map((c) => ({ value: c.name, label: settings.columnLabel(c.name) }))"
+            :max="5"
+          />
+        </div>
+        <div v-if="!controlsOpen && controls.length" class="chipfield-selected">
+          <span v-for="name in controls" :key="name" class="chip-static">
+            {{ settings.columnLabel(name) }}
+          </span>
+        </div>
+        <p v-else-if="!controlsOpen" class="hint chipfield-empty">
+          {{ $t('未选择控制变量（等同普通相关）') }}
+        </p>
       </div>
       <label class="chk"><input v-model="mask" type="checkbox" /> {{ $t('只显示下三角') }}</label>
       <label class="chk"><input v-model="annot" type="checkbox" /> {{ $t('标注数值') }}</label>

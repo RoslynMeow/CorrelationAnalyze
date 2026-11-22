@@ -1,4 +1,4 @@
-/** 由 scripts/i18n-catalog.mjs 生成；请勿手改。共 422 条。 */
+/** 由 scripts/i18n-catalog.mjs 生成；请勿手改。共 425 条。 */
 export const TEXT_CATALOG: string[] = [
   " · 最多 {max} 个",
   "（不堆叠）",
@@ -251,6 +251,7 @@ export const TEXT_CATALOG: string[] = [
   "设置",
   "深色",
   "视图链接已复制；打开后载入同一份 CSV 即可复现",
+  "收起",
   "数据",
   "数据超过 {n} 行，仅载入前 {n} 行",
   "数据点",
@@ -347,6 +348,7 @@ export const TEXT_CATALOG: string[] = [
   "已删除预设",
   "已修改 {n} 条",
   "已选",
+  "已选 {n} 个",
   "已应用分享的视图",
   "已应用预设：{name}",
   "已载入 {rows} 行 × {cols} 列{note}",
@@ -365,6 +367,7 @@ export const TEXT_CATALOG: string[] = [
   "预设已导入",
   "圆角",
   "载入 CSV 后可以编辑列名与类别取值。",
+  "展开",
   "这些变量表达的信息高度重叠，建模时可考虑保留其一。",
   "正 / 高端",
   "正常",
