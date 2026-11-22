@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useDatasetStore } from '@/stores/dataset'
 import { useViewStore } from '@/stores/view'
@@ -25,6 +25,29 @@ const { partialControls: controls } = storeToRefs(view)
 const mask = ref(true)
 const annot = ref(true)
 const controlsOpen = ref(false)
+const chipFieldEl = ref<HTMLElement | null>(null)
+
+function onDocClickControls(e: MouseEvent): void {
+  if (!controlsOpen.value) return
+  const el = chipFieldEl.value
+  if (!el?.contains(e.target as Node)) controlsOpen.value = false
+}
+
+function onEscControls(e: KeyboardEvent): void {
+  if (e.key === 'Escape' && controlsOpen.value) {
+    controlsOpen.value = false
+    e.stopPropagation()
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('click', onDocClickControls)
+  document.addEventListener('keydown', onEscControls)
+})
+onBeforeUnmount(() => {
+  document.removeEventListener('click', onDocClickControls)
+  document.removeEventListener('keydown', onEscControls)
+})
 
 const vars = computed<Column[]>(() =>
   ds.nums.filter((c) => !controls.value.includes(c.name)).slice(0, 20),
@@ -180,11 +203,12 @@ const vifNote = computed(() =>
 <template>
   <section class="panel panel-fit partial-panel">
     <div class="controls controls-chips">
-      <div class="chipfield collapsible">
+      <div ref="chipFieldEl" class="chipfield collapsible" @click.stop>
         <button
           class="chipfield-head"
           type="button"
           :aria-expanded="controlsOpen"
+          aria-controls="partial-controls-popover"
           @click="controlsOpen = !controlsOpen"
         >
           <span class="chipfield-label">{{ $t('控制变量（可多选，最多 5 个）') }}</span>
@@ -194,21 +218,25 @@ const vifNote = computed(() =>
             <span class="chipfield-caret" :class="{ open: controlsOpen }">▾</span>
           </span>
         </button>
-        <div v-show="controlsOpen" class="chipfield-body">
+        <div v-if="controls.length" class="chipfield-selected">
+          <span v-for="name in controls" :key="name" class="chip-static">
+            {{ settings.columnLabel(name) }}
+          </span>
+        </div>
+        <p v-else class="hint chipfield-empty">
+          {{ $t('未选择控制变量（等同普通相关）') }}
+        </p>
+        <div
+          v-show="controlsOpen"
+          id="partial-controls-popover"
+          class="chipfield-popover"
+        >
           <ChipGroup
             v-model="controls"
             :options="ds.nums.map((c) => ({ value: c.name, label: settings.columnLabel(c.name) }))"
             :max="5"
           />
         </div>
-        <div v-if="!controlsOpen && controls.length" class="chipfield-selected">
-          <span v-for="name in controls" :key="name" class="chip-static">
-            {{ settings.columnLabel(name) }}
-          </span>
-        </div>
-        <p v-else-if="!controlsOpen" class="hint chipfield-empty">
-          {{ $t('未选择控制变量（等同普通相关）') }}
-        </p>
       </div>
       <label class="chk"><input v-model="mask" type="checkbox" /> {{ $t('只显示下三角') }}</label>
       <label class="chk"><input v-model="annot" type="checkbox" /> {{ $t('标注数值') }}</label>

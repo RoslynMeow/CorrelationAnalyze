@@ -35,7 +35,7 @@ from the test fixtures.
 | --- | --- |
 | Overview | Dataset KPIs, top-10 association pairs, automatic summary |
 | Matrix | Pearson / Spearman for numeric columns, Cramér's V for categorical ones, significance stars |
-| Partial / VIF | Partial correlation matrix controlling up to 5 variables (collapsible picker); variance inflation factors for numeric columns |
+| Partial / VIF | Partial correlation matrix controlling up to 5 variables (collapsible floating picker); variance inflation factors for numeric columns |
 | Target | Rank every column against a chosen target; r / ρ / η / V with p values, 95% CI and FDR correction |
 | Scatter | X/Y/color/size, linear fit with R², slope CI and p value, date axis |
 | Group | Box plots for multiple numeric variables by any group |

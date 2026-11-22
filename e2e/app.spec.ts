@@ -58,8 +58,11 @@ test('偏相关矩阵与 VIF', async ({ page }) => {
   expect(vifWidth).toBeLessThan(400)
 
   await expect(page.locator('.chipfield-selected')).toHaveCount(0)
+  const gridBefore = await page.locator('.partial-grid').evaluate((el) => el.getBoundingClientRect().height)
   await page.locator('.chipfield-head').click()
   await expect(page.locator('.chips')).toBeVisible()
+  const gridAfter = await page.locator('.partial-grid').evaluate((el) => el.getBoundingClientRect().height)
+  expect(Math.abs(gridAfter - gridBefore)).toBeLessThan(2)
   await page.locator('.chips label[title="sleep_hours"]').click()
   await expect(page.getByText('控制：sleep_hours')).toBeVisible()
   await page.locator('.chipfield-head').click()
