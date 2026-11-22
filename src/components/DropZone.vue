@@ -32,13 +32,34 @@ const emit = defineEmits<{ (e: 'pick'): void; (e: 'sample'): void }>()
         </svg>
       </div>
       <h1>关联性分析</h1>
-      <p class="lead">把 CSV 文件拖到这里</p>
-      <p class="sub">或点击选择文件</p>
+
+      <div class="filetype" tabindex="0" aria-describedby="filetype-tip">
+        <span class="filetype-icon" aria-hidden="true">CSV</span>
+        <span class="filetype-text">支持的文件类型：<b>CSV</b></span>
+        <span class="filetype-info" aria-hidden="true">i</span>
+
+        <div id="filetype-tip" class="filetype-tip" role="tooltip">
+          <h5>CSV 支持情况</h5>
+          <ul>
+            <li>扩展名：<b>.csv</b> / <b>.tsv</b> / <b>.txt</b>（文本表格）</li>
+            <li>编码：UTF-8、UTF-8 BOM、GBK(GB18030)、UTF-16 LE/BE</li>
+            <li>分隔符：逗号、分号、Tab、竖线，自动探测</li>
+            <li>缺失值：<code>NA</code> / <code>N/A</code> / <code>NaN</code> / <code>null</code> / <code>-</code> 等自动识别</li>
+          </ul>
+          <h5>性能与优化</h5>
+          <ul>
+            <li>读取上限 100,000 行，变量对计算放入 Web Worker，不阻塞界面</li>
+            <li>散点最多 6,000 点，成对矩阵最多 3,000 行抽样</li>
+            <li>文件不会上传，全部在浏览器本地计算</li>
+          </ul>
+        </div>
+      </div>
+
       <div class="feats">
         <span>相关矩阵</span><span>目标关联排序</span><span>类别列联分析</span>
       </div>
-      <button class="btn sample-btn" type="button" @click.stop="emit('sample')">
-        先看看示例数据
+      <button class="btn sample-btn" type="button" title="载入 30 行示例 CSV" @click.stop="emit('sample')">
+        示例数据
       </button>
     </div>
   </div>
