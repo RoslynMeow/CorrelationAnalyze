@@ -79,11 +79,11 @@ const charts = computed(() => {
   <section class="panel">
     <div class="controls">
       <SelectField v-model="groupName" label="分组列" :options="ds.groups.map((c) => c.name)" />
-      <div class="grow">
-        <div class="field" style="margin-bottom: 4px">对比数值变量（可多选）</div>
+      <label class="chk"><input v-model="showPts" type="checkbox" /> 叠加散点</label>
+      <div class="chipfield">
+        <span class="chipfield-label">对比数值变量（可多选）</span>
         <ChipGroup v-model="vars" :options="ds.nums.map((c) => c.name)" />
       </div>
-      <label class="chk"><input v-model="showPts" type="checkbox" /> 叠加散点</label>
     </div>
 
     <div v-if="!groupName" class="card hint">

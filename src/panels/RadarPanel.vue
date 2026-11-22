@@ -17,7 +17,7 @@ const groupName = ref(pickGroup(ds.groups))
 const dims = ref(preferredNums(ds.nums, 8))
 const norm = ref('minmax')
 
-const chartH = computed(() => (narrow.value ? 420 : 560))
+const chartH = computed(() => (narrow.value ? 380 : 560))
 
 const PALETTE = [
   '#66c2a5', '#fc8d62', '#8da0cb', '#e78ac3', '#a6d854', '#ffd92f', '#e5c494',
@@ -78,20 +78,22 @@ const built = computed(() => {
     traces,
     layout: baseLayout({
       height: chartH.value,
-      margin: { l: 60, r: 60, t: 50, b: 60 },
+      margin: narrow.value
+        ? { l: 28, r: 28, t: 36, b: 36 }
+        : { l: 60, r: 60, t: 50, b: 60 },
       polar: {
         bgcolor: 'rgba(0,0,0,0)',
         radialaxis: {
           gridcolor: cssv('--border'),
           linecolor: cssv('--border'),
-          tickfont: { size: 9, color: cssv('--muted') },
+          tickfont: { size: 8, color: cssv('--muted') },
           angle: 90,
           tickangle: 90,
         },
         angularaxis: {
           gridcolor: cssv('--border'),
           linecolor: cssv('--border'),
-          tickfont: { size: 10, color: cssv('--text') },
+          tickfont: { size: narrow.value ? 8 : 10, color: cssv('--text') },
         },
       },
       showlegend: true,
@@ -113,8 +115,8 @@ const built = computed(() => {
           { value: 'zscore', label: 'Z-Score' },
         ]"
       />
-      <div class="grow">
-        <div class="field" style="margin-bottom: 4px">画像维度（3–12 个）</div>
+      <div class="chipfield">
+        <span class="chipfield-label">画像维度（3–12 个）</span>
         <ChipGroup v-model="dims" :options="ds.nums.map((c) => c.name)" :max="12" />
       </div>
     </div>

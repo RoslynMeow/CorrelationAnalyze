@@ -92,7 +92,7 @@ const stats = computed(() => {
           { value: 'spearman', label: 'Spearman' },
         ]"
       />
-      <span class="hint">
+      <span class="hint hint-wide">
         r = Pearson · ρ = Spearman · η = 相关比（数值×类别） · V = Cramér's V（类别×类别）｜
         绿=正相关，红=负相关，蓝=无方向
       </span>

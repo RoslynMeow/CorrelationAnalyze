@@ -93,8 +93,8 @@ const built = computed(() => {
   <section class="panel">
     <div class="controls">
       <SelectField v-model="colorName" label="颜色分组" :options="colorOptions" />
-      <div class="grow">
-        <div class="field" style="margin-bottom: 4px">维度（最多 6 个）</div>
+      <div class="chipfield">
+        <span class="chipfield-label">维度（最多 6 个）</span>
         <ChipGroup v-model="dims" :options="ds.nums.map((c) => c.name)" :max="6" />
       </div>
     </div>
