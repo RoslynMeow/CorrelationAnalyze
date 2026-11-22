@@ -153,6 +153,8 @@ export function mergeSettings(raw: unknown): Settings {
       heatmap,
       grid: typeof ch.grid === 'boolean' ? ch.grid : d.charts.grid,
       transparent: typeof ch.transparent === 'boolean' ? ch.transparent : d.charts.transparent,
+      showModeBar:
+        typeof ch.showModeBar === 'boolean' ? ch.showModeBar : d.charts.showModeBar,
       defaultWidth:
         ch.defaultWidth === null || ch.defaultWidth === undefined
           ? null

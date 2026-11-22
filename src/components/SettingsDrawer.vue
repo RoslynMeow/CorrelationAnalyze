@@ -376,8 +376,11 @@ onBeforeUnmount(() => {
             <label class="chk">
               <input v-model="settings.state.charts.transparent" type="checkbox" /> 图表背景透明
             </label>
+            <label class="chk">
+              <input v-model="settings.state.charts.showModeBar" type="checkbox" /> 显示 Plotly 自带工具栏
+            </label>
             <p class="hint" style="margin-top: 6px">
-              单图 / 单序列配色：点击每张图左上角的调色板图标。改动只影响那张图。
+              默认关闭，使用图左上角的应用工具条（导出、复制、重置缩放、尺寸与配色）。需要原生缩放/平移按钮时可以打开。
             </p>
           </div>
         </section>

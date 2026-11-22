@@ -254,9 +254,33 @@ const hasWebgl = computed(() =>
   props.traces.some((raw) => (raw as Record<string, unknown>).type === 'scattergl'),
 )
 
+const hasZoomableAxes = computed(() =>
+  props.traces.some((raw) => {
+    const type = (raw as Record<string, unknown>).type
+    return type !== 'scatterpolar' && type !== 'pie'
+  }),
+)
+
+async function resetZoom(): Promise<void> {
+  if (!el.value) return
+  try {
+    await Plotly.relayout(el.value, {
+      'xaxis.autorange': true,
+      'yaxis.autorange': true,
+    })
+    toast('已重置缩放')
+  } catch {
+    toast('重置失败')
+  }
+}
+
 async function draw(): Promise<void> {
   if (!el.value) return
-  const config = { ...CHART_CONFIG, ...(props.config || {}) }
+  const config = {
+    ...CHART_CONFIG,
+    ...(props.config || {}),
+    displayModeBar: settings.state.charts.showModeBar ? 'hover' : false,
+  }
   try {
     await Plotly.react(el.value, styledTraces.value, styledLayout.value, config)
   } catch (err) {
@@ -291,6 +315,13 @@ onMounted(() => {
   resizeObserver.observe(el.value)
 })
 watch(styledTraces, draw, { flush: 'post' })
+watch(
+  () => settings.state.charts.showModeBar,
+  () => {
+    void draw()
+  },
+  { flush: 'post' },
+)
 watch(
   styledLayout,
   () => {
@@ -388,6 +419,18 @@ function onSeriesColor(key: string, e: Event): void {
       </button>
       <button class="chart-tool text" type="button" title="复制数据（TSV）" @click="copyData">
         TSV
+      </button>
+      <button
+        v-if="hasZoomableAxes"
+        class="chart-tool"
+        type="button"
+        title="重置缩放 / 平移"
+        @click="resetZoom"
+      >
+        <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3.4 8a4.6 4.6 0 1 0 1.4-3.3" />
+          <path d="M3 2.6v3h3" />
+        </svg>
       </button>
       <button
         class="chart-tool"

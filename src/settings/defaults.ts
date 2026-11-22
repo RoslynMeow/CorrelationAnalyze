@@ -50,6 +50,8 @@ export interface ChartSettings {
   heatmap: HeatmapColors
   grid: boolean
   transparent: boolean
+  /** 是否显示 Plotly 自带工具栏（默认关闭，用应用自己的工具条） */
+  showModeBar: boolean
   /** 全局图表宽度上限；null = 自适应 */
   defaultWidth: number | null
   /** chartId → 单图尺寸覆盖 */
@@ -169,6 +171,7 @@ export function defaultSettings(): Settings {
       heatmap: { ...DEFAULT_HEATMAP },
       grid: true,
       transparent: true,
+      showModeBar: false,
       defaultWidth: null,
       sizes: {},
       series: {},

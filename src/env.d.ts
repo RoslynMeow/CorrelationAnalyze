@@ -16,6 +16,7 @@ declare module 'plotly.js-dist-min' {
     ): Promise<unknown>
     purge(el: HTMLElement): void
     toImage(el: HTMLElement, opts?: Record<string, unknown>): Promise<string>
+    relayout(el: HTMLElement, update: Record<string, unknown>): Promise<unknown>
     Plots: { resize(el: HTMLElement): void }
   }
   const Plotly: PlotlyStatic

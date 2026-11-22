@@ -99,6 +99,11 @@ describe('配置合并与校验', () => {
     expect(s.charts.sizes.bad).toBeUndefined()
   })
 
+  it('Plotly 原生工具栏默认关闭，可手动开启', () => {
+    expect(mergeSettings({}).charts.showModeBar).toBe(false)
+    expect(mergeSettings({ charts: { showModeBar: true } }).charts.showModeBar).toBe(true)
+  })
+
   it('全局图表宽度默认 null，越界时限幅', () => {
     expect(mergeSettings({}).charts.defaultWidth).toBeNull()
     expect(mergeSettings({ charts: { defaultWidth: 900 } }).charts.defaultWidth).toBe(900)
