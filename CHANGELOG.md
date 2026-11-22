@@ -17,6 +17,8 @@
 - Playwright E2E suite for upload, tab switching, matrix stars, search/export, PNG download, dialogs and report generation
 - Partial correlation matrix controlling up to 5 numeric variables (standardized residualization, t-test p values)
 - VIF multicollinearity panel with normal / watch / high tiers and collinearity notes
+- Shareable view links (`?view=…`) that restore the current tab and analysis selections after loading the same CSV
+- Report dialog with custom title, subtitle and notes, rendered into the HTML / PDF export
 
 ### Changed
 

@@ -13,6 +13,12 @@ export interface ReportMeta {
   rows: number
   columns: number
   generatedAt: string
+  /** 自定义报告标题 */
+  title?: string
+  /** 副标题 / 团队 / 课程名 */
+  subtitle?: string
+  /** 报告末尾备注 */
+  notes?: string
 }
 
 const esc = (s: string): string =>
@@ -104,7 +110,9 @@ body{margin:0;background:#f5f7fa;color:#172033;font:14px/1.6 'Segoe UI','Microso
 .report-page{max-width:980px;margin:0 auto;padding:32px 28px 60px;background:#fff;min-height:100vh}
 .report-head{border-bottom:2px solid #4c6ef5;padding-bottom:18px;margin-bottom:22px}
 .report-head h1{margin:0 0 6px;font-size:26px;letter-spacing:-.02em}
+.report-head .subtitle{color:#3b5bdb;font-size:13.5px;font-weight:600;margin:0 0 6px}
 .report-head .meta{color:#6b7793;font-size:12.5px}
+.report-notes{margin:24px 0 0;padding:12px 14px;border:1px solid #e4e9f2;border-left:3px solid #4c6ef5;border-radius:8px;background:#f8fafc;font-size:12.5px;white-space:pre-wrap;page-break-inside:avoid}
 .report-tools{position:sticky;top:0;display:flex;gap:8px;justify-content:flex-end;padding:10px 0;background:#fff;z-index:5}
 .report-tools button{padding:6px 12px;border:1px solid #d7deea;border-radius:7px;background:#fff;color:#172033;font:inherit;font-size:12.5px;cursor:pointer}
 .report-tools button.primary{background:#4c6ef5;border-color:#4c6ef5;color:#fff}
@@ -174,6 +182,9 @@ th{background:#f8fafc}
 
 /** 生成可独立打开 / 打印为 PDF 的报告 HTML */
 export function buildReportHtml(meta: ReportMeta, sections: ReportSection[]): string {
+  const title = meta.title?.trim() || t('关联性分析报告')
+  const subtitle = meta.subtitle?.trim() || ''
+  const notes = meta.notes?.trim() || ''
   const toc = sections
     .map(
       (s, i) =>
@@ -196,7 +207,7 @@ export function buildReportHtml(meta: ReportMeta, sections: ReportSection[]): st
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>${esc(t('关联性分析报告'))} · ${esc(meta.datasetName)}</title>
+<title>${esc(title)} · ${esc(meta.datasetName)}</title>
 <style>${REPORT_CSS}</style>
 </head>
 <body>
@@ -206,7 +217,8 @@ export function buildReportHtml(meta: ReportMeta, sections: ReportSection[]): st
     <button onclick="downloadReport()">${esc(t('下载 HTML'))}</button>
   </div>
   <header class="report-head">
-    <h1>${esc(t('关联性分析报告'))}</h1>
+    <h1>${esc(title)}</h1>
+    ${subtitle ? `<div class="subtitle">${esc(subtitle)}</div>` : ''}
     <div class="meta">
       ${esc(t('数据：{name}', { name: meta.datasetName }))} ·
       ${esc(t('{rows} 行 × {cols} 列', { rows: meta.rows, cols: meta.columns }))} ·
@@ -215,6 +227,7 @@ export function buildReportHtml(meta: ReportMeta, sections: ReportSection[]): st
   </header>
   <nav class="report-toc"><b>${esc(t('目录'))}</b><ol>${toc}</ol></nav>
   ${body}
+  ${notes ? `<div class="report-notes">${esc(notes)}</div>` : ''}
   <footer class="report-foot">${esc(
     t('由 CorrelationAnalyze 在本地生成，数据未上传。'),
   )}</footer>

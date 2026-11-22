@@ -22,7 +22,7 @@
   <img alt="Vite" src="https://img.shields.io/badge/Vite-8-646cff?style=flat-square&logo=vite&logoColor=white">
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5-3178c6?style=flat-square&logo=typescript&logoColor=white">
   <img alt="Plotly" src="https://img.shields.io/badge/Plotly-4-3f4f75?style=flat-square&logo=plotly&logoColor=white">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-92%20passed-3fb950?style=flat-square">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-97%20passed-3fb950?style=flat-square">
 </p>
 
 <p align="center"><strong>简体中文</strong> · <a href="./README.en.md">English</a></p>
@@ -71,7 +71,8 @@
 
 每张图左上角工具条：**复制图片、下载 PNG、下载 SVG、复制数据（TSV）、重置缩放、图表设置**。
 分析结论页提供「复制结论」。导出按当前显示尺寸生成，适合直接放进论文或报告。
-右上角「报告」可把所选页签与图表导出为独立 HTML，浏览器打印即可另存为 PDF。
+右上角「报告」可把所选页签与图表导出为独立 HTML，支持自定义标题、副标题和备注；浏览器打印即可另存为 PDF。
+右上角「分享」会把当前页签与目标 / 分组 / 散点等视图选择编码进链接，打开后载入同一份 CSV 即可复现。
 右上角「预设」内置「自动推荐」「学生心理健康」模板，也可保存 / 导入 / 导出自定义预设。
 
 > 复制图片需要 localhost 或 HTTPS；`file://` 下会自动回退为下载。
@@ -107,7 +108,7 @@ cd CorrelationAnalyze
 npm install
 
 npm run dev          # http://localhost:5188
-npm test             # 92 个单元测试
+npm test             # 97 个单元测试
 npm run test:e2e     # Playwright 浏览器测试
 npm run typecheck
 npm run build        # 常规构建 -> dist/
@@ -177,7 +178,7 @@ CorrelationAnalyze/
 │  ├─ workers/associations.worker.ts
 │  ├─ components/              # PlotlyChart / SettingsDrawer / 图表工具条等
 │  └─ panels/                  # 12 个页签
-├─ tests/                      # 92 个单元测试 + fixtures/sample.csv（仅测试用）
+├─ tests/                      # 97 个单元测试 + fixtures/sample.csv（仅测试用）
 ├─ e2e/                        # Playwright 浏览器端测试
 └─ .github/                    # CI、Pages、Issue/PR 模板
 ```
@@ -201,7 +202,7 @@ npm test        # 单元测试
 npm run test:e2e # 浏览器端测试（首次需 npx playwright install chromium）
 ```
 
-当前 **92 个单元测试 + 6 个 E2E 测试全部通过**：
+当前 **97 个单元测试 + 7 个 E2E 测试全部通过**：
 
 - `tests/stats.spec.ts`：基础统计 + 与 pandas / scipy / statsmodels 对照（含 p 值、CI、R²、FDR、偏相关、VIF，容差 1e-9）
 - `tests/csv.spec.ts`：引号、CRLF、BOM、重复列名、GB18030 / UTF-16
@@ -211,6 +212,7 @@ npm run test:e2e # 浏览器端测试（首次需 npx playwright install chromiu
 - `tests/i18n.spec.ts`：占位符替换、文案覆盖与恢复
 - `tests/report.spec.ts`：报告 HTML 结构、章节与转义
 - `tests/presets.spec.ts`：内置模板、列匹配、快照与导入校验
+- `tests/share.spec.ts`：视图链接编码 / 解码、非法参数与字段清洗
 - `e2e/app.spec.ts`：载入 CSV、切换页签、矩阵星号、数据搜索/导出、PNG 下载、弹窗焦点与 Esc、报告生成
 
 对照基准示例：
@@ -254,6 +256,9 @@ npm run test:e2e # 浏览器端测试（首次需 npx playwright install chromiu
 - [x] 第 2 期：全界面文案可编辑（i18n 词典）
 - [x] 第 3 期：单图标题 / 轴标题编辑
 - [x] 第 3 期：整页报告导出（HTML / PDF）
+- [x] 第 4 期：p 值 / 95% CI / R² / FDR 校正
+- [x] 第 4 期：偏相关矩阵与 VIF 共线性检查
+- [x] 第 4 期：视图链接分享、报告自定义标题与备注
 - [x] 常见数据集预设模板（自动推荐 / 心理健康 / 自定义）
 
 ## 数据与隐私

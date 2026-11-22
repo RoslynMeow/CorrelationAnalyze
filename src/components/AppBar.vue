@@ -15,6 +15,7 @@ const emit = defineEmits<{
   (e: 'settings'): void
   (e: 'report'): void
   (e: 'presets'): void
+  (e: 'share'): void
 }>()
 
 const tabsEl = ref<HTMLElement | null>(null)
@@ -72,10 +73,11 @@ function selectTab(key: string): void {
   emit('select', key)
 }
 
-function act(kind: 'presets' | 'report' | 'change' | 'settings'): void {
+function act(kind: 'presets' | 'report' | 'share' | 'change' | 'settings'): void {
   menuOpen.value = false
   if (kind === 'presets') emit('presets')
   else if (kind === 'report') emit('report')
+  else if (kind === 'share') emit('share')
   else if (kind === 'change') emit('change')
   else emit('settings')
 }
@@ -158,6 +160,7 @@ watch(
       <div class="appactions-inline wide-only">
         <button class="btn ghost" type="button" @click="emit('presets')">{{ $t('预设') }}</button>
         <button class="btn ghost" type="button" @click="emit('report')">{{ $t('报告') }}</button>
+        <button class="btn ghost" type="button" @click="emit('share')">{{ $t('分享') }}</button>
         <button class="btn ghost" type="button" @click="emit('change')">{{ $t('更换 CSV') }}</button>
       </div>
 
@@ -201,6 +204,9 @@ watch(
           </button>
           <button class="appmenu-item" type="button" role="menuitem" @click="act('report')">
             {{ $t('报告') }}
+          </button>
+          <button class="appmenu-item" type="button" role="menuitem" @click="act('share')">
+            {{ $t('分享') }}
           </button>
           <button class="appmenu-item" type="button" role="menuitem" @click="act('change')">
             {{ $t('更换 CSV') }}

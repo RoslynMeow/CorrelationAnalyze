@@ -98,11 +98,14 @@ test('生成报告会打开新页面', async ({ page }) => {
   await openSample(page)
   await page.getByRole('button', { name: '报告', exact: true }).click()
   const dialog = page.getByRole('dialog', { name: '导出报告' })
+  await dialog.getByLabel('报告标题').fill('自定义报告')
+  await dialog.getByLabel('备注').fill('E2E 备注')
   await dialog.getByRole('button', { name: '清空' }).click()
   await dialog.getByRole('checkbox', { name: '关联总览' }).check()
   const [popup] = await Promise.all([
     page.waitForEvent('popup'),
     dialog.getByRole('button', { name: '生成报告' }).click(),
   ])
-  await expect(popup.locator('body')).toContainText('关联总览', { timeout: 30_000 })
+  await expect(popup.locator('body')).toContainText('自定义报告', { timeout: 30_000 })
+  await expect(popup.locator('.report-notes')).toContainText('E2E 备注')
 })

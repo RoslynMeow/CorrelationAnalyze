@@ -55,7 +55,8 @@ Also included:
 - Per-file profiles keyed by CSV headers (aliases, sizes, titles, colors)
 - All static UI text can be searched, edited and reset in Settings → Text
 - Copy chart image, download PNG / SVG, copy data as TSV, copy insights
-- Full-page HTML report of selected tabs; print to PDF
+- Full-page HTML report of selected tabs with custom title, subtitle and notes; print to PDF
+- Share link that restores the current tab and analysis selections (load the same CSV to reproduce)
 - Built-in presets (auto, student mental health) plus save / import / export
 - Import / export settings as JSON; everything persisted locally
 
@@ -84,7 +85,7 @@ git clone https://github.com/RoslynMeow/CorrelationAnalyze.git
 cd CorrelationAnalyze
 npm install
 npm run dev          # http://localhost:5188
-npm test             # 92 tests
+npm test             # 97 tests
 npm run test:e2e     # Playwright browser tests
 npm run build        # -> dist/
 npm run build:single # -> dist-single/index.html (portable, offline)
@@ -103,7 +104,7 @@ src/
   workers/           # pairwise association worker
   components/        # PlotlyChart, SettingsDrawer, ...
   panels/            # 12 analysis tabs
-tests/               # 92 tests + CSV fixture
+tests/               # 97 tests + CSV fixture
 e2e/                 # Playwright browser tests
 .github/             # CI, Pages, issue/PR templates
 ```
@@ -154,6 +155,9 @@ Full board: **https://github.com/users/RoslynMeow/projects/8**
 - [x] Phase 2: editable UI text dictionary
 - [x] Phase 3: per-chart title and axis title editing
 - [x] Phase 3: full-page report export
+- [x] Phase 4: p values, 95% CI, R² and FDR correction
+- [x] Phase 4: partial correlation matrix and VIF
+- [x] Phase 4: shareable view links, custom report title and notes
 - [x] Common dataset presets (auto / mental health / custom)
 
 ## Privacy

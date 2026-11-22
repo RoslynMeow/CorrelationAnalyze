@@ -27,6 +27,26 @@ describe('报告导出', () => {
     expect(html).toContain('@page')
   })
 
+  it('支持自定义标题 / 副标题 / 备注并转义', () => {
+    const html = buildReportHtml(
+      {
+        datasetName: 'demo.csv',
+        rows: 30,
+        columns: 20,
+        generatedAt: '2026-11-22 10:00',
+        title: '心理健康 <b>报告</b>',
+        subtitle: '2026 春季课程项目',
+        notes: '口径：pairwise\n第二行',
+      },
+      [{ key: 'overview', label: '关联总览', html: '<p>ok</p>', charts: 0 }],
+    )
+    expect(html).toContain('<title>心理健康 &lt;b&gt;报告&lt;/b&gt; · demo.csv</title>')
+    expect(html).toContain('2026 春季课程项目')
+    expect(html).toContain('report-notes')
+    expect(html).toContain('口径：pairwise')
+    expect(html).not.toContain('<b>报告</b>')
+  })
+
   it('转义数据名中的 HTML', () => {
     const html = buildReportHtml(
       {

@@ -17,6 +17,9 @@ import {
 } from '@/lib/report'
 import { toast } from '@/composables/useToast'
 import { t } from '@/i18n'
+import { copyText } from '@/lib/exportChart'
+import { decodeShare, shareUrl } from '@/lib/share'
+import { useViewStore } from '@/stores/view'
 import Toast from '@/components/Toast.vue'
 import OverviewPanel from '@/panels/OverviewPanel.vue'
 import MatrixPanel from '@/panels/MatrixPanel.vue'
@@ -48,9 +51,12 @@ const TABS = [
 
 const ds = useDatasetStore()
 const settings = useSettingsStore()
+const view = useViewStore()
 const settingsOpen = ref(false)
 const reportOpen = ref(false)
 const presetOpen = ref(false)
+
+let pendingShare = decodeShare(new URLSearchParams(location.search).get('view'))
 
 const active = ref(readHash())
 const mainEl = ref<HTMLElement | null>(null)
@@ -68,6 +74,37 @@ watch(active, (v) => {
 })
 
 const current = computed(() => TABS.find((t) => t.key === active.value) ?? TABS[0])
+
+// 分享链接：载入 CSV 后应用其中的页签与视图选择
+watch(
+  () => ds.datasetId,
+  async (id) => {
+    if (!id || !pendingShare) return
+    const shared = pendingShare
+    pendingShare = null
+    await nextTick()
+    const data = ds.dataset
+    if (!data) return
+    if (shared.tab && TABS.some((t) => t.key === shared.tab)) active.value = shared.tab
+    view.apply(shared.view, data)
+    toast(t('已应用分享的视图'))
+  },
+)
+
+async function shareView(): Promise<void> {
+  try {
+    const url = shareUrl(location.href, active.value, view.snapshot())
+    const ok = await copyText(url)
+    toast(
+      ok
+        ? t('视图链接已复制；打开后载入同一份 CSV 即可复现')
+        : t('复制失败，请重试'),
+      4000,
+    )
+  } catch {
+    toast(t('复制失败，请重试'))
+  }
+}
 
 const fileInput = ref<HTMLInputElement | null>(null)
 function pick(): void {
@@ -108,7 +145,11 @@ async function onDrop(e: DragEvent): Promise<void> {
   if (f) await ds.loadFile(f)
 }
 
-async function generateReport(keys: string[], includeCharts: boolean): Promise<void> {
+async function generateReport(
+  keys: string[],
+  includeCharts: boolean,
+  meta: { title: string; subtitle: string; notes: string },
+): Promise<void> {
   const win = openReportWindow()
   reportOpen.value = false
   if (!win) {
@@ -134,6 +175,7 @@ async function generateReport(keys: string[], includeCharts: boolean): Promise<v
         rows: ds.n,
         columns: ds.dataset?.headers.length ?? 0,
         generatedAt: new Date().toLocaleString('zh-CN'),
+        ...meta,
       },
       sections,
     )
@@ -182,6 +224,7 @@ onBeforeUnmount(() => {
       @settings="settingsOpen = true"
       @report="reportOpen = true"
       @presets="presetOpen = true"
+      @share="shareView"
     />
     <main ref="mainEl" class="wrap">
       <div v-if="ds.error" class="banner warn">⚠️ {{ ds.error }}</div>
@@ -214,6 +257,7 @@ onBeforeUnmount(() => {
   <ReportDialog
     :open="reportOpen"
     :tabs="TABS"
+    :dataset-name="ds.fileName"
     @close="reportOpen = false"
     @generate="generateReport"
   />

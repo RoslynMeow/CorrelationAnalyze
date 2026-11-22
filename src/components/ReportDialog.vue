@@ -1,19 +1,29 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useFocusTrap } from '@/composables/useFocusTrap'
+import { t } from '@/i18n'
 
 const props = defineProps<{
   open: boolean
   tabs: { key: string; label: string }[]
+  datasetName?: string
 }>()
 
 const emit = defineEmits<{
   (e: 'close'): void
-  (e: 'generate', keys: string[], includeCharts: boolean): void
+  (
+    e: 'generate',
+    keys: string[],
+    includeCharts: boolean,
+    meta: { title: string; subtitle: string; notes: string },
+  ): void
 }>()
 
 const selected = ref<string[]>([])
 const includeCharts = ref(true)
+const reportTitle = ref('')
+const reportSubtitle = ref('')
+const reportNotes = ref('')
 const dialogEl = ref<HTMLElement | null>(null)
 useFocusTrap(
   computed(() => props.open),
@@ -27,6 +37,9 @@ watch(
     if (open) {
       selected.value = props.tabs.map((t) => t.key)
       includeCharts.value = true
+      reportTitle.value = t('关联性分析报告')
+      reportSubtitle.value = props.datasetName || ''
+      reportNotes.value = ''
     }
   },
   { immediate: true },
@@ -50,7 +63,11 @@ function generate(): void {
   if (!selected.value.length) return
   // 保持页签顺序
   const keys = props.tabs.map((t) => t.key).filter((k) => selected.value.includes(k))
-  emit('generate', keys, includeCharts.value)
+  emit('generate', keys, includeCharts.value, {
+    title: reportTitle.value.trim(),
+    subtitle: reportSubtitle.value.trim(),
+    notes: reportNotes.value.trim(),
+  })
 }
 </script>
 
@@ -69,6 +86,26 @@ function generate(): void {
           <p class="hint">
             {{ $t('选择要包含的页签。生成时会自动切换页签截取图表，可能需要几秒钟。') }}
           </p>
+
+          <div class="report-fields">
+            <label class="report-field">
+              <span>{{ $t('报告标题') }}</span>
+              <input v-model="reportTitle" type="text" maxlength="80" :placeholder="$t('关联性分析报告')" />
+            </label>
+            <label class="report-field">
+              <span>{{ $t('副标题 / 团队') }}</span>
+              <input v-model="reportSubtitle" type="text" maxlength="100" :placeholder="$t('可选，例如：2026 春季课程项目')" />
+            </label>
+            <label class="report-field">
+              <span>{{ $t('备注') }}</span>
+              <textarea
+                v-model="reportNotes"
+                rows="2"
+                maxlength="300"
+                :placeholder="$t('可选：分析范围、口径说明或结论摘要')"
+              ></textarea>
+            </label>
+          </div>
 
           <div class="report-actions">
             <button class="linkbtn" type="button" @click="selectAll">{{ $t('全选') }}</button>
