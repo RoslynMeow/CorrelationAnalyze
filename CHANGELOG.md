@@ -12,6 +12,7 @@
 - Column and category value display aliases (display only)
 - Per-file profiles keyed by CSV headers: aliases, chart sizes, titles and colors
 - Editable UI text catalog with search, per-key overrides and reset
+- Full-page HTML report of selected tabs with 2x chart images; print to PDF
 - Drag-to-resize charts with live CSS preview
 - Per-chart toolbar: copy image, PNG, SVG, TSV, reset zoom, chart settings
 - Copy insights as plain text; import/export settings as JSON

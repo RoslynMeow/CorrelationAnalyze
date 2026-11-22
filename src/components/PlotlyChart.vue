@@ -434,7 +434,13 @@ function onSeriesColor(key: string, e: Event): void {
 </script>
 
 <template>
-  <div ref="wrapEl" class="chart-wrap" :class="{ resizing }" :style="wrapStyle">
+  <div
+    ref="wrapEl"
+    class="chart-wrap"
+    :class="{ resizing }"
+    :style="wrapStyle"
+    :data-chart-id="chartId"
+  >
     <div ref="el" class="chart-host" data-plotly-host :style="hostStyle"></div>
 
     <div class="chart-tools" @mousedown.stop @click.stop>

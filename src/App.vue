@@ -1,10 +1,21 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useDatasetStore } from '@/stores/dataset'
 import { useSettingsStore } from '@/stores/settings'
 import DropZone from '@/components/DropZone.vue'
 import AppBar from '@/components/AppBar.vue'
 import SettingsDrawer from '@/components/SettingsDrawer.vue'
+import ReportDialog from '@/components/ReportDialog.vue'
+import {
+  buildReportHtml,
+  capturePanel,
+  openReportWindow,
+  waitForPanel,
+  writeReport,
+  type ReportSection,
+} from '@/lib/report'
+import { toast } from '@/composables/useToast'
+import { t } from '@/i18n'
 import Toast from '@/components/Toast.vue'
 import OverviewPanel from '@/panels/OverviewPanel.vue'
 import MatrixPanel from '@/panels/MatrixPanel.vue'
@@ -35,6 +46,7 @@ const TABS = [
 const ds = useDatasetStore()
 const settings = useSettingsStore()
 const settingsOpen = ref(false)
+const reportOpen = ref(false)
 
 const active = ref(readHash())
 function readHash(): string {
@@ -64,6 +76,7 @@ async function onFileChange(e: Event): Promise<void> {
 
 const dragging = ref(false)
 let depth = 0
+
 function hasFiles(e: DragEvent): boolean {
   return !!e.dataTransfer && Array.from(e.dataTransfer.types || []).includes('Files')
 }
@@ -87,6 +100,47 @@ async function onDrop(e: DragEvent): Promise<void> {
   dragging.value = false
   const f = e.dataTransfer?.files?.[0]
   if (f) await ds.loadFile(f)
+}
+
+async function generateReport(keys: string[], includeCharts: boolean): Promise<void> {
+  const win = openReportWindow()
+  reportOpen.value = false
+  if (!win) {
+    toast(t('浏览器阻止了弹出窗口，请允许后重试'))
+    return
+  }
+
+  const prev = active.value
+  const sections: ReportSection[] = []
+  try {
+    for (const key of keys) {
+      active.value = key
+      await waitForPanel()
+      const panel = document.querySelector('main .panel') as HTMLElement | null
+      if (!panel) continue
+      const tab = TABS.find((x) => x.key === key)
+      sections.push(await capturePanel(panel, key, tab ? t(tab.label) : key, includeCharts))
+    }
+
+    const html = buildReportHtml(
+      {
+        datasetName: ds.fileName || 'dataset',
+        rows: ds.n,
+        columns: ds.dataset?.headers.length ?? 0,
+        generatedAt: new Date().toLocaleString('zh-CN'),
+      },
+      sections,
+    )
+    writeReport(win, html)
+    toast(t('报告已生成'))
+  } catch (err) {
+    console.error(err)
+    win.close()
+    toast(t('生成报告失败'), 3500)
+  } finally {
+    active.value = prev
+    await nextTick()
+  }
 }
 
 onMounted(() => {
@@ -120,6 +174,7 @@ onBeforeUnmount(() => {
       @change="pick"
       @theme="settings.toggleMode()"
       @settings="settingsOpen = true"
+      @report="reportOpen = true"
     />
     <main class="wrap">
       <div v-if="ds.error" class="banner warn">⚠️ {{ ds.error }}</div>
@@ -149,4 +204,10 @@ onBeforeUnmount(() => {
 
   <Toast />
   <SettingsDrawer :open="settingsOpen" @close="settingsOpen = false" />
+  <ReportDialog
+    :open="reportOpen"
+    :tabs="TABS"
+    @close="reportOpen = false"
+    @generate="generateReport"
+  />
 </template>

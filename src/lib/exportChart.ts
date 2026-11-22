@@ -1,11 +1,19 @@
-import Plotly from 'plotly.js-dist-min'
 import { t } from '@/i18n'
+
+let plotlyPromise: Promise<typeof import('plotly.js-dist-min')> | null = null
+
+/** 延迟加载 Plotly，避免 Node 测试环境在导入时执行浏览器代码 */
+async function getPlotly(): Promise<typeof import('plotly.js-dist-min')> {
+  if (!plotlyPromise) plotlyPromise = import('plotly.js-dist-min')
+  return plotlyPromise
+}
 
 async function toDataUrl(
   el: HTMLElement,
   format: 'png' | 'svg',
   scale: number,
 ): Promise<string> {
+  const Plotly = (await getPlotly()).default
   const rect = el.getBoundingClientRect()
   const width = Math.max(320, Math.round(rect.width) || 800)
   const height = Math.max(220, Math.round(rect.height) || 500)

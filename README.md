@@ -22,7 +22,7 @@
   <img alt="Vite" src="https://img.shields.io/badge/Vite-8-646cff?style=flat-square&logo=vite&logoColor=white">
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5-3178c6?style=flat-square&logo=typescript&logoColor=white">
   <img alt="Plotly" src="https://img.shields.io/badge/Plotly-4-3f4f75?style=flat-square&logo=plotly&logoColor=white">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-63%20passed-3fb950?style=flat-square">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-65%20passed-3fb950?style=flat-square">
 </p>
 
 <p align="center"><strong>简体中文</strong> · <a href="./README.en.md">English</a></p>
@@ -70,6 +70,7 @@
 
 每张图左上角工具条：**复制图片、下载 PNG、下载 SVG、复制数据（TSV）、重置缩放、图表设置**。
 分析结论页提供「复制结论」。导出按当前显示尺寸生成，适合直接放进论文或报告。
+右上角「报告」可把所选页签与图表导出为独立 HTML，浏览器打印即可另存为 PDF。
 
 > 复制图片需要 localhost 或 HTTPS；`file://` 下会自动回退为下载。
 > WebGL 散点图导出 SVG 时会自动改为 PNG。
@@ -99,7 +100,7 @@ cd CorrelationAnalyze
 npm install
 
 npm run dev          # http://localhost:5188
-npm test             # 63 个单元测试
+npm test             # 65 个单元测试
 npm run typecheck
 npm run build        # 常规构建 -> dist/
 npm run build:single # 单文件便携版 -> dist-single/index.html
@@ -156,6 +157,7 @@ CorrelationAnalyze/
 │  │  ├─ chartTheme.ts         # Plotly 基础布局与主题联动
 │  │  ├─ color.ts              # 颜色混合 / 色阶 / 透明度
 │  │  ├─ exportChart.ts        # 图片 / SVG / TSV / 剪贴板
+│  │  ├─ report.ts             # 整页报告生成（HTML / 打印）
 │  │  ├─ themeBus.ts           # 主题变化通知
 │  │  └─ format.ts
 │  ├─ workers/associations.worker.ts
@@ -183,7 +185,7 @@ CorrelationAnalyze/
 npm test
 ```
 
-当前 **63 个测试全部通过**：
+当前 **65 个测试全部通过**：
 
 - `tests/stats.spec.ts`：基础统计 + 与 pandas / scipy 对照（容差 1e-9）
 - `tests/csv.spec.ts`：引号、CRLF、BOM、重复列名、GB18030 / UTF-16
@@ -191,6 +193,7 @@ npm test
 - `tests/settings.spec.ts`：配置合并、非法值回退、颜色校验、尺寸限幅、JSON 往返
 - `tests/profiles.spec.ts`：文件签名、按文件配置校验、颜色 / 尺寸 / 标题清洗
 - `tests/i18n.spec.ts`：占位符替换、文案覆盖与恢复
+- `tests/report.spec.ts`：报告 HTML 结构、章节与转义
 
 对照基准示例：
 
@@ -225,7 +228,7 @@ npm test
 - [x] 第 2 期：按 CSV 文件保存列映射与图表配置
 - [x] 第 2 期：全界面文案可编辑（i18n 词典）
 - [x] 第 3 期：单图标题 / 轴标题编辑
-- [ ] 第 3 期：整页报告导出（HTML / PDF）
+- [x] 第 3 期：整页报告导出（HTML / PDF）
 - [ ] 常见数据集预设模板
 
 ## 数据与隐私

@@ -1569,6 +1569,80 @@ input[type='color']::-webkit-color-swatch {
   border-radius: 4px;
 }
 
+/* ================= 报告导出 ================= */
+.btn.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+.btn.primary:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  filter: brightness(1.06);
+}
+.report-veil {
+  position: fixed;
+  inset: 0;
+  z-index: 110;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(10, 15, 25, 0.4);
+}
+.report-dialog {
+  width: min(560px, 100%);
+  max-height: min(82vh, 720px);
+  display: flex;
+  flex-direction: column;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow);
+}
+.report-dialog-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.report-dialog-head h3 {
+  font-size: 15px;
+}
+.report-dialog-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px;
+  overflow: auto;
+}
+.report-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.report-checks {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px 12px;
+}
+.report-check {
+  height: auto;
+  padding: 3px 0;
+}
+.report-dialog-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--border);
+}
+@media (max-width: 520px) {
+  .report-checks {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* ================= 响应式 ================= */
 @media (max-width: 1100px) {
   .grid2 {
