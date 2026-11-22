@@ -5,7 +5,7 @@ import { useDatasetStore } from '@/stores/dataset'
 import { useViewStore } from '@/stores/view'
 import PlotlyChart from '@/components/PlotlyChart.vue'
 import SelectField from '@/components/SelectField.vue'
-import ChipGroup from '@/components/ChipGroup.vue'
+import ChipPicker from '@/components/ChipPicker.vue'
 import { baseLayout } from '@/lib/chartTheme'
 import { groupLabels } from '@/lib/infer'
 import { isNull } from '@/lib/format'
@@ -101,16 +101,14 @@ const built = computed(() => {
 
 <template>
   <section class="panel panel-fit">
-    <div class="controls controls-chips">
+    <div class="controls">
       <SelectField v-model="colorName" :label="$t('颜色分组')" :options="colorOptions" />
-      <div class="chipfield">
-        <span class="chipfield-label">{{ $t('维度（最多 6 个）') }}</span>
-        <ChipGroup
-          v-model="dims"
-          :options="ds.nums.map((c) => ({ value: c.name, label: settings.columnLabel(c.name) }))"
-          :max="6"
-        />
-      </div>
+      <ChipPicker
+        v-model="dims"
+        :label="$t('维度（最多 6 个）')"
+        :options="ds.nums.map((c) => ({ value: c.name, label: settings.columnLabel(c.name) }))"
+        :max="6"
+      />
     </div>
 
     <div class="card chart-card">

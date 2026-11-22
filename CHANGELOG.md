@@ -26,6 +26,7 @@
 - Mobile keeps natural page scrolling and fixed chart heights instead of compressing to one screen
 - The top bar keeps only the file name and settings button; filters, presets, sharing and changing CSV are grouped under Settings → Actions
 - Analysis tabs always use the dropdown navigator (no 900px breakpoint), so long file names no longer squeeze the tab bar
+- Analysis control bars use inline labels and stay on one row on desktop; multi-select variable pickers collapse into one-line floating pickers
 
 ### Fixed
 

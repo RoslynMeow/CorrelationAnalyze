@@ -119,8 +119,11 @@ const stats = computed(() => {
           { value: 'spearman', label: $t('Spearman') },
         ]"
       />
-      <span class="hint hint-wide">
-        {{ $t('r = Pearson · ρ = Spearman · η = 相关比（数值×类别） · V = Cramér\'s V（类别×类别）｜ 绿=正相关，红=负相关，蓝=无方向｜ * q<0.05 · ** q<0.01 · *** q<0.001（FDR 校正）') }}
+      <span
+        class="hint target-legend"
+        :title="$t('r = Pearson · ρ = Spearman · η = 相关比（数值×类别） · V = Cramér\'s V（类别×类别）｜ 绿=正相关，红=负相关，蓝=无方向｜ * q<0.05 · ** q<0.01 · *** q<0.001（FDR 校正）')"
+      >
+        {{ $t('r/ρ 有方向 · V/η 无方向 · 绿正红负 · * FDR 显著') }}
       </span>
     </div>
 

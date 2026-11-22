@@ -52,6 +52,7 @@ windows no longer squeeze the tab bar.
 Also included:
 
 - Top bar keeps only the file name and a settings button; filters, presets, sharing and changing CSV live under Settings → Actions
+- Control bars use inline labels and stay on one row on desktop; multi-select variable pickers collapse into one-line floating pickers
 - Global row filter (category values, numeric / date ranges, AND combined); all statistics, charts, preview and share links use the filtered rows
 - Settings drawer: theme tokens, density, radius, shadow, table styles
 - 4 palette presets + custom palette; per-chart and per-series colors

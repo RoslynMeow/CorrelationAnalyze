@@ -1,4 +1,4 @@
-/** 由 scripts/i18n-catalog.mjs 生成；请勿手改。共 425 条。 */
+/** 由 scripts/i18n-catalog.mjs 生成；请勿手改。共 429 条。 */
 export const TEXT_CATALOG: string[] = [
   " · 最多 {max} 个",
   "（不堆叠）",
@@ -297,6 +297,8 @@ export const TEXT_CATALOG: string[] = [
   "维度",
   "维度（最多 6 个）",
   "未发现 |r| ≥ 0.8 的强相关变量对。",
+  "未选择",
+  "未选择（等同普通相关）",
   "未选择控制变量（等同普通相关）",
   "未载入",
   "文案",
@@ -348,7 +350,7 @@ export const TEXT_CATALOG: string[] = [
   "已删除预设",
   "已修改 {n} 条",
   "已选",
-  "已选 {n} 个",
+  "已选 {n} / {total}",
   "已应用分享的视图",
   "已应用预设：{name}",
   "已载入 {rows} 行 × {cols} 列{note}",
@@ -400,6 +402,7 @@ export const TEXT_CATALOG: string[] = [
   "自适应（100%）",
   "最大值",
   "最大组",
+  "最多 {max} 个",
   "最强关联",
   "最晚",
   "最小值",
@@ -415,6 +418,7 @@ export const TEXT_CATALOG: string[] = [
   "r / ρ 反映线性或单调关系（−1 ~ 1）；V / η 只表示关联强度（0 ~ 1）。相关性不等于因果，样本量 {n} 时请结合业务判断。",
   "r / ρ 为有符号相关，V / η 只反映强度。",
   "r = Pearson · ρ = Spearman · η = 相关比（数值×类别） · V = Cramér's V（类别×类别）｜ 绿=正相关，红=负相关，蓝=无方向｜ * q<0.05 · ** q<0.01 · *** q<0.001（FDR 校正）",
+  "r/ρ 有方向 · V/η 无方向 · 绿正红负 · * FDR 显著",
   "Spearman ρ（单调关系）",
   "Spearman（秩相关）",
   "SVG（矢量）",

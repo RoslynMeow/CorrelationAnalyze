@@ -5,7 +5,7 @@ import { useDatasetStore } from '@/stores/dataset'
 import { useViewStore } from '@/stores/view'
 import PlotlyChart from '@/components/PlotlyChart.vue'
 import SelectField from '@/components/SelectField.vue'
-import ChipGroup from '@/components/ChipGroup.vue'
+import ChipPicker from '@/components/ChipPicker.vue'
 import { baseLayout } from '@/lib/chartTheme'
 import { withAlpha } from '@/lib/color'
 import { groupLabels } from '@/lib/infer'
@@ -89,20 +89,18 @@ const charts = computed(() => {
 
 <template>
   <section class="panel panel-fit">
-    <div class="controls controls-chips">
+    <div class="controls">
       <SelectField
         v-model="groupName"
         :label="$t('分组列')"
         :options="ds.groups.map((c) => ({ value: c.name, label: settings.columnLabel(c.name) }))"
       />
       <label class="chk"><input v-model="showPts" type="checkbox" /> {{ $t('叠加散点') }}</label>
-      <div class="chipfield">
-        <span class="chipfield-label">{{ $t('对比数值变量（可多选）') }}</span>
-        <ChipGroup
-          v-model="vars"
-          :options="ds.nums.map((c) => ({ value: c.name, label: settings.columnLabel(c.name) }))"
-        />
-      </div>
+      <ChipPicker
+        v-model="vars"
+        :label="$t('对比数值变量（可多选）')"
+        :options="ds.nums.map((c) => ({ value: c.name, label: settings.columnLabel(c.name) }))"
+      />
     </div>
 
     <div v-if="!groupName" class="card hint">
