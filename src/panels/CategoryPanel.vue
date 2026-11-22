@@ -8,6 +8,7 @@ import { groupLabels } from '@/lib/infer'
 import { isNull } from '@/lib/format'
 import { useNarrow } from '@/composables/useNarrow'
 import { useSettingsStore } from '@/stores/settings'
+import { t } from '@/i18n'
 
 const ds = useDatasetStore()
 const settings = useSettingsStore()
@@ -27,7 +28,7 @@ const categoryOptions = computed(() => {
 })
 
 const stackOptions = computed(() => [
-  { value: '', label: '（不堆叠）' },
+  { value: '', label: t('（不堆叠）') },
   ...ds.groups
     .filter((c) => c.name !== catName.value)
     .map((c) => ({ value: c.name, label: settings.columnLabel(c.name) })),
@@ -37,7 +38,7 @@ const built = computed(() => {
   const col = ds.column(catName.value)
   if (!col) return null
   const order = groupLabels(col)
-  const labels = col.raw.map((v) => (isNull(v) ? '(缺失)' : String(v).trim()))
+  const labels = col.raw.map((v) => (isNull(v) ? t('(缺失)') : String(v).trim()))
   const totals: Record<string, number> = {}
   labels.forEach((l) => {
     totals[l] = (totals[l] || 0) + 1
@@ -48,10 +49,10 @@ const built = computed(() => {
     ? groupLabels(scol)
     : [null]
   const stackLabels = scol
-    ? scol.raw.map((v) => (isNull(v) ? '(缺失)' : String(v).trim()))
+    ? scol.raw.map((v) => (isNull(v) ? t('(缺失)') : String(v).trim()))
     : null
   const orderDisplay = order.map((v) =>
-    v === '(缺失)' ? v : settings.valueLabel(col.name, v),
+    v === t('(缺失)') ? v : settings.valueLabel(col.name, v),
   )
 
   const traces = stackOrder.map((sl, si) => {
@@ -73,7 +74,9 @@ const built = computed(() => {
       x: orderDisplay,
       y: ys,
       marker: { color: settings.paletteColor(si) || PALETTE_FALLBACK },
-      hovertemplate: percent.value ? '%{x}<br>%{y:.1f}%<extra></extra>' : '%{x}<br>%{y} 行<extra></extra>',
+      hovertemplate: percent.value
+        ? t('%{x}<br>%{y:.1f}%<extra></extra>')
+        : t('%{x}<br>%{y} 行<extra></extra>'),
     }
   })
 
@@ -92,7 +95,7 @@ const built = computed(() => {
         title: { text: settings.columnLabel(catName.value) },
         tickangle: order.length > 6 ? -30 : 0,
       },
-      yaxis: { title: { text: percent.value ? '百分比 (%)' : '行数' } },
+      yaxis: { title: { text: percent.value ? t('百分比 (%)') : t('行数') } },
       legend: { orientation: 'h', y: -0.2 },
       showlegend: !!scol,
     }),
@@ -103,9 +106,9 @@ const built = computed(() => {
 <template>
   <section class="panel">
     <div class="controls">
-      <SelectField v-model="catName" label="类别列" :options="categoryOptions" />
-      <SelectField v-model="stackName" label="堆叠分组" :options="stackOptions" />
-      <label class="chk"><input v-model="percent" type="checkbox" /> 显示百分比</label>
+      <SelectField v-model="catName" :label="$t('类别列')" :options="categoryOptions" />
+      <SelectField v-model="stackName" :label="$t('堆叠分组')" :options="stackOptions" />
+      <label class="chk"><input v-model="percent" type="checkbox" /> {{ $t('显示百分比') }}</label>
     </div>
 
     <div class="card" style="padding: 8px 8px 0">
@@ -116,15 +119,15 @@ const built = computed(() => {
         :layout="built.layout"
         :height="chartH"
       />
-      <div v-else class="empty-chart">该数据集没有可用的类别列</div>
+      <div v-else class="empty-chart">{{ $t('该数据集没有可用的类别列') }}</div>
     </div>
 
     <div v-if="built" class="statstrip">
-      <div class="stat"><span>类别数</span><b>{{ Object.keys(built.totals).length }}</b></div>
-      <div class="stat"><span>最大组</span><b>{{ built.maxCount }} 行</b></div>
-      <div class="stat"><span>最小组</span><b>{{ built.minCount }} 行</b></div>
+      <div class="stat"><span>{{ $t('类别数') }}</span><b>{{ Object.keys(built.totals).length }}</b></div>
+      <div class="stat"><span>{{ $t('最大组') }}</span><b>{{ built.maxCount }} 行</b></div>
+      <div class="stat"><span>{{ $t('最小组') }}</span><b>{{ built.minCount }} 行</b></div>
       <div class="stat">
-        <span>不平衡比</span>
+        <span>{{ $t('不平衡比') }}</span>
         <b>{{ built.minCount ? (built.maxCount / built.minCount).toFixed(2) : '—' }}</b>
       </div>
     </div>

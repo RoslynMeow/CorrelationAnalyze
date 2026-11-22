@@ -9,6 +9,7 @@ import { isNull } from '@/lib/format'
 import { describe, kde } from '@/lib/stats'
 import { useNarrow } from '@/composables/useNarrow'
 import { useSettingsStore } from '@/stores/settings'
+import { t } from '@/i18n'
 
 const ds = useDatasetStore()
 const settings = useSettingsStore()
@@ -44,7 +45,7 @@ const built = computed(() => {
   const gcol = groupName.value ? ds.column(groupName.value) : null
 
   if (gcol) {
-    const labels = gcol.raw.map((v) => (isNull(v) ? '(缺失)' : String(v).trim()))
+    const labels = gcol.raw.map((v) => (isNull(v) ? t('(缺失)') : String(v).trim()))
     groupLabels(gcol).forEach((lab, gi) => {
       const vals = col.num!.filter((v, i) => v !== null && labels[i] === lab) as number[]
       if (!vals.length) return
@@ -101,7 +102,7 @@ const built = computed(() => {
       barmode: 'overlay',
       bargap: 0.02,
       xaxis: { title: { text: varLabel } },
-      yaxis: { title: { text: '密度' } },
+      yaxis: { title: { text: t('密度') } },
       legend: { orientation: 'h', y: -0.16 },
       showlegend: !!gcol,
     }),
@@ -114,11 +115,11 @@ const stats = computed(() => {
   const s = describe(col.num)
   if (!s) return []
   return [
-    { k: '有效样本', v: `${s.n}` },
-    { k: '均值', v: s.mean.toFixed(3) },
-    { k: '标准差', v: s.sd.toFixed(3) },
-    { k: '中位数', v: s.median.toFixed(3) },
-    { k: '范围', v: `${s.min.toFixed(2)} ~ ${s.max.toFixed(2)}` },
+    { k: t('有效样本'), v: `${s.n}` },
+    { k: t('均值'), v: s.mean.toFixed(3) },
+    { k: t('标准差'), v: s.sd.toFixed(3) },
+    { k: t('中位数'), v: s.median.toFixed(3) },
+    { k: t('范围'), v: `${s.min.toFixed(2)} ~ ${s.max.toFixed(2)}` },
   ]
 })
 </script>
@@ -128,29 +129,29 @@ const stats = computed(() => {
     <div class="controls">
       <SelectField
         v-model="varName"
-        label="数值变量"
+        :label="$t('数值变量')"
         :options="ds.nums.map((c) => ({ value: c.name, label: settings.columnLabel(c.name) }))"
       />
       <SelectField
         v-model="groupName"
-        label="分组叠加"
+        :label="$t('分组叠加')"
         :options="[
-          { value: '', label: '（不分组）' },
+          { value: '', label: $t('（不分组）') },
           ...ds.groups.map((c) => ({ value: c.name, label: settings.columnLabel(c.name) })),
         ]"
       />
       <SelectField
         v-model="bins"
-        label="分箱数"
+        :label="$t('分箱数')"
         :options="[
-          { value: '0', label: '自动' },
+          { value: '0', label: $t('自动') },
           { value: '10', label: '10' },
           { value: '20', label: '20' },
           { value: '30', label: '30' },
           { value: '50', label: '50' },
         ]"
       />
-      <label class="chk"><input v-model="showKde" type="checkbox" /> 核密度曲线</label>
+      <label class="chk"><input v-model="showKde" type="checkbox" /> {{ $t('核密度曲线') }}</label>
     </div>
 
     <div class="card" style="padding: 8px 8px 0">
@@ -161,7 +162,7 @@ const stats = computed(() => {
         :layout="built.layout"
         :height="chartH"
       />
-      <div v-else class="empty-chart">该列没有可用的数值，无法绘制分布</div>
+      <div v-else class="empty-chart">{{ $t('该列没有可用的数值，无法绘制分布') }}</div>
     </div>
 
     <div class="statstrip">

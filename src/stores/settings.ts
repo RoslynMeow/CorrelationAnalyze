@@ -451,6 +451,22 @@ export const useSettingsStore = defineStore('settings', () => {
     state.value.data.valueAliases = all
   }
 
+  /* ---------------- 界面文案 ---------------- */
+
+  const textOverrideCount = computed(() => Object.keys(state.value.text.overrides).length)
+
+  function setTextOverride(key: string, value: string): void {
+    const next = { ...state.value.text.overrides }
+    const text = value.trim()
+    if (text) next[key] = text.slice(0, 500)
+    else delete next[key]
+    state.value.text.overrides = next
+  }
+
+  function clearTextOverrides(): void {
+    state.value.text.overrides = {}
+  }
+
   /* ---------------- 色板 ---------------- */
 
   function setPalette(colors: string[]): void {
@@ -527,6 +543,9 @@ export const useSettingsStore = defineStore('settings', () => {
     setColumnAlias,
     setValueAlias,
     clearValueAliases,
+    textOverrideCount,
+    setTextOverride,
+    clearTextOverrides,
     setPalette,
     setPaletteColor,
     toJson,

@@ -15,6 +15,7 @@ import { assoc, computePairs, slimColumns } from '@/lib/associations'
 import AssociationsWorker from '@/workers/associations.worker?worker&inline'
 import type { AssocMethod, Column, Dataset, PairAssoc } from '@/types'
 import { toast } from '@/composables/useToast'
+import { t } from '@/i18n'
 import { useSettingsStore } from './settings'
 
 interface PendingCall {
@@ -42,7 +43,12 @@ export const useDatasetStore = defineStore('dataset', () => {
   const assocs = computed<Column[]>(() => (dataset.value ? assocCols(dataset.value) : []))
   const targets = computed<Column[]>(() => (dataset.value ? targetCols(dataset.value) : []))
   const chipTitle = computed(() =>
-    dataset.value ? `${fileName.value} · ${dataset.value.n} 行 × ${dataset.value.headers.length} 列` : '',
+    dataset.value
+      ? `${fileName.value} · ${t('{rows} 行 × {cols} 列', {
+          rows: dataset.value.n,
+          cols: dataset.value.headers.length,
+        })}`
+      : '',
   )
 
   function column(name: string): Column | undefined {
@@ -50,7 +56,7 @@ export const useDatasetStore = defineStore('dataset', () => {
   }
 
   function applyData(headers: string[], rows: string[][], name: string): void {
-    if (!headers.length) throw new Error('没有解析到表头')
+    if (!headers.length) throw new Error(t('没有解析到表头'))
     const ds = buildDataset(name, headers, rows)
     dataset.value = ds
     fileName.value = name
@@ -58,9 +64,9 @@ export const useDatasetStore = defineStore('dataset', () => {
     datasetId.value++
     pairCache.value = {}
     error.value = ''
-    document.title = `${name} · 关联性分析`
+    document.title = `${name} · ${t('关联性分析')}`
     if (ds.truncated) {
-      toast(`数据超过 ${ds.n.toLocaleString('zh-CN')} 行，仅载入前 ${ds.n.toLocaleString('zh-CN')} 行`, 4000)
+      toast(t('数据超过 {n} 行，仅载入前 {n} 行', { n: ds.n.toLocaleString('zh-CN') }), 4000)
     }
   }
 
@@ -71,11 +77,20 @@ export const useDatasetStore = defineStore('dataset', () => {
       const text = await readTextSmart(file)
       const { headers, rows, delim } = parseCSV(text)
       applyData(headers, rows, file.name.replace(/\.(csv|tsv|txt)$/i, ''))
-      const sepNote = delim !== ',' ? `（分隔符：${delim === '\t' ? 'Tab' : delim}）` : ''
-      toast(`已载入 ${rows.length.toLocaleString('zh-CN')} 行 × ${headers.length} 列${sepNote}`)
+      const sepNote =
+        delim !== ','
+          ? t('（分隔符：{d}）', { d: delim === '\t' ? 'Tab' : delim })
+          : ''
+      toast(
+        t('已载入 {rows} 行 × {cols} 列{note}', {
+          rows: rows.length.toLocaleString('zh-CN'),
+          cols: headers.length,
+          note: sepNote,
+        }),
+      )
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err)
-      error.value = '读取失败：' + msg
+      error.value = t('读取失败：{msg}', { msg })
       toast(error.value, 4500)
     } finally {
       loading.value = false
@@ -88,7 +103,7 @@ export const useDatasetStore = defineStore('dataset', () => {
     pairCache.value = {}
     error.value = ''
     useSettingsStore().activateProfile(null)
-    document.title = '关联性分析'
+    document.title = t('关联性分析')
   }
 
   /* ---------------- 变量对计算（Web Worker + 主线程回退） ---------------- */

@@ -8,6 +8,7 @@ import { divergingScale, sequentialScale } from '@/lib/color'
 import { cramersV, pearson, ranks } from '@/lib/stats'
 import { useNarrow } from '@/composables/useNarrow'
 import { useSettingsStore } from '@/stores/settings'
+import { t } from '@/i18n'
 import type { Column } from '@/types'
 
 const ds = useDatasetStore()
@@ -137,11 +138,18 @@ const layout = computed(() =>
 
 const note = computed(() => {
   if (mode.value === 'num') {
-    return `数值变量 ${cols.value.length} 个 · ${
-      method.value === 'spearman' ? 'Spearman ρ（单调关系）' : 'Pearson r（线性关系）'
-    } · 蓝色为负、红色为正`
+    return t('数值变量 {n} 个 · {method} · 蓝色为负、红色为正', {
+      n: cols.value.length,
+      method:
+        method.value === 'spearman'
+          ? t('Spearman ρ（单调关系）')
+          : t('Pearson r（线性关系）'),
+    })
   }
-  return `类别变量 ${cols.value.length} 个（每列 ≤ 25 个取值）· V 越大关联越强（0 ~ 1），与方向无关`
+  return t(
+    '类别变量 {n} 个（每列 ≤ 25 个取值）· V 越大关联越强（0 ~ 1），与方向无关',
+    { n: cols.value.length },
+  )
 })
 </script>
 
@@ -150,23 +158,23 @@ const note = computed(() => {
     <div class="controls">
       <div class="seg">
         <button type="button" :class="{ active: mode === 'num' }" @click="mode = 'num'">
-          数值变量
+          {{ $t('数值变量') }}
         </button>
         <button type="button" :class="{ active: mode === 'cat' }" @click="mode = 'cat'">
-          类别变量
+          {{ $t('类别变量') }}
         </button>
       </div>
       <SelectField
         v-model="method"
-        label="相关方法"
+        :label="$t('相关方法')"
         :disabled="mode === 'cat'"
         :options="[
-          { value: 'pearson', label: 'Pearson（线性）' },
-          { value: 'spearman', label: 'Spearman（秩相关）' },
+          { value: 'pearson', label: $t('Pearson（线性）') },
+          { value: 'spearman', label: $t('Spearman（秩相关）') },
         ]"
       />
-      <label class="chk"><input v-model="mask" type="checkbox" /> 只显示下三角</label>
-      <label class="chk"><input v-model="annot" type="checkbox" /> 标注数值</label>
+      <label class="chk"><input v-model="mask" type="checkbox" /> {{ $t('只显示下三角') }}</label>
+      <label class="chk"><input v-model="annot" type="checkbox" /> {{ $t('标注数值') }}</label>
     </div>
 
     <div class="card" style="padding: 8px 8px 0">
@@ -179,7 +187,7 @@ const note = computed(() => {
         :max-width="chartW"
       />
       <div v-else class="empty-chart">
-        {{ mode === 'num' ? '数值列不足 2 个' : '类别列不足 2 个' }}，无法计算矩阵
+        {{ $t('{msg}，无法计算矩阵', { msg: mode === 'num' ? $t('数值列不足 2 个') : $t('类别列不足 2 个') }) }}
       </div>
     </div>
     <div class="hint" style="margin-top: 8px">{{ note }}</div>

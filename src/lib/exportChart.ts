@@ -1,4 +1,5 @@
 import Plotly from 'plotly.js-dist-min'
+import { t } from '@/i18n'
 
 async function toDataUrl(
   el: HTMLElement,
@@ -119,22 +120,22 @@ export function tracesToTsv(
     const n = Math.min(dims[0]?.values?.length || 0, MAX_ROWS)
     for (let i = 0; i < n; i++) rows.push(dims.map((d) => d.values?.[i] ?? ''))
   } else if (first.type === 'scatterpolar') {
-    rows.push(['系列', '维度', '值'])
+    rows.push([t('系列'), t('维度'), t('值')])
     for (const t of list) {
       ;(t.theta || []).forEach((th, i) => {
         rows.push([cell(t.name), cell(th), t.r?.[i] ?? ''])
       })
     }
   } else if (first.type === 'box') {
-    rows.push(['系列', '值'])
+    rows.push([t('系列'), t('值')])
     for (const t of list) for (const v of t.y || []) rows.push([cell(t.name), v])
   } else if (first.type === 'histogram') {
-    rows.push(['系列', '值'])
+    rows.push([t('系列'), t('值')])
     for (const t of list) for (const v of t.x || []) rows.push([cell(t.name), v])
   } else if (first.type === 'bar' && first.orientation === 'h') {
     const multi = list.length > 1 || list.some((t) => t.name)
     const header = multi
-      ? ['系列', axisTitle(layout, 'y'), axisTitle(layout, 'x')]
+      ? [t('系列'), axisTitle(layout, 'y'), axisTitle(layout, 'x')]
       : [axisTitle(layout, 'y'), axisTitle(layout, 'x')]
     rows.push(header)
     for (const t of list) {
@@ -151,7 +152,7 @@ export function tracesToTsv(
     const multi = list.length > 1 || list.some((t) => t.name)
     rows.push(
       multi
-        ? ['系列', axisTitle(layout, 'x'), axisTitle(layout, 'y')]
+        ? [t('系列'), axisTitle(layout, 'x'), axisTitle(layout, 'y')]
         : [axisTitle(layout, 'x'), axisTitle(layout, 'y')],
     )
     for (const t of list) {

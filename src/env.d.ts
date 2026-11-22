@@ -6,6 +6,12 @@ declare module '*.vue' {
   export default component
 }
 
+declare module 'vue' {
+  interface ComponentCustomProperties {
+    $t: (key: string, params?: Record<string, string | number>) => string
+  }
+}
+
 declare module 'plotly.js-dist-min' {
   export interface PlotlyStatic {
     react(
@@ -22,3 +28,5 @@ declare module 'plotly.js-dist-min' {
   const Plotly: PlotlyStatic
   export default Plotly
 }
+
+export {}

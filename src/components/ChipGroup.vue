@@ -76,44 +76,44 @@ function clear(): void {
   <div class="chipgroup">
     <div class="chipbar">
       <span class="chipcount">
-        已选 <b>{{ selectedCount }}</b> / {{ opts.length
-        }}<template v-if="props.max"> · 最多 {{ props.max }} 个</template>
+        {{ $t('已选') }} <b>{{ selectedCount }}</b> / {{ opts.length
+        }}<template v-if="props.max">{{ $t(' · 最多 {max} 个', { max: props.max }) }}</template>
       </span>
       <input
         v-if="showSearch"
         v-model="keyword"
         class="chipsearch"
         type="search"
-        placeholder="筛选变量…"
-        aria-label="筛选变量"
+        :placeholder="$t('筛选变量…')"
+        :aria-label="$t('筛选变量')"
       />
       <span class="chipspacer"></span>
       <button
         class="linkbtn"
         type="button"
         :disabled="!shown.length || allShownSelected"
-        title="全选当前筛选结果"
+        :title="$t('全选当前筛选结果')"
         @click="selectAll"
       >
-        全选
+        {{ $t('全选') }}
       </button>
       <button
         class="linkbtn"
         type="button"
         :disabled="!shown.length"
-        title="反选当前筛选结果"
+        :title="$t('反选当前筛选结果')"
         @click="invert"
       >
-        反选
+        {{ $t('反选') }}
       </button>
       <button
         class="linkbtn"
         type="button"
         :disabled="!selectedCount"
-        title="清空全部选择"
+        :title="$t('清空全部选择')"
         @click="clear"
       >
-        清空
+        {{ $t('清空') }}
       </button>
     </div>
 

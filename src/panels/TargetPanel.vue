@@ -8,6 +8,7 @@ import { pickTarget } from '@/lib/infer'
 import { fmtInt, shortName } from '@/lib/format'
 import { useNarrow } from '@/composables/useNarrow'
 import { useSettingsStore } from '@/stores/settings'
+import { t } from '@/i18n'
 import type { AssocMethod } from '@/types'
 
 const ds = useDatasetStore()
@@ -46,8 +47,9 @@ const traces = computed(() => [
       d.signed === null ? '—' : d.signed.toFixed(2),
       d.n,
     ]),
-    hovertemplate:
+    hovertemplate: t(
       '<b>%{customdata[0]}</b><br>关联强度 %{x:.3f}（%{customdata[1]}）<br>有符号值 %{customdata[2]} · n=%{customdata[3]}<extra></extra>',
+    ),
   },
 ])
 
@@ -60,7 +62,7 @@ const layout = computed(() =>
       t: 26,
       b: 50,
     },
-    xaxis: { title: { text: '关联强度' }, range: [0, 1.05] },
+    xaxis: { title: { text: t('关联强度') }, range: [0, 1.05] },
     yaxis: { tickfont: { size: narrow.value ? 9.5 : 11 }, automargin: true },
     showlegend: false,
   }),
@@ -70,11 +72,20 @@ const stats = computed(() => {
   if (!list.value.length) return []
   const strongest = list.value[0]
   return [
-    { k: '目标类型', v: target.value?.type === 'number' ? '数值目标' : '类别目标' },
-    { k: '参与分析', v: `${list.value.length} 个变量` },
-    { k: '关联最强', v: `${settings.columnLabel(strongest.name)}（${strongest.strength.toFixed(2)} ${strongest.type}）` },
-    { k: '强度 ≥ 0.5', v: `${list.value.filter((d) => d.strength >= 0.5).length} 个` },
-    { k: '完整样本', v: fmtInt(strongest.n) },
+    {
+      k: t('目标类型'),
+      v: target.value?.type === 'number' ? t('数值目标') : t('类别目标'),
+    },
+    { k: t('参与分析'), v: t('{n} 个变量', { n: list.value.length }) },
+    {
+      k: t('关联最强'),
+      v: `${settings.columnLabel(strongest.name)}（${strongest.strength.toFixed(2)} ${strongest.type}）`,
+    },
+    {
+      k: t('强度 ≥ 0.5'),
+      v: t('{n} 个', { n: list.value.filter((d) => d.strength >= 0.5).length }),
+    },
+    { k: t('完整样本'), v: fmtInt(strongest.n) },
   ]
 })
 </script>
@@ -84,20 +95,19 @@ const stats = computed(() => {
     <div class="controls">
       <SelectField
         v-model="targetName"
-        label="目标变量"
+        :label="$t('目标变量')"
         :options="ds.targets.map((c) => ({ value: c.name, label: settings.columnLabel(c.name) }))"
       />
       <SelectField
         v-model="method"
-        label="数值相关方法"
+        :label="$t('数值相关方法')"
         :options="[
-          { value: 'pearson', label: 'Pearson' },
-          { value: 'spearman', label: 'Spearman' },
+          { value: 'pearson', label: $t('Pearson') },
+          { value: 'spearman', label: $t('Spearman') },
         ]"
       />
       <span class="hint hint-wide">
-        r = Pearson · ρ = Spearman · η = 相关比（数值×类别） · V = Cramér's V（类别×类别）｜
-        绿=正相关，红=负相关，蓝=无方向
+        {{ $t('r = Pearson · ρ = Spearman · η = 相关比（数值×类别） · V = Cramér\'s V（类别×类别）｜ 绿=正相关，红=负相关，蓝=无方向') }}
       </span>
     </div>
 
@@ -109,7 +119,7 @@ const stats = computed(() => {
         :layout="layout"
         :height="chartH"
       />
-      <div v-else class="empty-chart">目标变量与其他列没有足够的完整数据</div>
+      <div v-else class="empty-chart">{{ $t('目标变量与其他列没有足够的完整数据') }}</div>
     </div>
 
     <div class="statstrip">

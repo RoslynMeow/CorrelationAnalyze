@@ -11,6 +11,7 @@ import { isNull } from '@/lib/format'
 import { describe } from '@/lib/stats'
 import { useNarrow } from '@/composables/useNarrow'
 import { useSettingsStore } from '@/stores/settings'
+import { t } from '@/i18n'
 
 const ds = useDatasetStore()
 const settings = useSettingsStore()
@@ -32,7 +33,7 @@ const built = computed(() => {
   const displayNames = names.map((n) => settings.columnLabel(n))
 
   const groups = groupLabels(gcol)
-  const labels = gcol.raw.map((v) => (isNull(v) ? '(缺失)' : String(v).trim()))
+  const labels = gcol.raw.map((v) => (isNull(v) ? t('(缺失)') : String(v).trim()))
 
   // 每个维度先整体标准化，再按组求均值
   const normed = names.map((name) => {
@@ -110,19 +111,19 @@ const built = computed(() => {
     <div class="controls">
       <SelectField
         v-model="groupName"
-        label="分组列"
+        :label="$t('分组列')"
         :options="ds.groups.map((c) => ({ value: c.name, label: settings.columnLabel(c.name) }))"
       />
       <SelectField
         v-model="norm"
-        label="标准化"
+        :label="$t('标准化')"
         :options="[
-          { value: 'minmax', label: 'Min-Max（0–1）' },
-          { value: 'zscore', label: 'Z-Score' },
+          { value: 'minmax', label: $t('Min-Max（0–1）') },
+          { value: 'zscore', label: $t('Z-Score') },
         ]"
       />
       <div class="chipfield">
-        <span class="chipfield-label">画像维度（3–12 个）</span>
+        <span class="chipfield-label">{{ $t('画像维度（3–12 个）') }}</span>
         <ChipGroup
           v-model="dims"
           :options="ds.nums.map((c) => ({ value: c.name, label: settings.columnLabel(c.name) }))"
@@ -142,14 +143,17 @@ const built = computed(() => {
       <div v-else class="empty-chart">
         {{
           !groupName
-            ? '该数据集没有适合分组的列'
-            : '请至少选择 3 个数值维度来绘制雷达画像'
+            ? $t('该数据集没有适合分组的列')
+            : $t('请至少选择 3 个数值维度来绘制雷达画像')
         }}
       </div>
     </div>
     <div class="hint" style="margin-top: 8px">
-      各维度先按全样本标准化（{{ norm === 'zscore' ? 'Z-Score' : 'Min-Max 0–1' }}），再按组求均值。
-      标准化后 0.5 附近的差异不代表原始量级，仅用于形状对比。
+      {{
+        $t('各维度先按全样本标准化（{mode}），再按组求均值。标准化后 0.5 附近的差异不代表原始量级，仅用于形状对比。', {
+          mode: norm === 'zscore' ? 'Z-Score' : 'Min-Max 0–1',
+        })
+      }}
     </div>
   </section>
 </template>

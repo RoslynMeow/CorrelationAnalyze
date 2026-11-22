@@ -16,7 +16,7 @@ const emit = defineEmits<{
 
 <template>
   <header class="appbar">
-    <nav class="tabs" aria-label="分析页签">
+    <nav class="tabs" :aria-label="$t('分析页签')">
       <button
         v-for="t in tabs"
         :key="t.key"
@@ -25,14 +25,14 @@ const emit = defineEmits<{
         :class="{ active: active === t.key }"
         @click="emit('select', t.key)"
       >
-        {{ t.label }}
+        {{ $t(t.label) }}
       </button>
     </nav>
     <div class="appactions">
       <span class="filechip" :title="chipTitle">{{ fileName }}</span>
-      <button class="btn ghost" type="button" @click="emit('change')">更换 CSV</button>
-      <button class="btn icon" type="button" title="切换深/浅色" @click="emit('theme')">◐</button>
-      <button class="btn icon" type="button" title="设置" @click="emit('settings')">
+      <button class="btn ghost" type="button" @click="emit('change')">{{ $t('更换 CSV') }}</button>
+      <button class="btn icon" type="button" :title="$t('切换深/浅色')" @click="emit('theme')">◐</button>
+      <button class="btn icon" type="button" :title="$t('设置')" @click="emit('settings')">
         <svg
           viewBox="0 0 16 16"
           width="14"

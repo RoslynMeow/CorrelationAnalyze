@@ -11,7 +11,8 @@
     "preview": "vite preview",
     "typecheck": "vue-tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "i18n:catalog": "node scripts/i18n-catalog.mjs"
   },
   "dependencies": {
     "pinia": "^4.1.0",

@@ -10,6 +10,7 @@ import { fmt, isNull } from '@/lib/format'
 import { linreg, pearson, spearman } from '@/lib/stats'
 import { useNarrow } from '@/composables/useNarrow'
 import { useSettingsStore } from '@/stores/settings'
+import { t } from '@/i18n'
 
 const ds = useDatasetStore()
 const settings = useSettingsStore()
@@ -31,11 +32,11 @@ const xOptions = computed(() =>
   [...ds.nums, ...ds.dates].map((c) => ({ value: c.name, label: settings.columnLabel(c.name) })),
 )
 const colorOptions = computed(() => [
-  { value: '', label: '（不分组）' },
+  { value: '', label: t('（不分组）') },
   ...ds.groups.map((c) => ({ value: c.name, label: settings.columnLabel(c.name) })),
 ])
 const sizeOptions = computed(() => [
-  { value: '', label: '（固定大小）' },
+  { value: '', label: t('（固定大小）') },
   ...ds.nums.map((c) => ({ value: c.name, label: settings.columnLabel(c.name) })),
 ])
 
@@ -103,7 +104,7 @@ const built = computed(() => {
     const tr: Record<string, unknown> = {
       type: 'scattergl',
       mode: 'markers',
-      name: '数据点',
+      name: t('数据点'),
       x: idx.map((i) => xv[i]),
       y: idx.map((i) => yv[i]),
       marker: {
@@ -129,7 +130,7 @@ const built = computed(() => {
     traces.push({
       type: 'scatter',
       mode: 'lines',
-      name: '拟合线',
+      name: t('拟合线'),
       x: [xmin, xmax],
       y: [reg.a + reg.b * xmin, reg.a + reg.b * xmax],
       line: { color: 'rgba(120,130,150,0.9)', width: 2, dash: 'dash' },
@@ -140,12 +141,15 @@ const built = computed(() => {
   const r = reg ? reg.r : pearson(validX, validY)
   const rho = spearman(validX, validY)
   let note =
-    `样本 n = ${idx.length} · Pearson r = ${r === null ? '—' : r.toFixed(3)}` +
-    ` · Spearman ρ = ${rho === null ? '—' : rho.toFixed(3)}`
+    t('样本 n = {n} · Pearson r = {r} · Spearman ρ = {rho}', {
+      n: idx.length,
+      r: r === null ? '—' : r.toFixed(3),
+      rho: rho === null ? '—' : rho.toFixed(3),
+    })
   if (reg) {
-    note += ` · 拟合 y = ${fmt(reg.b, 3)}x ${reg.a >= 0 ? '+' : '−'} ${fmt(Math.abs(reg.a), 3)}`
+    note += ` · ${t('拟合')} y = ${fmt(reg.b, 3)}x ${reg.a >= 0 ? '+' : '−'} ${fmt(Math.abs(reg.a), 3)}`
   }
-  if (xc.type === 'date') note += ' · X 为日期，斜率按时间戳计算'
+  if (xc.type === 'date') note += ' · ' + t('X 为日期，斜率按时间戳计算')
 
   return {
     traces,
@@ -166,16 +170,16 @@ const built = computed(() => {
 <template>
   <section class="panel">
     <div class="controls">
-      <SelectField v-model="xName" label="X 轴" :options="xOptions" />
+      <SelectField v-model="xName" :label="$t('X 轴')" :options="xOptions" />
       <SelectField
         v-model="yName"
-        label="Y 轴"
+        :label="$t('Y 轴')"
         :options="ds.nums.map((c) => ({ value: c.name, label: settings.columnLabel(c.name) }))"
       />
-      <SelectField v-model="colorName" label="颜色分组" :options="colorOptions" />
-      <SelectField v-model="sizeName" label="气泡大小" :options="sizeOptions" />
-      <label class="chk"><input v-model="trend" type="checkbox" /> 拟合线</label>
-      <label class="chk"><input v-model="logX" type="checkbox" /> 对数 X</label>
+      <SelectField v-model="colorName" :label="$t('颜色分组')" :options="colorOptions" />
+      <SelectField v-model="sizeName" :label="$t('气泡大小')" :options="sizeOptions" />
+      <label class="chk"><input v-model="trend" type="checkbox" /> {{ $t('拟合线') }}</label>
+      <label class="chk"><input v-model="logX" type="checkbox" /> {{ $t('对数 X') }}</label>
     </div>
 
     <div class="card" style="padding: 8px 8px 0">
@@ -187,7 +191,7 @@ const built = computed(() => {
         :height="chartH"
       />
       <div v-else class="empty-chart">
-        {{ xName && yName ? '所选变量没有有效数值对' : '该数据集没有足够的数值列，无法绘制散点图' }}
+        {{ xName && yName ? $t('所选变量没有有效数值对') : $t('该数据集没有足够的数值列，无法绘制散点图') }}
       </div>
     </div>
     <div class="hint" style="margin-top: 8px">{{ built?.note }}</div>

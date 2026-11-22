@@ -9,6 +9,7 @@ import { groupLabels, pickGroup, preferredNums } from '@/lib/infer'
 import { isNull } from '@/lib/format'
 import { useNarrow } from '@/composables/useNarrow'
 import { useSettingsStore } from '@/stores/settings'
+import { t } from '@/i18n'
 
 const ds = useDatasetStore()
 const settings = useSettingsStore()
@@ -18,7 +19,7 @@ const colorName = ref(pickGroup(ds.groups))
 const dims = ref(preferredNums(ds.nums, 4))
 
 const colorOptions = computed(() => [
-  { value: '', label: '（不分组）' },
+  { value: '', label: t('（不分组）') },
   ...ds.groups.map((c) => ({ value: c.name, label: settings.columnLabel(c.name) })),
 ])
 const chartH = computed(() => (narrow.value ? 430 : 620))
@@ -53,7 +54,7 @@ const built = computed(() => {
 
   const legendTraces: Record<string, unknown>[] = []
   if (ccol) {
-    const labels = ccol.raw.map((v) => (isNull(v) ? '(缺失)' : String(v).trim()))
+    const labels = ccol.raw.map((v) => (isNull(v) ? t('(缺失)') : String(v).trim()))
     const order = groupLabels(ccol)
     const map = new Map(order.map((l, i) => [l, settings.paletteColor(i)]))
     ;(trace.marker as Record<string, unknown>).color = sample.map(
@@ -93,9 +94,9 @@ const built = computed(() => {
 <template>
   <section class="panel">
     <div class="controls">
-      <SelectField v-model="colorName" label="颜色分组" :options="colorOptions" />
+      <SelectField v-model="colorName" :label="$t('颜色分组')" :options="colorOptions" />
       <div class="chipfield">
-        <span class="chipfield-label">维度（最多 6 个）</span>
+        <span class="chipfield-label">{{ $t('维度（最多 6 个）') }}</span>
         <ChipGroup
           v-model="dims"
           :options="ds.nums.map((c) => ({ value: c.name, label: settings.columnLabel(c.name) }))"
@@ -113,7 +114,7 @@ const built = computed(() => {
         :height="chartH"
       />
       <div v-else class="empty-chart">
-        {{ dims.length < 2 ? '请至少选择 2 个数值维度' : '所选维度没有完整的行' }}
+        {{ dims.length < 2 ? $t('请至少选择 2 个数值维度') : $t('所选维度没有完整的行') }}
       </div>
     </div>
   </section>

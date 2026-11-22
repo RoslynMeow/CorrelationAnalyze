@@ -2,6 +2,8 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import ColorField from '@/components/ColorField.vue'
 import { PALETTES, DEFAULT_HEATMAP } from '@/settings/defaults'
+import { TEXT_CATALOG } from '@/i18n/catalog'
+import { t } from '@/i18n'
 import { useDatasetStore } from '@/stores/dataset'
 import { useSettingsStore } from '@/stores/settings'
 import { toast } from '@/composables/useToast'
@@ -12,16 +14,19 @@ const emit = defineEmits<{ (e: 'close'): void }>()
 
 const settings = useSettingsStore()
 const ds = useDatasetStore()
-const tab = ref<'appearance' | 'charts' | 'table' | 'data' | 'export' | 'config'>('appearance')
+const tab = ref<'appearance' | 'charts' | 'table' | 'data' | 'text' | 'export' | 'config'>('appearance')
 const fileInput = ref<HTMLInputElement | null>(null)
 const colQuery = ref('')
 const valueColumn = ref('')
+const textQuery = ref('')
+const overridesOnly = ref(false)
 
 const TABS = [
   { id: 'appearance', label: '外观' },
   { id: 'charts', label: '图表' },
   { id: 'table', label: '表格' },
   { id: 'data', label: '数据' },
+  { id: 'text', label: '文案' },
   { id: 'export', label: '导出' },
   { id: 'config', label: '配置' },
 ] as const
@@ -62,12 +67,33 @@ const valueAliasCount = computed(
   () => Object.keys(settings.state.data.valueAliases[valueColumn.value] ?? {}).length,
 )
 
+const filteredTexts = computed(() => {
+  const q = textQuery.value.trim().toLowerCase()
+  return TEXT_CATALOG.filter((key) => {
+    const ov = settings.state.text.overrides[key] || ''
+    if (overridesOnly.value && !ov) return false
+    if (!q) return true
+    return key.toLowerCase().includes(q) || ov.toLowerCase().includes(q)
+  })
+})
+
 function onColAlias(name: string, e: Event): void {
   settings.setColumnAlias(name, (e.target as HTMLInputElement).value)
 }
 
 function onValAlias(value: string, e: Event): void {
   settings.setValueAlias(valueColumn.value, value, (e.target as HTMLInputElement).value)
+}
+
+function onText(key: string, e: Event): void {
+  settings.setTextOverride(key, (e.target as HTMLInputElement).value)
+}
+
+function resetTextAll(): void {
+  if (window.confirm(t('恢复全部界面文案？'))) {
+    settings.clearTextOverrides()
+    toast(t('已恢复默认文案'))
+  }
 }
 
 const radius = computed(() => settings.state.appearance.radius ?? 14)
@@ -95,7 +121,7 @@ function exportConfig(): void {
   const url = URL.createObjectURL(blob)
   downloadDataUrl(url, 'association-analyzer-settings.json')
   setTimeout(() => URL.revokeObjectURL(url), 2000)
-  toast('配置已导出')
+  toast(t('配置已导出'))
 }
 
 async function onImport(e: Event): Promise<void> {
@@ -104,33 +130,33 @@ async function onImport(e: Event): Promise<void> {
   if (!f) return
   try {
     const text = await f.text()
-    if (settings.importJson(text)) toast('配置已导入')
-    else toast('配置文件格式不正确', 3500)
+    if (settings.importJson(text)) toast(t('配置已导入'))
+    else toast(t('配置文件格式不正确'), 3500)
   } catch {
-    toast('读取配置失败', 3500)
+    toast(t('读取配置失败'), 3500)
   } finally {
     input.value = ''
   }
 }
 
 function resetAll(): void {
-  if (window.confirm('恢复全部默认设置？当前自定义颜色、色板与单图配色都会清除。')) {
+  if (window.confirm(t('恢复全部默认设置？当前自定义颜色、色板与单图配色都会清除。'))) {
     settings.resetAll()
-    toast('已恢复默认设置')
+    toast(t('已恢复默认设置'))
   }
 }
 
 function clearCurrentProfile(): void {
-  if (window.confirm('清除当前 CSV 的列映射与单图配置？全局外观设置不受影响。')) {
+  if (window.confirm(t('清除当前 CSV 的列映射与单图配置？全局外观设置不受影响。'))) {
     settings.clearCurrentProfile()
-    toast('已清除当前文件配置')
+    toast(t('已清除当前文件配置'))
   }
 }
 
 function clearAllProfiles(): void {
-  if (window.confirm('清除所有按文件保存的列映射与图表配置？全局外观设置不受影响。')) {
+  if (window.confirm(t('清除所有按文件保存的列映射与图表配置？全局外观设置不受影响。'))) {
     settings.clearAllProfiles()
-    toast('已清除全部文件配置')
+    toast(t('已清除全部文件配置'))
   }
 }
 
@@ -155,11 +181,11 @@ onBeforeUnmount(() => {
 <template>
   <Teleport to="body">
     <div v-if="props.open" class="drawer-veil" @click="emit('close')"></div>
-    <aside v-if="props.open" class="drawer" role="dialog" aria-label="设置">
+    <aside v-if="props.open" class="drawer" role="dialog" :aria-label="$t('设置')">
       <header class="drawer-head">
-        <h3>设置</h3>
-        <span class="hint">自动保存在本机</span>
-        <button class="btn icon" type="button" title="关闭" @click="emit('close')">✕</button>
+        <h3>{{ $t('设置') }}</h3>
+        <span class="hint">{{ $t('自动保存在本机') }}</span>
+        <button class="btn icon" type="button" :title="$t('关闭')" @click="emit('close')">✕</button>
       </header>
 
       <nav class="drawer-tabs">
@@ -170,7 +196,7 @@ onBeforeUnmount(() => {
           :class="{ active: tab === t.id }"
           @click="tab = t.id"
         >
-          {{ t.label }}
+          {{ $t(t.label) }}
         </button>
       </nav>
 
@@ -178,91 +204,91 @@ onBeforeUnmount(() => {
         <!-- ================= 外观 ================= -->
         <section v-if="tab === 'appearance'" class="set-section">
           <div class="set-block">
-            <div class="set-label">主题</div>
+            <div class="set-label">{{ $t('主题') }}</div>
             <div class="seg full">
               <button
                 type="button"
                 :class="{ active: settings.state.appearance.mode === 'light' }"
                 @click="settings.state.appearance.mode = 'light'"
               >
-                浅色
+                {{ $t('浅色') }}
               </button>
               <button
                 type="button"
                 :class="{ active: settings.state.appearance.mode === 'dark' }"
                 @click="settings.state.appearance.mode = 'dark'"
               >
-                深色
+                {{ $t('深色') }}
               </button>
               <button
                 type="button"
                 :class="{ active: settings.state.appearance.mode === 'system' }"
                 @click="settings.state.appearance.mode = 'system'"
               >
-                跟随系统
+                {{ $t('跟随系统') }}
               </button>
             </div>
           </div>
 
           <div class="set-block">
-            <div class="set-label">颜色</div>
+            <div class="set-label">{{ $t('颜色') }}</div>
             <div class="color-grid">
               <ColorField
-                label="背景"
+                :label="$t('背景')"
                 :model-value="settings.state.appearance.colors.bg ?? null"
                 :fallback="settings.cssColor('--bg')"
                 @update:model-value="settings.state.appearance.colors.bg = $event ?? undefined"
               />
               <ColorField
-                label="面板"
+                :label="$t('面板')"
                 :model-value="settings.state.appearance.colors.panel ?? null"
                 :fallback="settings.cssColor('--panel')"
                 @update:model-value="settings.state.appearance.colors.panel = $event ?? undefined"
               />
               <ColorField
-                label="面板浅色"
+                :label="$t('面板浅色')"
                 :model-value="settings.state.appearance.colors.panel2 ?? null"
                 :fallback="settings.cssColor('--panel-2')"
                 @update:model-value="settings.state.appearance.colors.panel2 = $event ?? undefined"
               />
               <ColorField
-                label="文字"
+                :label="$t('文字')"
                 :model-value="settings.state.appearance.colors.text ?? null"
                 :fallback="settings.cssColor('--text')"
                 @update:model-value="settings.state.appearance.colors.text = $event ?? undefined"
               />
               <ColorField
-                label="次要文字"
+                :label="$t('次要文字')"
                 :model-value="settings.state.appearance.colors.muted ?? null"
                 :fallback="settings.cssColor('--muted')"
                 @update:model-value="settings.state.appearance.colors.muted = $event ?? undefined"
               />
               <ColorField
-                label="边框"
+                :label="$t('边框')"
                 :model-value="settings.state.appearance.colors.border ?? null"
                 :fallback="settings.cssColor('--border')"
                 @update:model-value="settings.state.appearance.colors.border = $event ?? undefined"
               />
               <ColorField
-                label="强调色"
+                :label="$t('强调色')"
                 :model-value="settings.state.appearance.colors.accent ?? null"
                 :fallback="settings.cssColor('--accent')"
                 @update:model-value="settings.state.appearance.colors.accent = $event ?? undefined"
               />
               <ColorField
-                label="强调浅底"
+                :label="$t('强调浅底')"
                 :model-value="settings.state.appearance.colors.accentSoft ?? null"
                 :fallback="settings.cssColor('--accent-soft')"
                 @update:model-value="settings.state.appearance.colors.accentSoft = $event ?? undefined"
               />
               <ColorField
-                label="正相关"
+                :label="$t('正相关')"
                 :model-value="settings.state.appearance.colors.good ?? null"
                 :fallback="settings.cssColor('--good')"
                 @update:model-value="settings.state.appearance.colors.good = $event ?? undefined"
               />
               <ColorField
-                label="负相关"
+                :label="$t('负相关')"
                 :model-value="settings.state.appearance.colors.bad ?? null"
                 :fallback="settings.cssColor('--bad')"
                 @update:model-value="settings.state.appearance.colors.bad = $event ?? undefined"
@@ -272,7 +298,7 @@ onBeforeUnmount(() => {
 
           <div class="set-block">
             <div class="set-label">
-              圆角
+              {{ $t('圆角') }}
               <span class="set-value">{{ radius }}px</span>
               <button
                 v-if="settings.state.appearance.radius !== null"
@@ -280,73 +306,73 @@ onBeforeUnmount(() => {
                 type="button"
                 @click="settings.state.appearance.radius = null"
               >
-                默认
+                {{ $t('默认') }}
               </button>
             </div>
             <input class="range" type="range" min="0" max="24" step="1" :value="radius" @input="onRadius" />
           </div>
 
           <div class="set-block">
-            <div class="set-label">密度</div>
+            <div class="set-label">{{ $t('密度') }}</div>
             <div class="seg full">
               <button
                 type="button"
                 :class="{ active: settings.state.appearance.density === 'compact' }"
                 @click="settings.state.appearance.density = 'compact'"
               >
-                紧凑
+                {{ $t('紧凑') }}
               </button>
               <button
                 type="button"
                 :class="{ active: settings.state.appearance.density === 'normal' }"
                 @click="settings.state.appearance.density = 'normal'"
               >
-                标准
+                {{ $t('标准') }}
               </button>
               <button
                 type="button"
                 :class="{ active: settings.state.appearance.density === 'comfortable' }"
                 @click="settings.state.appearance.density = 'comfortable'"
               >
-                宽松
+                {{ $t('宽松') }}
               </button>
             </div>
           </div>
 
           <div class="set-block">
-            <div class="set-label">卡片阴影</div>
+            <div class="set-label">{{ $t('卡片阴影') }}</div>
             <div class="seg full">
               <button
                 type="button"
                 :class="{ active: settings.state.appearance.shadow === 'none' }"
                 @click="settings.state.appearance.shadow = 'none'"
               >
-                无
+                {{ $t('无') }}
               </button>
               <button
                 type="button"
                 :class="{ active: settings.state.appearance.shadow === 'soft' }"
                 @click="settings.state.appearance.shadow = 'soft'"
               >
-                柔和
+                {{ $t('柔和') }}
               </button>
               <button
                 type="button"
                 :class="{ active: settings.state.appearance.shadow === 'strong' }"
                 @click="settings.state.appearance.shadow = 'strong'"
               >
-                强
+                {{ $t('强') }}
               </button>
             </div>
           </div>
 
-          <button class="btn" type="button" @click="settings.resetAppearance()">恢复默认外观</button>
+          <button class="btn" type="button" @click="settings.resetAppearance()">{{ $t('恢复默认外观') }}</button>
         </section>
 
         <!-- ================= 图表 ================= -->
         <section v-else-if="tab === 'charts'" class="set-section">
           <div class="set-block">
-            <div class="set-label">分类色板</div>
+            <div class="set-label">{{ $t('分类色板') }}</div>
             <div class="palette-list">
               <button
                 v-for="p in PALETTES"
@@ -356,7 +382,7 @@ onBeforeUnmount(() => {
                 :class="{ active: sameColors(settings.state.charts.palette, p.colors) }"
                 @click="applyPreset(p.colors)"
               >
-                <span class="palette-name">{{ p.name }}</span>
+                <span class="palette-name">{{ $t(p.name) }}</span>
                 <span class="palette-swatches">
                   <i v-for="c in p.colors" :key="c" :style="{ background: c }"></i>
                 </span>
@@ -365,12 +391,12 @@ onBeforeUnmount(() => {
           </div>
 
           <div class="set-block">
-            <div class="set-label">自定义色板</div>
+            <div class="set-label">{{ $t('自定义色板') }}</div>
             <div class="color-grid">
               <ColorField
                 v-for="(c, i) in settings.state.charts.palette"
                 :key="i"
-                :label="`颜色 ${i + 1}`"
+                :label="$t('颜色 {n}', { n: i + 1 })"
                 :model-value="c"
                 :fallback="c"
                 :resettable="false"
@@ -380,52 +406,52 @@ onBeforeUnmount(() => {
           </div>
 
           <div class="set-block">
-            <div class="set-label">图表宽度上限</div>
+            <div class="set-label">{{ $t('图表宽度上限') }}</div>
             <select v-model.number="settings.state.charts.defaultWidth" class="set-select">
-              <option :value="null">自适应（100%）</option>
+              <option :value="null">{{ $t('自适应（100%）') }}</option>
               <option :value="600">600px</option>
               <option :value="760">760px</option>
               <option :value="900">900px</option>
               <option :value="1100">1100px</option>
             </select>
             <p class="hint">
-              单图尺寸可在每张图左上角的「图表设置」里单独改（含小/中/大预设），优先级高于这里。
+              {{ $t('单图尺寸可在每张图左上角的「图表设置」里单独改（含小/中/大预设），优先级高于这里。') }}
             </p>
           </div>
 
           <div class="set-block">
-            <div class="set-label">热力图色阶</div>
+            <div class="set-label">{{ $t('热力图色阶') }}</div>
             <div class="color-grid">
               <ColorField
-                label="负 / 低端"
+                :label="$t('负 / 低端')"
                 :model-value="settings.state.charts.heatmap.neg"
                 :fallback="settings.state.charts.heatmap.neg"
                 :resettable="false"
                 @update:model-value="setHeatmap('neg', $event)"
               />
               <ColorField
-                label="中间"
+                :label="$t('中间')"
                 :model-value="settings.state.charts.heatmap.mid"
                 :fallback="settings.state.charts.heatmap.mid"
                 :resettable="false"
                 @update:model-value="setHeatmap('mid', $event)"
               />
               <ColorField
-                label="正 / 高端"
+                :label="$t('正 / 高端')"
                 :model-value="settings.state.charts.heatmap.pos"
                 :fallback="settings.state.charts.heatmap.pos"
                 :resettable="false"
                 @update:model-value="setHeatmap('pos', $event)"
               />
               <ColorField
-                label="类别矩阵低端"
+                :label="$t('类别矩阵低端')"
                 :model-value="settings.state.charts.heatmap.low"
                 :fallback="settings.state.charts.heatmap.low"
                 :resettable="false"
                 @update:model-value="setHeatmap('low', $event)"
               />
               <ColorField
-                label="类别矩阵高端"
+                :label="$t('类别矩阵高端')"
                 :model-value="settings.state.charts.heatmap.high"
                 :fallback="settings.state.charts.heatmap.high"
                 :resettable="false"
@@ -435,15 +461,15 @@ onBeforeUnmount(() => {
           </div>
 
           <div class="set-block">
-            <label class="chk"><input v-model="settings.state.charts.grid" type="checkbox" /> 显示坐标轴网格</label>
+            <label class="chk"><input v-model="settings.state.charts.grid" type="checkbox" /> {{ $t('显示坐标轴网格') }}</label>
             <label class="chk">
-              <input v-model="settings.state.charts.transparent" type="checkbox" /> 图表背景透明
+              <input v-model="settings.state.charts.transparent" type="checkbox" /> {{ $t('图表背景透明') }}
             </label>
             <label class="chk">
-              <input v-model="settings.state.charts.showModeBar" type="checkbox" /> 显示 Plotly 自带工具栏
+              <input v-model="settings.state.charts.showModeBar" type="checkbox" /> {{ $t('显示 Plotly 自带工具栏') }}
             </label>
             <p class="hint" style="margin-top: 6px">
-              默认关闭，使用图左上角的应用工具条（导出、复制、重置缩放、尺寸与配色）。需要原生缩放/平移按钮时可以打开。
+              {{ $t('默认关闭，使用图左上角的应用工具条（导出、复制、重置缩放、尺寸与配色）。需要原生缩放/平移按钮时可以打开。') }}
             </p>
           </div>
         </section>
@@ -452,13 +478,13 @@ onBeforeUnmount(() => {
         <section v-else-if="tab === 'table'" class="set-section">
           <div class="color-grid">
             <ColorField
-              label="表头背景"
+              :label="$t('表头背景')"
               :model-value="settings.state.table.headerBg"
               :fallback="tableHeaderFallback"
               @update:model-value="settings.state.table.headerBg = $event"
             />
             <ColorField
-              label="表格边框"
+              :label="$t('表格边框')"
               :model-value="settings.state.table.border"
               :fallback="tableBorderFallback"
               @update:model-value="settings.state.table.border = $event"
@@ -466,9 +492,9 @@ onBeforeUnmount(() => {
           </div>
 
           <div class="set-block">
-            <div class="set-label">字号</div>
+            <div class="set-label">{{ $t('字号') }}</div>
             <select v-model.number="settings.state.table.fontSize" class="set-select">
-              <option :value="null">默认（12.5px）</option>
+              <option :value="null">{{ $t('默认（12.5px）') }}</option>
               <option :value="11">11px</option>
               <option :value="12">12px</option>
               <option :value="13">13px</option>
@@ -476,23 +502,23 @@ onBeforeUnmount(() => {
             </select>
           </div>
 
-          <label class="chk"><input v-model="settings.state.table.zebra" type="checkbox" /> 斑马纹（隔行浅底）</label>
+          <label class="chk"><input v-model="settings.state.table.zebra" type="checkbox" /> {{ $t('斑马纹（隔行浅底）') }}</label>
         </section>
 
         <!-- ================= 数据 ================= -->
         <section v-else-if="tab === 'data'" class="set-section">
           <p class="hint">
-            映射只改显示，统计、缓存与导出仍使用原始列名和取值。映射按 CSV 表头自动保存，同一组列再次打开会恢复。
+            {{ $t('映射只改显示，统计、缓存与导出仍使用原始列名和取值。映射按 CSV 表头自动保存，同一组列再次打开会恢复。') }}
           </p>
 
           <template v-if="aliasColumns.length">
             <div class="set-block">
-              <div class="set-label">列显示名</div>
+              <div class="set-label">{{ $t('列显示名') }}</div>
               <input
                 v-model="colQuery"
                 class="alias-search"
                 type="search"
-                placeholder="搜索列名…"
+                :placeholder="$t('搜索列名…')"
               />
               <div class="alias-list">
                 <div v-for="c in filteredColumns" :key="c.name" class="alias-row">
@@ -504,18 +530,23 @@ onBeforeUnmount(() => {
                     @change="onColAlias(c.name, $event)"
                   />
                 </div>
-                <p v-if="!filteredColumns.length" class="hint alias-empty">没有匹配的列</p>
+                <p v-if="!filteredColumns.length" class="hint alias-empty">{{ $t('没有匹配的列') }}</p>
               </div>
             </div>
 
             <div class="set-block">
               <div class="set-label">
-                类别取值显示名
-                <span class="hint">{{ valueAliasCount }} 条映射</span>
+                {{ $t('类别取值显示名') }}
+                <span class="hint">{{ $t('{n} 条映射', { n: valueAliasCount }) }}</span>
               </div>
               <select v-model="valueColumn" class="set-select">
                 <option v-for="c in valueColumns" :key="c.name" :value="c.name">
-                  {{ settings.columnLabel(c.name) }}（{{ c.uniqueCount }} 个取值）
+                  {{
+                    $t('{name}（{n} 个取值）', {
+                      name: settings.columnLabel(c.name),
+                      n: c.uniqueCount,
+                    })
+                  }}
                 </option>
               </select>
               <div v-if="valueCol" class="alias-list">
@@ -536,17 +567,64 @@ onBeforeUnmount(() => {
                 style="align-self: flex-start"
                 @click="settings.clearValueAliases(valueColumn)"
               >
-                清除本列映射
+                {{ $t('清除本列映射') }}
               </button>
             </div>
           </template>
-          <p v-else class="hint">载入 CSV 后可以编辑列名与类别取值。</p>
+          <p v-else class="hint">{{ $t('载入 CSV 后可以编辑列名与类别取值。') }}</p>
+        </section>
+
+        <!-- ================= 文案 ================= -->
+        <section v-else-if="tab === 'text'" class="set-section">
+          <p class="hint">
+            {{ $t('左边是默认文案，右边填写自定义文案；留空恢复默认。只影响界面显示，不影响数据列名与取值。') }}
+          </p>
+          <div class="text-toolbar">
+            <input
+              v-model="textQuery"
+              class="alias-search"
+              type="search"
+              :placeholder="$t('搜索文案…')"
+            />
+            <label class="chk"><input v-model="overridesOnly" type="checkbox" /> {{ $t('只看已修改') }}</label>
+          </div>
+          <div class="text-list">
+            <div v-for="key in filteredTexts" :key="key" class="text-row">
+              <span class="text-key" :title="key">{{ key }}</span>
+              <input
+                class="text-input"
+                :value="settings.state.text.overrides[key] ?? ''"
+                :placeholder="key"
+                @change="onText(key, $event)"
+              />
+              <button
+                v-if="settings.state.text.overrides[key]"
+                class="linkbtn"
+                type="button"
+                @click="settings.setTextOverride(key, '')"
+              >
+                {{ $t('重置') }}
+              </button>
+            </div>
+            <p v-if="!filteredTexts.length" class="hint alias-empty">{{ $t('没有匹配的文案') }}</p>
+          </div>
+          <div class="set-actions">
+            <span class="hint">{{ $t('已修改 {n} 条', { n: settings.textOverrideCount }) }}</span>
+            <button
+              class="btn"
+              type="button"
+              :disabled="!settings.textOverrideCount"
+              @click="resetTextAll"
+            >
+              {{ $t('恢复全部文案') }}
+            </button>
+          </div>
         </section>
 
         <!-- ================= 导出 ================= -->
         <section v-else-if="tab === 'export'" class="set-section">
           <div class="set-block">
-            <div class="set-label">默认格式</div>
+            <div class="set-label">{{ $t('默认格式') }}</div>
             <div class="seg full">
               <button
                 type="button"
@@ -560,13 +638,13 @@ onBeforeUnmount(() => {
                 :class="{ active: settings.state.exportSettings.format === 'svg' }"
                 @click="settings.state.exportSettings.format = 'svg'"
               >
-                SVG（矢量）
+                {{ $t('SVG（矢量）') }}
               </button>
             </div>
           </div>
 
           <div class="set-block">
-            <div class="set-label">PNG 倍数</div>
+            <div class="set-label">{{ $t('PNG 倍数') }}</div>
             <div class="seg full">
               <button
                 v-for="s in [1, 2, 3]"
@@ -581,7 +659,7 @@ onBeforeUnmount(() => {
           </div>
 
           <p class="hint">
-            每张图左上角工具条：复制图片、下载 PNG / SVG、复制数据 TSV。SVG 不受倍数影响，始终为矢量。
+            {{ $t('每张图左上角工具条：复制图片、下载 PNG / SVG、复制数据 TSV。SVG 不受倍数影响，始终为矢量。') }}
           </p>
         </section>
 
@@ -589,11 +667,15 @@ onBeforeUnmount(() => {
         <section v-else class="set-section">
           <div class="set-block">
             <div class="set-label">
-              按文件配置
-              <span class="hint">{{ settings.profileCount }} 个文件</span>
+              {{ $t('按文件配置') }}
+              <span class="hint">{{ $t('{n} 个文件', { n: settings.profileCount }) }}</span>
             </div>
             <p class="hint">
-              当前文件：{{ settings.activeProfileName || '未载入' }}。列映射、单图尺寸 / 标题 / 配色按 CSV 表头保存。
+              {{
+                $t('当前文件：{name}。列映射、单图尺寸 / 标题 / 配色按 CSV 表头保存。', {
+                  name: settings.activeProfileName || $t('未载入'),
+                })
+              }}
             </p>
             <div class="set-actions">
               <button
@@ -602,24 +684,24 @@ onBeforeUnmount(() => {
                 :disabled="!settings.activeProfileKey"
                 @click="clearCurrentProfile"
               >
-                清除当前文件配置
+                {{ $t('清除当前文件配置') }}
               </button>
               <button class="btn" type="button" :disabled="!settings.profileCount" @click="clearAllProfiles">
-                清除全部文件配置
+                {{ $t('清除全部文件配置') }}
               </button>
             </div>
           </div>
 
           <div class="set-block">
-            <div class="set-label">导入 / 导出</div>
+            <div class="set-label">{{ $t('导入 / 导出') }}</div>
             <div class="set-actions">
-              <button class="btn" type="button" @click="exportConfig">导出配置 JSON</button>
-              <button class="btn" type="button" @click="fileInput?.click()">导入配置 JSON</button>
-              <button class="btn" type="button" @click="resetAll">恢复全部默认</button>
+              <button class="btn" type="button" @click="exportConfig">{{ $t('导出配置 JSON') }}</button>
+              <button class="btn" type="button" @click="fileInput?.click()">{{ $t('导入配置 JSON') }}</button>
+              <button class="btn" type="button" @click="resetAll">{{ $t('恢复全部默认') }}</button>
             </div>
             <input ref="fileInput" type="file" accept=".json,application/json" hidden @change="onImport" />
             <p class="hint">
-              全局设置保存在 `ca-settings-v1`，按文件配置保存在 `ca-profiles-v1`；导出的 JSON 会同时包含两者。
+              {{ $t('全局设置保存在 `ca-settings-v1`，按文件配置保存在 `ca-profiles-v1`；导出的 JSON 会同时包含两者。') }}
             </p>
           </div>
         </section>

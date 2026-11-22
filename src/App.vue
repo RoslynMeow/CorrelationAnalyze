@@ -140,11 +140,11 @@ onBeforeUnmount(() => {
   />
 
   <div v-if="ds.loading" class="banner" style="position: fixed; top: 16px; left: 50%; transform: translateX(-50%); z-index: 120">
-    正在读取…
+    {{ $t('正在读取…') }}
   </div>
 
   <div class="dragveil" :class="{ on: dragging }">
-    <div class="vbox">松开即可载入新的 CSV</div>
+    <div class="vbox">{{ $t('松开即可载入新的 CSV') }}</div>
   </div>
 
   <Toast />

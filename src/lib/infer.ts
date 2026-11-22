@@ -1,5 +1,6 @@
 import { describe } from './stats'
 import { isNull, toNum, toTime, uniq, countBy } from './format'
+import { t } from '@/i18n'
 import type { Column, ColumnType, Dataset } from '@/types'
 
 /** 常见有序等级词表（顺序即大小） */
@@ -94,7 +95,7 @@ export function isIdCol(col: Column, totalRows: number): boolean {
 
 /** 类别显示顺序：有序等级 → 数值 → 频次，缺失值放最后 */
 export function groupLabels(col: Column): string[] {
-  const MISS = '(缺失)'
+  const MISS = t('(缺失)')
   const vals = col.raw.map((v) => (isNull(v) ? MISS : String(v).trim()))
   const present = uniq(vals)
   const nonNull = present.filter((v) => v !== MISS)

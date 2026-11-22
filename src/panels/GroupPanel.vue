@@ -10,6 +10,7 @@ import { groupLabels, pickGroup, preferredNums } from '@/lib/infer'
 import { isNull } from '@/lib/format'
 import { useNarrow } from '@/composables/useNarrow'
 import { useSettingsStore } from '@/stores/settings'
+import { t } from '@/i18n'
 
 const ds = useDatasetStore()
 const settings = useSettingsStore()
@@ -26,7 +27,7 @@ const charts = computed(() => {
   if (!gcol) return []
   const order = groupLabels(gcol)
   const groupTitle = settings.columnLabel(gcol.name)
-  const labels = gcol.raw.map((v) => (isNull(v) ? '(缺失)' : String(v).trim()))
+  const labels = gcol.raw.map((v) => (isNull(v) ? t('(缺失)') : String(v).trim()))
   const counts: Record<string, number> = {}
   labels.forEach((l) => {
     counts[l] = (counts[l] || 0) + 1
@@ -84,12 +85,12 @@ const charts = computed(() => {
     <div class="controls">
       <SelectField
         v-model="groupName"
-        label="分组列"
+        :label="$t('分组列')"
         :options="ds.groups.map((c) => ({ value: c.name, label: settings.columnLabel(c.name) }))"
       />
-      <label class="chk"><input v-model="showPts" type="checkbox" /> 叠加散点</label>
+      <label class="chk"><input v-model="showPts" type="checkbox" /> {{ $t('叠加散点') }}</label>
       <div class="chipfield">
-        <span class="chipfield-label">对比数值变量（可多选）</span>
+        <span class="chipfield-label">{{ $t('对比数值变量（可多选）') }}</span>
         <ChipGroup
           v-model="vars"
           :options="ds.nums.map((c) => ({ value: c.name, label: settings.columnLabel(c.name) }))"
@@ -98,14 +99,14 @@ const charts = computed(() => {
     </div>
 
     <div v-if="!groupName" class="card hint">
-      该数据集没有适合分组的列（需要 2–40 个不同取值）。
+      {{ $t('该数据集没有适合分组的列（需要 2–40 个不同取值）。') }}
     </div>
-    <div v-else-if="!vars.length" class="card hint">请至少勾选一个数值变量。</div>
+    <div v-else-if="!vars.length" class="card hint">{{ $t('请至少勾选一个数值变量。') }}</div>
     <div v-else class="grid-charts">
       <div v-for="c in charts" :key="c.key" class="card mini">
         <div class="minihead">
           <span class="mtitle" :title="c.name">{{ c.name }}</span>
-          <span class="mmuted">按 {{ c.groupTitle }}</span>
+          <span class="mmuted">{{ $t('按 {group}', { group: c.groupTitle }) }}</span>
         </div>
         <PlotlyChart
           :traces="c.traces"

@@ -7,6 +7,7 @@ import { fmtInt, isNull } from '@/lib/format'
 import { copyText } from '@/lib/exportChart'
 import { useSettingsStore } from '@/stores/settings'
 import { toast } from '@/composables/useToast'
+import { t } from '@/i18n'
 
 interface InsItem {
   key?: string
@@ -64,27 +65,40 @@ const cards = computed<InsCard[]>(() => {
   const cells = d.n * d.columns.length
 
   out.push({
-    title: '📦 数据概况',
+    title: t('📦 数据概况'),
     items: [
-      { strong: '规模：', text: `${fmtInt(d.n)} 行 × ${d.columns.length} 列` },
       {
-        strong: '类型：',
-        text: `数值 ${ds.nums.length} · 类别 ${ds.cats.length} · 日期 ${ds.dates.length}`,
+        strong: t('规模：'),
+        text: t('{rows} 行 × {cols} 列', { rows: fmtInt(d.n), cols: d.columns.length }),
       },
       {
-        strong: '缺失：',
-        text: `${fmtInt(miss)} 个单元格（${cells ? ((miss / cells) * 100).toFixed(2) : 0}%）`,
+        strong: t('类型：'),
+        text: t('数值 {num} · 类别 {cat} · 日期 {date}', {
+          num: ds.nums.length,
+          cat: ds.cats.length,
+          date: ds.dates.length,
+        }),
       },
       {
-        strong: '完整行：',
-        text: `${fmtInt(completeRows.value)}（${d.n ? ((completeRows.value / d.n) * 100).toFixed(1) : 0}%）`,
+        strong: t('缺失：'),
+        text: t('{n} 个单元格（{p}%）', {
+          n: fmtInt(miss),
+          p: cells ? ((miss / cells) * 100).toFixed(2) : 0,
+        }),
+      },
+      {
+        strong: t('完整行：'),
+        text: t('{n}（{p}%）', {
+          n: fmtInt(completeRows.value),
+          p: d.n ? ((completeRows.value / d.n) * 100).toFixed(1) : 0,
+        }),
       },
     ],
   })
 
   const top5 = pairs.value.slice(0, 5)
   out.push({
-    title: '🔗 最强关联（所有变量对）',
+    title: t('🔗 最强关联（所有变量对）'),
     items: top5.map((p) => ({
       key: p.a + '|' + p.b,
       strong: `${settings.columnLabel(p.a)} ↔ ${settings.columnLabel(p.b)}`,
@@ -94,14 +108,14 @@ const cards = computed<InsCard[]>(() => {
       tag: p.type,
       meta: ` n=${fmtInt(p.n)}`,
     })),
-    note: top5.length ? 'r / ρ 为有符号相关，V / η 只反映强度。' : undefined,
+    note: top5.length ? t('r / ρ 为有符号相关，V / η 只反映强度。') : undefined,
   })
 
   if (target.value) {
     const list = ds.assocWithTarget(target.value, 'pearson').slice(0, 6)
     const maxS = Math.max(...list.map((x) => x.strength), 1e-9)
     out.push({
-      title: `🎯 与「${settings.columnLabel(target.value.name)}」的关联`,
+      title: t('🎯 与「{name}」的关联', { name: settings.columnLabel(target.value.name) }),
       items: list.map((x) => ({
         key: x.name,
         bar: Math.max(6, (x.strength / maxS) * 50),
@@ -109,23 +123,30 @@ const cards = computed<InsCard[]>(() => {
         strong: settings.columnLabel(x.name),
         text: '：' + x.strength.toFixed(2),
         tag: x.type,
-        meta: ' ' + (x.strength >= 0.6 ? '强' : x.strength >= 0.3 ? '中等' : '弱'),
+        meta:
+          ' ' +
+          (x.strength >= 0.6 ? t('强') : x.strength >= 0.3 ? t('中等') : t('弱')),
       })),
-      note: `目标类型：${target.value.type === 'number' ? '数值' : '类别'}。数值×数值用 r，数值×类别用 η，类别×类别用 Cramér's V。`,
+      note: t(
+        "目标类型：{type}。数值×数值用 r，数值×类别用 η，类别×类别用 Cramér's V。",
+        {
+          type: target.value.type === 'number' ? t('数值') : t('类别'),
+        },
+      ),
     })
   }
 
   const catPairs = pairs.value.filter((p) => p.type === 'V' || p.type === 'η').slice(0, 5)
   if (catPairs.length) {
     out.push({
-      title: '🧩 类别维度关联（V / η）',
+      title: t('🧩 类别维度关联（V / η）'),
       items: catPairs.map((p) => ({
         key: p.a + '|' + p.b,
         strong: `${settings.columnLabel(p.a)} ↔ ${settings.columnLabel(p.b)}`,
         text: '：' + p.strength.toFixed(2),
         tag: p.type,
       })),
-      note: 'V / η 没有正负方向，数值越大关联越强。',
+      note: t('V / η 没有正负方向，数值越大关联越强。'),
     })
   }
 
@@ -133,7 +154,7 @@ const cards = computed<InsCard[]>(() => {
     .filter((p) => (p.type === 'r' || p.type === 'ρ') && p.strength >= 0.8)
     .slice(0, 6)
   out.push({
-    title: '♻️ 高度相关（可能冗余）',
+    title: t('♻️ 高度相关（可能冗余）'),
     items: redundant.length
       ? redundant.map((p) => ({
           key: p.a + '|' + p.b,
@@ -142,8 +163,10 @@ const cards = computed<InsCard[]>(() => {
           value: `r = ${(p.signed ?? 0).toFixed(2)}`,
           cls: (p.signed ?? 0) >= 0 ? 'pos' : 'neg',
         }))
-      : [{ text: '未发现 |r| ≥ 0.8 的强相关变量对。' }],
-    note: redundant.length ? '这些变量表达的信息高度重叠，建模时可考虑保留其一。' : undefined,
+      : [{ text: t('未发现 |r| ≥ 0.8 的强相关变量对。') }],
+    note: redundant.length
+      ? t('这些变量表达的信息高度重叠，建模时可考虑保留其一。')
+      : undefined,
   })
 
   const missCols = d.columns
@@ -153,20 +176,34 @@ const cards = computed<InsCard[]>(() => {
   const consts = d.columns.filter((c) => c.uniqueCount <= 1)
 
   out.push({
-    title: '🧪 数据质量检查',
+    title: t('🧪 数据质量检查'),
     items: [
       {
         text: missCols.length
-          ? '缺失最多：' + missCols.map((c) => `${settings.columnLabel(c.name)} ${((c.missing / d.n) * 100).toFixed(1)}%`).join(' · ')
-          : '没有缺失值 👍',
+          ? t('缺失最多：{list}', {
+              list: missCols
+                .map(
+                  (c) =>
+                    `${settings.columnLabel(c.name)} ${((c.missing / d.n) * 100).toFixed(1)}%`,
+                )
+                .join(' · '),
+            })
+          : t('没有缺失值 👍'),
       },
       {
-        text: '常量列：' + (consts.length ? consts.map((c) => settings.columnLabel(c.name)).join('、') : '0 个'),
+        text: t('常量列：{list}', {
+          list: consts.length
+            ? consts.map((c) => settings.columnLabel(c.name)).join('、')
+            : t('0 个'),
+        }),
       },
       {
-        text: `重复行：${fmtInt(dupCount.value)} 行（${d.n ? ((dupCount.value / d.n) * 100).toFixed(1) : 0}%）`,
+        text: t('重复行：{n} 行（{p}%）', {
+          n: fmtInt(dupCount.value),
+          p: d.n ? ((dupCount.value / d.n) * 100).toFixed(1) : 0,
+        }),
       },
-      { text: `参与关联分析的变量：${ds.assocs.length} 个` },
+      { text: t('参与关联分析的变量：{n} 个', { n: ds.assocs.length }) },
     ],
   })
 
@@ -191,7 +228,7 @@ function insightsText(): string {
 
 async function copyInsights(): Promise<void> {
   const ok = await copyText(insightsText())
-  toast(ok ? '分析结论已复制' : '复制失败，请重试')
+  toast(ok ? t('分析结论已复制') : t('复制失败，请重试'))
 }
 </script>
 
@@ -200,11 +237,11 @@ async function copyInsights(): Promise<void> {
     <div class="controls">
       <SelectField
         v-model="targetName"
-        label="分析目标"
+        :label="$t('分析目标')"
         :options="ds.targets.map((c) => ({ value: c.name, label: settings.columnLabel(c.name) }))"
       />
-      <button class="btn" type="button" @click="copyInsights">复制结论</button>
-      <span class="hint">自动汇总最强关联、目标因素、类别关联与数据质量</span>
+      <button class="btn" type="button" @click="copyInsights">{{ $t('复制结论') }}</button>
+      <span class="hint">{{ $t('自动汇总最强关联、目标因素、类别关联与数据质量') }}</span>
     </div>
 
     <div class="insights">

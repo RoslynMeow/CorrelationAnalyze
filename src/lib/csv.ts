@@ -1,3 +1,5 @@
+import { t } from '@/i18n'
+
 export function detectDelim(text: string): string {
   const line = text.split('\n').find((l) => l.trim() !== '') || ''
   const cands = [',', ';', '\t', '|']
@@ -77,7 +79,7 @@ export function parseCSV(text: string): ParsedCsv {
   rows.push(row)
 
   const clean = rows.filter((r) => !(r.length === 1 && r[0].trim() === ''))
-  if (clean.length < 2) throw new Error('CSV 至少需要一行表头 + 一行数据')
+  if (clean.length < 2) throw new Error(t('CSV 至少需要一行表头 + 一行数据'))
 
   const seen: Record<string, number> = Object.create(null)
   const headers = clean[0].map((h, idx) => {

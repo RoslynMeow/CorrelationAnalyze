@@ -45,10 +45,10 @@ function onHex(e: Event): void {
       v-if="props.modelValue && props.resettable !== false"
       class="linkbtn"
       type="button"
-      title="恢复默认"
+      :title="$t('恢复默认')"
       @click="emit('update:modelValue', null)"
     >
-      重置
+      {{ $t('重置') }}
     </button>
   </div>
 </template>

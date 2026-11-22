@@ -7,6 +7,7 @@ import { baseLayout } from '@/lib/chartTheme'
 import { fmtInt, shortName } from '@/lib/format'
 import { useNarrow } from '@/composables/useNarrow'
 import { useSettingsStore } from '@/stores/settings'
+import { t } from '@/i18n'
 
 const ds = useDatasetStore()
 const settings = useSettingsStore()
@@ -25,18 +26,22 @@ const kpis = computed(() => {
   const cells = d.n * d.columns.length
   const miss = d.columns.reduce((s, c) => s + c.missing, 0)
   return [
-    { label: '数据行数', value: fmtInt(d.n), sub: `${fmtInt(cells)} 个单元格` },
-    { label: '变量列数', value: fmtInt(d.columns.length), sub: `数值 ${ds.nums.length} · 类别 ${ds.cats.length}` },
+    { label: t('数据行数'), value: fmtInt(d.n), sub: t('{n} 个单元格', { n: fmtInt(cells) }) },
     {
-      label: '缺失单元格',
+      label: t('变量列数'),
+      value: fmtInt(d.columns.length),
+      sub: t('数值 {num} · 类别 {cat}', { num: ds.nums.length, cat: ds.cats.length }),
+    },
+    {
+      label: t('缺失单元格'),
       value: fmtInt(miss),
       sub: `${cells ? ((miss / cells) * 100).toFixed(2) : 0}%`,
     },
-    { label: '关联变量对', value: fmtInt(pairs.value.length), sub: '已计算全部组合' },
+    { label: t('关联变量对'), value: fmtInt(pairs.value.length), sub: t('已计算全部组合') },
     {
-      label: '强关联对',
+      label: t('强关联对'),
       value: fmtInt(pairs.value.filter((p) => p.strength >= 0.6).length),
-      sub: '强度 ≥ 0.6',
+      sub: t('强度 ≥ 0.6'),
     },
   ]
 })
@@ -44,7 +49,11 @@ const kpis = computed(() => {
 const top = computed(() => pairs.value.slice(0, 10).reverse())
 const note = computed(() => {
   const cols = ds.assocs.length
-  return `${cols} 个变量 · ${pairs.value.length} 对组合${cols > 40 ? '（仅前 40 个变量）' : ''}`
+  return t('{cols} 个变量 · {pairs} 对组合{extra}', {
+    cols,
+    pairs: pairs.value.length,
+    extra: cols > 40 ? t('（仅前 40 个变量）') : '',
+  })
 })
 
 const traces = computed(() => [
@@ -68,8 +77,9 @@ const traces = computed(() => [
       p.signed === null ? '—' : p.signed.toFixed(2),
       p.n,
     ]),
-    hovertemplate:
+    hovertemplate: t(
       '<b>%{customdata[0]} ↔ %{customdata[1]}</b><br>关联强度 %{x:.3f}（%{customdata[2]}）<br>有符号值 %{customdata[3]} · n=%{customdata[4]}<extra></extra>',
+    ),
   },
 ])
 
@@ -82,7 +92,7 @@ const layout = computed(() =>
       t: 14,
       b: 46,
     },
-    xaxis: { title: { text: '关联强度 |r| / V / η' }, range: [0, 1.05] },
+    xaxis: { title: { text: t('关联强度 |r| / V / η') }, range: [0, 1.05] },
     yaxis: { tickfont: { size: narrow.value ? 9.5 : 10.5 }, automargin: true },
     showlegend: false,
   }),
@@ -101,7 +111,7 @@ const top3 = computed(() => pairs.value.slice(0, 3))
     <div class="grid2">
       <div class="card">
         <div class="cardhead">
-          <h3>关联强度 Top 10</h3>
+          <h3>{{ $t('关联强度 Top 10') }}</h3>
           <span class="hint">{{ note }}</span>
         </div>
         <PlotlyChart
@@ -112,18 +122,24 @@ const top3 = computed(() => pairs.value.slice(0, 3))
           :height="chartH"
         />
         <div v-else class="empty-chart">
-          数据中可分析的变量不足（至少需要 2 个数值或类别列）
+          {{ $t('数据中可分析的变量不足（至少需要 2 个数值或类别列）') }}
         </div>
       </div>
       <div class="card">
-        <div class="cardhead"><h3>快速解读</h3></div>
+        <div class="cardhead"><h3>{{ $t('快速解读') }}</h3></div>
         <div v-if="pairs.length" class="summary">
-          <h4>数据规模</h4>
+          <h4>{{ $t('数据规模') }}</h4>
           <div>
-            {{ fmtInt(ds.n) }} 行 × {{ ds.dataset?.columns.length }} 列 · 数值
-            {{ ds.nums.length }} 列 · 类别 {{ ds.cats.length }} 列
+            {{
+              $t('{rows} 行 × {cols} 列 · 数值 {num} 列 · 类别 {cat} 列', {
+                rows: fmtInt(ds.n),
+                cols: ds.dataset?.columns.length ?? 0,
+                num: ds.nums.length,
+                cat: ds.cats.length,
+              })
+            }}
           </div>
-          <h4>最强关联</h4>
+          <h4>{{ $t('最强关联') }}</h4>
           <ul>
             <li v-for="p in top3" :key="p.a + p.b">
               <b>{{ settings.columnLabel(p.a) }}</b> ↔
@@ -134,18 +150,26 @@ const top3 = computed(() => pairs.value.slice(0, 3))
               <span class="sumtag">{{ p.type }}</span>
             </li>
           </ul>
-          <h4>关联强度分布</h4>
+          <h4>{{ $t('关联强度分布') }}</h4>
           <div>
-            强关联（≥0.6）<b>{{ strongCount }}</b> 组 · 中等（0.4–0.6）<b>{{ midCount }}</b> 组 ·
-            弱关联 <b>{{ pairs.length - strongCount - midCount }}</b> 组
+            {{
+              $t('强关联（≥0.6）{strong} 组 · 中等（0.4–0.6）{mid} 组 · 弱关联 {weak} 组', {
+                strong: strongCount,
+                mid: midCount,
+                weak: pairs.length - strongCount - midCount,
+              })
+            }}
           </div>
-          <h4>提示</h4>
+          <h4>{{ $t('提示') }}</h4>
           <div class="hint">
-            r / ρ 反映线性或单调关系（−1 ~ 1）；V / η 只表示关联强度（0 ~ 1）。
-            相关性不等于因果，样本量 {{ fmtInt(ds.n) }} 时请结合业务判断。
+            {{
+              $t('r / ρ 反映线性或单调关系（−1 ~ 1）；V / η 只表示关联强度（0 ~ 1）。相关性不等于因果，样本量 {n} 时请结合业务判断。', {
+                n: fmtInt(ds.n),
+              })
+            }}
           </div>
         </div>
-        <p v-else class="hint">没有可计算的变量对。</p>
+        <p v-else class="hint">{{ $t('没有可计算的变量对。') }}</p>
       </div>
     </div>
   </section>

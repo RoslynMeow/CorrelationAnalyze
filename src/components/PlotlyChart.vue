@@ -13,6 +13,7 @@ import {
 } from '@/lib/exportChart'
 import { useSettingsStore } from '@/stores/settings'
 import { toast } from '@/composables/useToast'
+import { t as translate } from '@/i18n'
 
 const props = withDefaults(
   defineProps<{
@@ -276,7 +277,7 @@ const seriesList = computed(() => {
     if (seen.has(key)) return
     seen.set(key, {
       key,
-      label: key === '__default__' ? '数据系列' : key,
+      label: key === '__default__' ? translate('数据系列') : key,
       color: normalizeHex(overrides.value[key] || traceColor(t) || settings.paletteColor(i)),
     })
   })
@@ -302,9 +303,9 @@ async function resetZoom(): Promise<void> {
       'xaxis.autorange': true,
       'yaxis.autorange': true,
     })
-    toast('已重置缩放')
+    toast(translate('已重置缩放'))
   } catch {
-    toast('重置失败')
+    toast(translate('重置失败'))
   }
 }
 
@@ -314,9 +315,11 @@ async function draw(): Promise<void> {
     ...CHART_CONFIG,
     ...(props.config || {}),
     displayModeBar: settings.state.charts.showModeBar ? 'hover' : false,
-  }
+  } as Parameters<typeof Plotly.react>[3]
   try {
-    await Plotly.react(el.value, styledTraces.value, styledLayout.value, config)
+    const data = styledTraces.value as Parameters<typeof Plotly.react>[1]
+    const layout = styledLayout.value as Parameters<typeof Plotly.react>[2]
+    await Plotly.react(el.value, data, layout, config)
   } catch (err) {
     console.error('Plotly 渲染失败', err)
   }
@@ -389,13 +392,13 @@ async function copyImage(): Promise<void> {
   try {
     const url = await chartImage(el.value, 'png', settings.state.exportSettings.scale)
     if (await copyImageUrl(url)) {
-      toast('图片已复制到剪贴板')
+      toast(translate('图片已复制到剪贴板'))
     } else {
       downloadDataUrl(url, `${safeFilename(props.chartId)}.png`)
-      toast('当前环境不支持复制图片，已改为下载')
+      toast(translate('当前环境不支持复制图片，已改为下载'))
     }
   } catch {
-    toast('复制图片失败，请改用下载')
+    toast(translate('复制图片失败，请改用下载'))
   }
 }
 
@@ -404,25 +407,25 @@ async function download(format: 'png' | 'svg'): Promise<void> {
   let fmt = format
   if (fmt === 'svg' && hasWebgl.value) {
     fmt = 'png'
-    toast('WebGL 散点图不支持 SVG，已改为 PNG')
+    toast(translate('WebGL 散点图不支持 SVG，已改为 PNG'))
   }
   try {
     const url = await chartImage(el.value, fmt, settings.state.exportSettings.scale)
     downloadDataUrl(url, `${safeFilename(props.chartId)}.${fmt}`)
-    toast(`已下载 ${fmt.toUpperCase()}`)
+    toast(translate('已下载 {format}', { format: fmt.toUpperCase() }))
   } catch {
-    toast('导出失败，请重试')
+    toast(translate('导出失败，请重试'))
   }
 }
 
 async function copyData(): Promise<void> {
   const tsv = tracesToTsv(props.traces, props.layout)
   if (!tsv) {
-    toast('该图暂不支持复制数据')
+    toast(translate('该图暂不支持复制数据'))
     return
   }
   const ok = await copyText(tsv)
-  toast(ok ? '数据已复制（TSV，可直接粘进表格）' : '复制失败，请重试')
+  toast(ok ? translate('数据已复制（TSV，可直接粘进表格）') : translate('复制失败，请重试'))
 }
 
 function onSeriesColor(key: string, e: Event): void {
@@ -435,30 +438,30 @@ function onSeriesColor(key: string, e: Event): void {
     <div ref="el" class="chart-host" data-plotly-host :style="hostStyle"></div>
 
     <div class="chart-tools" @mousedown.stop @click.stop>
-      <button class="chart-tool" type="button" title="复制图片" @click="copyImage">
+      <button class="chart-tool" type="button" :title="$t('复制图片')" @click="copyImage">
         <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.3">
           <rect x="5.2" y="5.2" width="8" height="8" rx="1.5" />
           <path d="M11 5V3.6A1.6 1.6 0 0 0 9.4 2h-5A1.6 1.6 0 0 0 2.8 3.6v5A1.6 1.6 0 0 0 4.4 10H5" />
         </svg>
       </button>
-      <button class="chart-tool" type="button" title="下载 PNG" @click="download('png')">
+      <button class="chart-tool" type="button" :title="$t('下载 PNG')" @click="download('png')">
         <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
           <path d="M8 2.5v7" />
           <path d="m5 6.5 3 3 3-3" />
           <path d="M3.5 12.5v1h9v-1" />
         </svg>
       </button>
-      <button class="chart-tool text" type="button" title="下载 SVG（矢量）" @click="download('svg')">
+      <button class="chart-tool text" type="button" :title="$t('下载 SVG（矢量）')" @click="download('svg')">
         SVG
       </button>
-      <button class="chart-tool text" type="button" title="复制数据（TSV）" @click="copyData">
+      <button class="chart-tool text" type="button" :title="$t('复制数据（TSV）')" @click="copyData">
         TSV
       </button>
       <button
         v-if="hasZoomableAxes"
         class="chart-tool"
         type="button"
-        title="重置缩放 / 平移"
+        :title="$t('重置缩放 / 平移')"
         @click="resetZoom"
       >
         <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
@@ -469,7 +472,7 @@ function onSeriesColor(key: string, e: Event): void {
       <button
         class="chart-tool"
         type="button"
-        title="图表设置（尺寸 / 配色）"
+        :title="$t('图表设置（尺寸 / 配色）')"
         :class="{ active: styleOpen }"
         @click="styleOpen = !styleOpen"
       >
@@ -486,67 +489,67 @@ function onSeriesColor(key: string, e: Event): void {
       <div class="chart-style-veil" @click="styleOpen = false"></div>
       <div class="chart-style" @click.stop>
         <div class="cs-head">
-          <b>图表设置</b>
-          <span class="hint">只影响这张图</span>
-          <button class="linkbtn" type="button" @click="styleOpen = false">关闭</button>
+          <b>{{ $t('图表设置') }}</b>
+          <span class="hint">{{ $t('只影响这张图') }}</span>
+          <button class="linkbtn" type="button" @click="styleOpen = false">{{ $t('关闭') }}</button>
         </div>
         <div class="cs-body">
-          <div class="cs-sub">尺寸（px）</div>
+          <div class="cs-sub">{{ $t('尺寸（px）') }}</div>
           <div class="cs-size-row">
             <label>
-              宽
+              {{ $t('宽') }}
               <input
                 type="number"
                 min="280"
                 max="1600"
                 step="20"
                 :value="size.width ?? ''"
-                placeholder="自适应"
+                :placeholder="$t('自适应')"
                 @change="onSize('width', $event)"
               />
             </label>
             <label>
-              高
+              {{ $t('高') }}
               <input
                 type="number"
                 min="200"
                 max="1200"
                 step="20"
                 :value="size.height ?? ''"
-                placeholder="默认"
+                :placeholder="$t('默认')"
                 @change="onSize('height', $event)"
               />
             </label>
           </div>
           <div class="cs-presets">
-            <button class="linkbtn" type="button" @click="applySize(480, 320)">小 480×320</button>
-            <button class="linkbtn" type="button" @click="applySize(720, 440)">中 720×440</button>
-            <button class="linkbtn" type="button" @click="applySize(960, 600)">大 960×600</button>
-            <button class="linkbtn" type="button" @click="clearSize">自动</button>
+            <button class="linkbtn" type="button" @click="applySize(480, 320)">{{ $t('小 480×320') }}</button>
+            <button class="linkbtn" type="button" @click="applySize(720, 440)">{{ $t('中 720×440') }}</button>
+            <button class="linkbtn" type="button" @click="applySize(960, 600)">{{ $t('大 960×600') }}</button>
+            <button class="linkbtn" type="button" @click="clearSize">{{ $t('自动') }}</button>
           </div>
           <p class="hint" style="margin: 2px 0 4px">
-            也可以直接拖动图表右下角的手柄实时缩放；双击手柄恢复自动尺寸。
+            {{ $t('也可以直接拖动图表右下角的手柄实时缩放；双击手柄恢复自动尺寸。') }}
           </p>
 
-          <div class="cs-sub">标题</div>
+          <div class="cs-sub">{{ $t('标题') }}</div>
           <div class="cs-title-row">
             <input
               :value="titleOverride.title ?? ''"
-              placeholder="图表标题（可选）"
+              :placeholder="$t('图表标题（可选）')"
               maxlength="120"
               @change="onTitle('title', $event)"
             />
             <input
               v-if="!isPolar"
               :value="titleOverride.xTitle ?? ''"
-              placeholder="X 轴标题"
+              :placeholder="$t('X 轴标题')"
               maxlength="120"
               @change="onTitle('xTitle', $event)"
             />
             <input
               v-if="!isPolar"
               :value="titleOverride.yTitle ?? ''"
-              placeholder="Y 轴标题"
+              :placeholder="$t('Y 轴标题')"
               maxlength="120"
               @change="onTitle('yTitle', $event)"
             />
@@ -558,11 +561,11 @@ function onSeriesColor(key: string, e: Event): void {
             style="align-self: flex-start"
             @click="settings.clearChartTitle(chartId)"
           >
-            恢复默认标题
+            {{ $t('恢复默认标题') }}
           </button>
 
           <template v-if="seriesList.length">
-            <div class="cs-sub">配色</div>
+            <div class="cs-sub">{{ $t('配色') }}</div>
             <div v-for="s in seriesList" :key="s.key" class="cs-row">
               <span class="cs-name" :title="s.label">{{ s.label }}</span>
               <input
@@ -577,11 +580,11 @@ function onSeriesColor(key: string, e: Event): void {
                 :disabled="!overrides[s.key]"
                 @click="settings.setSeriesColor(colorChartId, s.key, '')"
               >
-                重置
+                {{ $t('重置') }}
               </button>
             </div>
           </template>
-          <p v-else class="hint">该图没有可单独着色的序列；热力图色阶与全局色板在「设置 → 图表」里调整。</p>
+          <p v-else class="hint">{{ $t('该图没有可单独着色的序列；热力图色阶与全局色板在「设置 → 图表」里调整。') }}</p>
         </div>
         <div v-if="seriesList.length" class="cs-foot">
           <button
@@ -590,7 +593,7 @@ function onSeriesColor(key: string, e: Event): void {
             :disabled="!hasOverrides"
             @click="settings.clearChartSeries(colorChartId)"
           >
-            恢复全局配色
+            {{ $t('恢复全局配色') }}
           </button>
         </div>
       </div>
@@ -598,7 +601,7 @@ function onSeriesColor(key: string, e: Event): void {
 
     <div
       class="chart-resize"
-      title="拖动调整大小，双击恢复自动尺寸"
+      :title="$t('拖动调整大小，双击恢复自动尺寸')"
       @pointerdown="onResizeStart"
       @dblclick.stop="clearSize()"
     ></div>
