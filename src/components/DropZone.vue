@@ -15,6 +15,15 @@ const emit = defineEmits<{ (e: 'pick'): void; (e: 'sample'): void }>()
       @keydown.enter.prevent="emit('pick')"
       @keydown.space.prevent="emit('pick')"
     >
+      <button
+        class="btn sample-btn sample-top"
+        type="button"
+        title="载入 30 行示例 CSV"
+        @click.stop="emit('sample')"
+      >
+        示例数据
+      </button>
+
       <div class="dropicon">
         <svg
           viewBox="0 0 24 24"
@@ -54,13 +63,6 @@ const emit = defineEmits<{ (e: 'pick'): void; (e: 'sample'): void }>()
           </ul>
         </div>
       </div>
-
-      <div class="feats">
-        <span>相关矩阵</span><span>目标关联排序</span><span>类别列联分析</span>
-      </div>
-      <button class="btn sample-btn" type="button" title="载入 30 行示例 CSV" @click.stop="emit('sample')">
-        示例数据
-      </button>
     </div>
   </div>
 </template>
