@@ -317,6 +317,20 @@ onBeforeUnmount(() => {
           </div>
 
           <div class="set-block">
+            <div class="set-label">图表宽度上限</div>
+            <select v-model.number="settings.state.charts.defaultWidth" class="set-select">
+              <option :value="null">自适应（100%）</option>
+              <option :value="600">600px</option>
+              <option :value="760">760px</option>
+              <option :value="900">900px</option>
+              <option :value="1100">1100px</option>
+            </select>
+            <p class="hint">
+              单图尺寸可在每张图左上角的「图表设置」里单独改（含小/中/大预设），优先级高于这里。
+            </p>
+          </div>
+
+          <div class="set-block">
             <div class="set-label">热力图色阶</div>
             <div class="color-grid">
               <ColorField

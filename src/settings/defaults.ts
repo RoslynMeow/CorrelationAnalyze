@@ -40,11 +40,20 @@ export interface HeatmapColors {
   high: string
 }
 
+export interface ChartSize {
+  width?: number
+  height?: number
+}
+
 export interface ChartSettings {
   palette: string[]
   heatmap: HeatmapColors
   grid: boolean
   transparent: boolean
+  /** 全局图表宽度上限；null = 自适应 */
+  defaultWidth: number | null
+  /** chartId → 单图尺寸覆盖 */
+  sizes: Record<string, ChartSize>
   /** chartId → 系列名（无名为 __default__）→ 颜色 */
   series: Record<string, Record<string, string>>
 }
@@ -160,6 +169,8 @@ export function defaultSettings(): Settings {
       heatmap: { ...DEFAULT_HEATMAP },
       grid: true,
       transparent: true,
+      defaultWidth: null,
+      sizes: {},
       series: {},
     },
     exportSettings: {

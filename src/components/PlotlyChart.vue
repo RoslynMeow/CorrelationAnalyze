@@ -20,8 +20,10 @@ const props = withDefaults(
     layout?: Record<string, unknown>
     config?: Record<string, unknown>
     height?: number | string
-    /** 稳定的图表 ID，用于保存本图配色与导出文件名 */
+    /** 稳定图表 ID，用于保存本图配色/尺寸与导出文件名 */
     chartId?: string
+    /** 面板给这张图算出的默认最大宽度（可被单图设置覆盖） */
+    maxWidth?: number
   }>(),
   { chartId: 'chart' },
 )
@@ -30,9 +32,47 @@ const settings = useSettingsStore()
 const el = ref<HTMLDivElement | null>(null)
 const styleOpen = ref(false)
 
-const wrapStyle = computed(() => ({
-  height: typeof props.height === 'number' ? `${props.height}px` : props.height || '430px',
-}))
+const size = computed(() => settings.chartSize(props.chartId))
+const effectiveHeight = computed<number | null>(() => {
+  if (size.value.height) return size.value.height
+  return typeof props.height === 'number' ? props.height : null
+})
+const effectiveWidth = computed<number | null>(
+  () => size.value.width ?? settings.state.charts.defaultWidth ?? props.maxWidth ?? null,
+)
+
+const wrapStyle = computed(() => {
+  const h = effectiveHeight.value
+  const w = effectiveWidth.value
+  return {
+    height: h ? `${h}px` : props.height || '430px',
+    width: w ? `${w}px` : '100%',
+    maxWidth: '100%',
+    margin: w ? '0 auto' : '0',
+  }
+})
+
+const styledLayout = computed(() => {
+  const base = { ...(props.layout || {}) }
+  if (effectiveHeight.value) base.height = effectiveHeight.value
+  return base
+})
+
+function onSize(key: 'width' | 'height', e: Event): void {
+  const raw = (e.target as HTMLInputElement).value.trim()
+  const n = Number(raw)
+  settings.setChartSize(props.chartId, {
+    [key]: raw === '' || !Number.isFinite(n) ? null : n,
+  })
+}
+
+function applySize(width: number | null, height: number | null): void {
+  settings.setChartSize(props.chartId, { width, height })
+}
+
+function clearSize(): void {
+  settings.clearChartSize(props.chartId)
+}
 
 function seriesKeyOf(t: Record<string, unknown>): string {
   const name = t.name
@@ -123,7 +163,7 @@ async function draw(): Promise<void> {
   if (!el.value) return
   const config = { ...CHART_CONFIG, ...(props.config || {}) }
   try {
-    await Plotly.react(el.value, styledTraces.value, props.layout || {}, config)
+    await Plotly.react(el.value, styledTraces.value, styledLayout.value, config)
   } catch (err) {
     console.error('Plotly 渲染失败', err)
   }
@@ -152,7 +192,7 @@ onMounted(() => {
 })
 watch(styledTraces, draw, { flush: 'post' })
 watch(
-  () => props.layout,
+  styledLayout,
   () => {
     void draw()
   },
@@ -244,19 +284,17 @@ function onSeriesColor(key: string, e: Event): void {
         TSV
       </button>
       <button
-        v-if="seriesList.length"
         class="chart-tool"
         type="button"
-        title="本图配色"
+        title="图表设置（尺寸 / 配色）"
         :class="{ active: styleOpen }"
         @click="styleOpen = !styleOpen"
       >
-        <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.2">
-          <circle cx="8" cy="8" r="5.6" />
-          <circle cx="6" cy="6" r="1.1" fill="currentColor" stroke="none" />
-          <circle cx="10" cy="6" r="1.1" fill="currentColor" stroke="none" />
-          <circle cx="6" cy="10" r="1.1" fill="currentColor" stroke="none" />
-          <circle cx="10" cy="10" r="1.1" fill="currentColor" stroke="none" />
+        <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round">
+          <path d="M3 4h10M3 8h10M3 12h10" />
+          <circle cx="6" cy="4" r="1.6" fill="var(--panel)" />
+          <circle cx="10.5" cy="8" r="1.6" fill="var(--panel)" />
+          <circle cx="5" cy="12" r="1.6" fill="var(--panel)" />
         </svg>
       </button>
     </div>
@@ -265,37 +303,75 @@ function onSeriesColor(key: string, e: Event): void {
       <div class="chart-style-veil" @click="styleOpen = false"></div>
       <div class="chart-style" @click.stop>
         <div class="cs-head">
-          <b>本图配色</b>
+          <b>图表设置</b>
           <span class="hint">只影响这张图</span>
           <button class="linkbtn" type="button" @click="styleOpen = false">关闭</button>
         </div>
         <div class="cs-body">
-          <div v-for="s in seriesList" :key="s.key" class="cs-row">
-            <span class="cs-name" :title="s.label">{{ s.label }}</span>
-            <input
-              class="cs-color"
-              type="color"
-              :value="s.color"
-              @input="onSeriesColor(s.key, $event)"
-            />
-            <button
-              class="linkbtn"
-              type="button"
-              :disabled="!overrides[s.key]"
-              @click="settings.setSeriesColor(chartId, s.key, '')"
-            >
-              重置
-            </button>
+          <div class="cs-sub">尺寸（px）</div>
+          <div class="cs-size-row">
+            <label>
+              宽
+              <input
+                type="number"
+                min="280"
+                max="1600"
+                step="20"
+                :value="size.width ?? ''"
+                placeholder="自适应"
+                @change="onSize('width', $event)"
+              />
+            </label>
+            <label>
+              高
+              <input
+                type="number"
+                min="200"
+                max="1200"
+                step="20"
+                :value="size.height ?? ''"
+                placeholder="默认"
+                @change="onSize('height', $event)"
+              />
+            </label>
           </div>
+          <div class="cs-presets">
+            <button class="linkbtn" type="button" @click="applySize(480, 320)">小 480×320</button>
+            <button class="linkbtn" type="button" @click="applySize(720, 440)">中 720×440</button>
+            <button class="linkbtn" type="button" @click="applySize(960, 600)">大 960×600</button>
+            <button class="linkbtn" type="button" @click="clearSize">自动</button>
+          </div>
+
+          <template v-if="seriesList.length">
+            <div class="cs-sub">配色</div>
+            <div v-for="s in seriesList" :key="s.key" class="cs-row">
+              <span class="cs-name" :title="s.label">{{ s.label }}</span>
+              <input
+                class="cs-color"
+                type="color"
+                :value="s.color"
+                @input="onSeriesColor(s.key, $event)"
+              />
+              <button
+                class="linkbtn"
+                type="button"
+                :disabled="!overrides[s.key]"
+                @click="settings.setSeriesColor(chartId, s.key, '')"
+              >
+                重置
+              </button>
+            </div>
+          </template>
+          <p v-else class="hint">该图没有可单独着色的序列；热力图色阶与全局色板在「设置 → 图表」里调整。</p>
         </div>
-        <div class="cs-foot">
+        <div v-if="seriesList.length" class="cs-foot">
           <button
             class="btn ghost"
             type="button"
             :disabled="!hasOverrides"
             @click="settings.clearChartSeries(chartId)"
           >
-            恢复全局色板
+            恢复全局配色
           </button>
         </div>
       </div>

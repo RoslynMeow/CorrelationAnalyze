@@ -1,7 +1,7 @@
 import { computed, ref, watch } from 'vue'
 import { defineStore } from 'pinia'
 import { chartThemeTick, bumpTheme } from '@/lib/themeBus'
-import { defaultSettings, TOKEN_VARS, type ColorToken, type Settings } from '@/settings/defaults'
+import { defaultSettings, TOKEN_VARS, type ChartSize, type ColorToken, type Settings } from '@/settings/defaults'
 import { mergeSettings } from '@/settings/merge'
 
 const STORAGE_KEY = 'ca-settings-v1'
@@ -184,6 +184,37 @@ export const useSettingsStore = defineStore('settings', () => {
     state.value.charts.series = all
   }
 
+  /* ---------------- 单图尺寸 ---------------- */
+
+  function chartSize(chartId: string): ChartSize {
+    return state.value.charts.sizes[chartId] ?? {}
+  }
+
+  function setChartSize(
+    chartId: string,
+    patch: { width?: number | null; height?: number | null },
+  ): void {
+    const all = { ...state.value.charts.sizes }
+    const cur: ChartSize = { ...(all[chartId] ?? {}) }
+    if (patch.width !== undefined) {
+      if (patch.width === null) delete cur.width
+      else cur.width = Math.min(1600, Math.max(280, Math.round(patch.width)))
+    }
+    if (patch.height !== undefined) {
+      if (patch.height === null) delete cur.height
+      else cur.height = Math.min(1200, Math.max(200, Math.round(patch.height)))
+    }
+    if (Object.keys(cur).length) all[chartId] = cur
+    else delete all[chartId]
+    state.value.charts.sizes = all
+  }
+
+  function clearChartSize(chartId: string): void {
+    const all = { ...state.value.charts.sizes }
+    delete all[chartId]
+    state.value.charts.sizes = all
+  }
+
   /* ---------------- 色板 ---------------- */
 
   function setPalette(colors: string[]): void {
@@ -231,6 +262,9 @@ export const useSettingsStore = defineStore('settings', () => {
     chartSeries,
     setSeriesColor,
     clearChartSeries,
+    chartSize,
+    setChartSize,
+    clearChartSize,
     setPalette,
     setPaletteColor,
     toJson,

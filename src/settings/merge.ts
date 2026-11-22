@@ -2,6 +2,7 @@ import { isHexColor } from '@/lib/color'
 import {
   defaultSettings,
   DEFAULT_HEATMAP,
+  type ChartSize,
   type ColorToken,
   type Settings,
   TOKEN_VARS,
@@ -96,6 +97,26 @@ export function mergeSettings(raw: unknown): Settings {
     }
   }
 
+  const sizesIn = isRec(ch.sizes) ? ch.sizes : {}
+  const sizes: Record<string, ChartSize> = {}
+  let sizeSeen = 0
+  for (const [chartId, size] of Object.entries(sizesIn)) {
+    if (sizeSeen >= 40 || !isRec(size)) continue
+    const clean: ChartSize = {}
+    if (typeof size.width === 'number') {
+      const w = clamped(size.width, 280, 1600)
+      if (w !== null) clean.width = w
+    }
+    if (typeof size.height === 'number') {
+      const h = clamped(size.height, 200, 1200)
+      if (h !== null) clean.height = h
+    }
+    if (Object.keys(clean).length) {
+      sizes[chartId.slice(0, 80)] = clean
+      sizeSeen++
+    }
+  }
+
   /* ---------- export ---------- */
   const ex = isRec(r.exportSettings) ? r.exportSettings : {}
   const exportSettings: Settings['exportSettings'] = {
@@ -132,6 +153,11 @@ export function mergeSettings(raw: unknown): Settings {
       heatmap,
       grid: typeof ch.grid === 'boolean' ? ch.grid : d.charts.grid,
       transparent: typeof ch.transparent === 'boolean' ? ch.transparent : d.charts.transparent,
+      defaultWidth:
+        ch.defaultWidth === null || ch.defaultWidth === undefined
+          ? null
+          : clamped(ch.defaultWidth, 280, 1600),
+      sizes,
       series,
     },
     exportSettings,

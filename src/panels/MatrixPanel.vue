@@ -68,7 +68,16 @@ const matrix = computed(() => {
 
 const chartH = computed(() => {
   const cell = narrow.value ? 26 : 36
-  return Math.max(narrow.value ? 300 : 420, cols.value.length * cell + (narrow.value ? 80 : 150))
+  return Math.max(narrow.value ? 280 : 320, cols.value.length * cell + (narrow.value ? 80 : 130))
+})
+
+/** 列少时不要把 2×2 矩阵拉满整张卡片 */
+const chartW = computed(() => {
+  const per = narrow.value ? 36 : 48
+  return Math.max(
+    narrow.value ? 300 : 380,
+    cols.value.length * per + (narrow.value ? 110 : 210),
+  )
 })
 
 const showText = computed(() => annot.value && cols.value.length <= 22)
@@ -167,6 +176,7 @@ const note = computed(() => {
         :traces="trace"
         :layout="layout"
         :height="chartH"
+        :max-width="chartW"
       />
       <div v-else class="empty-chart">
         {{ mode === 'num' ? '数值列不足 2 个' : '类别列不足 2 个' }}，无法计算矩阵

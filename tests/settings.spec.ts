@@ -84,6 +84,27 @@ describe('配置合并与校验', () => {
     expect(s.table.zebra).toBe(true)
   })
 
+  it('单图宽高限幅，非法尺寸被丢弃', () => {
+    const s = mergeSettings({
+      charts: {
+        sizes: {
+          matrix: { width: 400, height: 9999 },
+          scatter: { width: 'x' },
+          bad: 1,
+        },
+      },
+    })
+    expect(s.charts.sizes.matrix).toEqual({ width: 400, height: 1200 })
+    expect(s.charts.sizes.scatter).toBeUndefined()
+    expect(s.charts.sizes.bad).toBeUndefined()
+  })
+
+  it('全局图表宽度默认 null，越界时限幅', () => {
+    expect(mergeSettings({}).charts.defaultWidth).toBeNull()
+    expect(mergeSettings({ charts: { defaultWidth: 900 } }).charts.defaultWidth).toBe(900)
+    expect(mergeSettings({ charts: { defaultWidth: 100 } }).charts.defaultWidth).toBe(280)
+  })
+
   it('导出格式非法时回退 PNG', () => {
     expect(mergeSettings({ exportSettings: { format: 'pdf' } }).exportSettings.format).toBe('png')
     expect(mergeSettings({ exportSettings: { format: 'svg' } }).exportSettings.format).toBe('svg')
