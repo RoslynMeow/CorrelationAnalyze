@@ -83,9 +83,11 @@ const traces = computed(() => [
       p.type,
       p.signed === null ? '—' : p.signed.toFixed(2),
       p.n,
+      p.p === null || p.p === undefined ? '—' : p.p < 0.001 ? '<0.001' : p.p.toFixed(3),
+      p.q === null || p.q === undefined ? '—' : p.q < 0.001 ? '<0.001' : p.q.toFixed(3),
     ]),
     hovertemplate: t(
-      '<b>%{customdata[0]} ↔ %{customdata[1]}</b><br>关联强度 %{x:.3f}（%{customdata[2]}）<br>有符号值 %{customdata[3]} · n=%{customdata[4]}<extra></extra>',
+      '<b>%{customdata[0]} ↔ %{customdata[1]}</b><br>关联强度 %{x:.3f}（%{customdata[2]}）<br>有符号值 %{customdata[3]} · n=%{customdata[4]}<br>p = %{customdata[5]} · FDR q = %{customdata[6]}<extra></extra>',
     ),
   },
 ])

@@ -5,6 +5,7 @@ export interface PresetConfig {
   matrixMethod?: string
   matrixMask?: boolean
   matrixAnnot?: boolean
+  matrixSignif?: boolean
   scatterX?: string
   scatterY?: string
   scatterColor?: string

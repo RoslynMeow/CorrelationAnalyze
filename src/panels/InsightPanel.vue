@@ -4,7 +4,7 @@ import { storeToRefs } from 'pinia'
 import { useDatasetStore } from '@/stores/dataset'
 import { useViewStore } from '@/stores/view'
 import SelectField from '@/components/SelectField.vue'
-import { fmtInt, isNull } from '@/lib/format'
+import { fmtInt, fmtP, isNull } from '@/lib/format'
 import { copyText } from '@/lib/exportChart'
 import { useSettingsStore } from '@/stores/settings'
 import { toast } from '@/composables/useToast'
@@ -108,9 +108,29 @@ const cards = computed<InsCard[]>(() => {
       value: p.strength.toFixed(2),
       cls: p.signed === null ? '' : p.signed >= 0 ? 'pos' : 'neg',
       tag: p.type,
-      meta: ` n=${fmtInt(p.n)}`,
+      meta: ` n=${fmtInt(p.n)} · p ${fmtP(p.p)} · q ${fmtP(p.q)}`,
     })),
     note: top5.length ? t('r / ρ 为有符号相关，V / η 只反映强度。') : undefined,
+  })
+
+  const significant = pairs.value.filter((p) => (p.q ?? 1) < 0.05)
+  out.push({
+    title: t('✅ 显著关联（FDR < 0.05）'),
+    items: significant.length
+      ? significant.slice(0, 6).map((p) => ({
+          key: p.a + '|' + p.b,
+          strong: `${settings.columnLabel(p.a)} ↔ ${settings.columnLabel(p.b)}`,
+          text: '：',
+          value: p.strength.toFixed(2),
+          cls: p.signed === null ? '' : p.signed >= 0 ? 'pos' : 'neg',
+          tag: p.type,
+          meta: ` p ${fmtP(p.p)} · q ${fmtP(p.q)}`,
+        }))
+      : [{ text: t('没有通过 FDR 校正的显著关联。') }],
+    note: t(
+      '共检验 {n} 对，q 为 Benjamini–Hochberg 校正值；显著只说明关联不太可能由随机波动造成，不代表因果。',
+      { n: pairs.value.length },
+    ),
   })
 
   if (target.value) {
@@ -127,7 +147,8 @@ const cards = computed<InsCard[]>(() => {
         tag: x.type,
         meta:
           ' ' +
-          (x.strength >= 0.6 ? t('强') : x.strength >= 0.3 ? t('中等') : t('弱')),
+          (x.strength >= 0.6 ? t('强') : x.strength >= 0.3 ? t('中等') : t('弱')) +
+          ` · p ${fmtP(x.p)} · q ${fmtP(x.q)}`,
       })),
       note: t(
         "目标类型：{type}。数值×数值用 r，数值×类别用 η，类别×类别用 Cramér's V。",

@@ -8,8 +8,8 @@ import SelectField from '@/components/SelectField.vue'
 import { axisValues, baseLayout } from '@/lib/chartTheme'
 import { withAlpha } from '@/lib/color'
 import { groupLabels } from '@/lib/infer'
-import { fmt, isNull } from '@/lib/format'
-import { linreg, pearson, spearman } from '@/lib/stats'
+import { fmt, fmtP, isNull } from '@/lib/format'
+import { corrPValue, linreg, pearson, spearman } from '@/lib/stats'
 import { useNarrow } from '@/composables/useNarrow'
 import { useViewportHeight } from '@/composables/useViewportHeight'
 import { useSettingsStore } from '@/stores/settings'
@@ -155,6 +155,12 @@ const built = computed(() => {
     })
   if (reg) {
     note += ` · ${t('拟合')} y = ${fmt(reg.b, 3)}x ${reg.a >= 0 ? '+' : '−'} ${fmt(Math.abs(reg.a), 3)}`
+    note += ` · R² = ${reg.r2 === null ? '—' : reg.r2.toFixed(3)} · p = ${fmtP(reg.p)}`
+    if (reg.slopeCi) {
+      note += ` · ${t('斜率 95% CI')} [${fmt(reg.slopeCi[0], 3)}, ${fmt(reg.slopeCi[1], 3)}]`
+    }
+  } else {
+    note += ` · p = ${fmtP(r === null ? null : corrPValue(r, idx.length))}`
   }
   if (xc.type === 'date') note += ' · ' + t('X 为日期，斜率按时间戳计算')
 

@@ -22,7 +22,7 @@
   <img alt="Vite" src="https://img.shields.io/badge/Vite-8-646cff?style=flat-square&logo=vite&logoColor=white">
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5-3178c6?style=flat-square&logo=typescript&logoColor=white">
   <img alt="Plotly" src="https://img.shields.io/badge/Plotly-4-3f4f75?style=flat-square&logo=plotly&logoColor=white">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-72%20passed-3fb950?style=flat-square">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-88%20passed-3fb950?style=flat-square">
 </p>
 
 <p align="center"><strong>简体中文</strong> · <a href="./README.en.md">English</a></p>
@@ -42,15 +42,15 @@
 | 页签 | 内容 |
 | --- | --- |
 | 关联总览 | 数据规模 KPI、全部变量对的关联强度 Top 10、自动文字解读 |
-| 相关矩阵 | 数值变量 Pearson / Spearman；类别变量 Cramér's V；下三角遮罩、数值标注 |
-| 目标关联 | 选一个目标列，其余列按关联强度排序；自动区分 r / ρ / η / V |
-| 散点拟合 | 任选 X / Y / 颜色 / 气泡大小；线性拟合；日期列可作时间轴 |
+| 相关矩阵 | 数值变量 Pearson / Spearman；类别变量 Cramér's V；下三角遮罩、数值标注、显著性星号 |
+| 目标关联 | 选一个目标列，其余列按关联强度排序；自动区分 r / ρ / η / V，附 p 值、95% CI 与 FDR 校正 |
+| 散点拟合 | 任选 X / Y / 颜色 / 气泡大小；线性拟合（R²、斜率 CI、p 值）；日期列可作时间轴 |
 | 分组对比 | 按任意分组列批量画箱线图，可多选数值变量 |
 | 成对关系 | SPLOM 矩阵图，最多 6 维，按类别着色 |
 | 分布分析 | 直方图 + KDE，可按组叠加上色，分箱数可调 |
 | 类别计数 | countplot，可堆叠子组、切换百分比、显示不平衡比 |
 | 雷达画像 | 按组标准化后的多维对比，Min-Max / Z-Score 两种标准化 |
-| 分析结论 | 数据概况、最强关联、目标因素、类别关联、冗余变量、数据质量 |
+| 分析结论 | 数据概况、最强关联、FDR 显著关联、目标因素、类别关联、冗余变量、数据质量 |
 | 数据预览 | 表格分页、全列搜索、表头悬停 / 点按查看列画像、导出当前数据 CSV |
 
 ### 设置与自定义
@@ -87,9 +87,12 @@
 - 缺失值逐对剔除（pairwise complete）；r / ρ 需要 n ≥ 3，V 需要 n ≥ 4 且至少 2×2
 - 常量列、ID 列不参与统计
 - 有序等级自动识别：Low < Medium < High、低 < 中 < 高 等
+- **p 值**：r / ρ 用 t 检验；V 用卡方检验；η 用 F 检验（单因素方差分析）
+- **95% 置信区间**：r / ρ 经 Fisher z 变换；回归斜率用 t 分布
+- **多重比较**：目标关联与全部变量对提供 Benjamini–Hochberg FDR 校正 q 值；矩阵星号为逐对未校正 p 值
 - 相关性不等于因果，样本量较小时请结合业务判断
 
-实现集中在 `src/lib/stats.ts`，全部为纯函数，并有 pandas / scipy 对照测试。
+实现集中在 `src/lib/stats.ts`，全部为纯函数，并有 pandas / scipy 对照测试（p 值、CI、R²、FDR 均有基准）。
 
 ## 快速开始
 
@@ -101,7 +104,7 @@ cd CorrelationAnalyze
 npm install
 
 npm run dev          # http://localhost:5188
-npm test             # 72 个单元测试
+npm test             # 88 个单元测试
 npm run typecheck
 npm run build        # 常规构建 -> dist/
 npm run build:single # 单文件便携版 -> dist-single/index.html
@@ -170,7 +173,7 @@ CorrelationAnalyze/
 │  ├─ workers/associations.worker.ts
 │  ├─ components/              # PlotlyChart / SettingsDrawer / 图表工具条等
 │  └─ panels/                  # 11 个页签
-├─ tests/                      # 72 个测试 + fixtures/sample.csv（仅测试用）
+├─ tests/                      # 88 个测试 + fixtures/sample.csv（仅测试用）
 └─ .github/                    # CI、Pages、Issue/PR 模板
 ```
 
@@ -192,7 +195,7 @@ CorrelationAnalyze/
 npm test
 ```
 
-当前 **72 个测试全部通过**：
+当前 **88 个测试全部通过**：
 
 - `tests/stats.spec.ts`：基础统计 + 与 pandas / scipy 对照（容差 1e-9）
 - `tests/csv.spec.ts`：引号、CRLF、BOM、重复列名、GB18030 / UTF-16
@@ -212,6 +215,11 @@ npm test
 | η（stress_level 按 risk_level 分组） | 0.719637734744 |
 | Cramér's V（gender × risk_level） | 0.183791360553 |
 | 回归斜率（sleep_hours → stress_level） | −0.330057856601 |
+| Pearson p（stress_level × mental_health_index） | 1.08140841778e-19 |
+| 95% CI（同上） | −0.987883158842 ~ −0.946361416480 |
+| R²（sleep_hours → stress_level） | 0.0435836813004 |
+| η 的 F 检验 p | 5.27974699208e-05 |
+| Cramér's V 的卡方 p | 0.730837564067 |
 
 ## 部署
 

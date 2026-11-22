@@ -35,6 +35,13 @@ export function fmt(v: number | null | undefined, d = 3): string {
 
 export const fmtInt = (n: number): string => Number(n).toLocaleString('zh-CN')
 
+/** p 值：过小用 <0.001，其余保留 3 位 */
+export function fmtP(p: number | null | undefined): string {
+  if (p === null || p === undefined || !Number.isFinite(p)) return '—'
+  if (p < 0.001) return '<0.001'
+  return p.toFixed(3)
+}
+
 export function countBy<T extends string | number>(arr: T[]): Record<string, number> {
   const m: Record<string, number> = Object.create(null)
   for (const v of arr) {

@@ -3,8 +3,27 @@ import { resolve } from 'node:path'
 import { beforeAll, describe, expect, it } from 'vitest'
 import { parseCSV } from '@/lib/csv'
 import { buildDataset } from '@/lib/infer'
-import { assoc } from '@/lib/associations'
-import { cramersV, describe as desc, etaStats, kde, linreg, pearson, ranks, spearman } from '@/lib/stats'
+import { assoc, computePairs } from '@/lib/associations'
+import {
+  betai,
+  bhAdjust,
+  chi2UpperP,
+  corrPValue,
+  cramersV,
+  describe as desc,
+  etaStats,
+  fUpperP,
+  fisherCI,
+  kde,
+  linreg,
+  normInv,
+  pearson,
+  ranks,
+  spearman,
+  starsForP,
+  studentTCritical,
+  studentTTwoSidedP,
+} from '@/lib/stats'
 import type { Dataset } from '@/types'
 
 let ds: Dataset
@@ -117,5 +136,95 @@ describe('与 pandas / scipy 对照（test.csv）', () => {
     expect(assoc(col('stress_level'), col('sleep_hours'))!.type).toBe('r')
     expect(assoc(col('stress_level'), col('risk_level'))!.type).toBe('η')
     expect(assoc(col('gender'), col('risk_level'))!.type).toBe('V')
+  })
+})
+
+describe('分布函数与推断统计（scipy 基准）', () => {
+  it('标准正态分位数', () => {
+    expect(normInv(0.975)).toBeCloseTo(1.959963984540054, 8)
+    expect(normInv(0.5)).toBeCloseTo(0, 8)
+  })
+
+  it('不完全 Beta 与 t 分布', () => {
+    expect(betai(2, 3, 0.4)).toBeCloseTo(0.5248, 10)
+    expect(studentTTwoSidedP(2.048407141795244, 28)).toBeCloseTo(0.05, 10)
+    expect(studentTCritical(28)).toBeCloseTo(2.048407141795244, 6)
+  })
+
+  it('卡方与 F 分布上尾概率', () => {
+    expect(chi2UpperP(2.0267558528428093, 4)).toBeCloseTo(0.730837564067129, 10)
+    expect(fUpperP(14.501238566327883, 2, 27)).toBeCloseTo(5.2797469920797834e-5, 12)
+  })
+
+  it('相关系数 p 值与 Fisher 置信区间', () => {
+    const strong = corrPValue(-0.9744103930417336, 30)!
+    expect(strong / 1.0814084177802038e-19).toBeCloseTo(1, 5)
+    expect(corrPValue(0.36553684755421323, 30)).toBeCloseTo(0.04698880582546862, 10)
+    const ci = fisherCI(-0.9744103930417336, 30)!
+    expect(ci[0]).toBeCloseTo(-0.9878831588418897, 9)
+    expect(ci[1]).toBeCloseTo(-0.9463614164800268, 9)
+  })
+
+  it('Cramér V 附带卡方 p 与自由度', () => {
+    const res = cramersV(col('gender').labels!, col('risk_level').labels!)!
+    expect(res.df).toBe(4)
+    expect(res.chi2).toBeCloseTo(2.0267558528428093, 9)
+    expect(res.p).toBeCloseTo(0.730837564067129, 10)
+  })
+
+  it('η 附带 F 检验 p 值', () => {
+    const res = etaStats(col('stress_level').num!, col('risk_level').labels!)!
+    expect(res.k).toBe(3)
+    expect(res.f).toBeCloseTo(14.501238566327883, 9)
+    expect(res.p / 5.2797469920797834e-5).toBeCloseTo(1, 6)
+  })
+
+  it('回归含 R²、斜率标准误与置信区间', () => {
+    const reg = linreg(col('sleep_hours').num!, col('stress_level').num!)!
+    expect(reg.r2).toBeCloseTo(0.04358368130044028, 10)
+    expect(reg.seB).toBeCloseTo(0.2921948741732997, 10)
+    expect(reg.p).toBeCloseTo(0.2682371944576718, 10)
+    expect(reg.slopeCi![0]).toBeCloseTo(-0.9285919236537125, 9)
+    expect(reg.slopeCi![1]).toBeCloseTo(0.26847621045138725, 9)
+  })
+
+  it('BH 校正：p 值单调映射到 q 值', () => {
+    const q = bhAdjust([0.001, 0.008, 0.039, 0.041, 0.042]) as number[]
+    expect(q[0]).toBeCloseTo(0.005, 12)
+    expect(q[1]).toBeCloseTo(0.02, 12)
+    expect(q[2]).toBeCloseTo(0.042, 12)
+    expect(q[3]).toBeCloseTo(0.042, 12)
+    expect(q[4]).toBeCloseTo(0.042, 12)
+    expect(bhAdjust([null, 0.04])).toEqual([null, 0.04])
+  })
+
+  it('显著性星号', () => {
+    expect(starsForP(0.0009)).toBe('***')
+    expect(starsForP(0.009)).toBe('**')
+    expect(starsForP(0.049)).toBe('*')
+    expect(starsForP(0.05)).toBe('')
+    expect(starsForP(null)).toBe('')
+  })
+
+  it('变量对结果附带 p、CI 与 FDR q', () => {
+    const pairs = computePairs(ds.columns)
+    const hit = pairs.find(
+      (p) =>
+        (p.a === 'stress_level' && p.b === 'mental_health_index') ||
+        (p.a === 'mental_health_index' && p.b === 'stress_level'),
+    )!
+    expect(hit.p).not.toBeNull()
+    expect(hit.p! / 1.0814084177802038e-19).toBeCloseTo(1, 6)
+    expect(hit.ci![0]).toBeCloseTo(-0.9878831588418897, 9)
+    expect(hit.q).not.toBeNull()
+    expect(hit.q!).toBeGreaterThanOrEqual(hit.p!)
+    expect(hit.q!).toBeLessThanOrEqual(1)
+    const byP = pairs
+      .filter((p) => p.p !== null && p.q !== null)
+      .sort((a, b) => a.p! - b.p!)
+    for (let i = 0; i < byP.length; i++) {
+      expect(byP[i].q!).toBeGreaterThanOrEqual(byP[i].p! - 1e-15)
+      if (i) expect(byP[i].q! + 1e-15).toBeGreaterThanOrEqual(byP[i - 1].q!)
+    }
   })
 })

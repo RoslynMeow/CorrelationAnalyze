@@ -52,9 +52,15 @@ export interface AssocResult {
   signed: number | null
   type: AssocType
   n: number
+  /** 双侧 p 值（r/ρ：相关为 0；V：独立性；η：各组均值相等） */
+  p: number | null
+  /** r / ρ 的 95% Fisher z 置信区间；V / η 为 null */
+  ci: [number, number] | null
 }
 
 export interface PairAssoc extends AssocResult {
   a: string
   b: string
+  /** Benjamini–Hochberg FDR 校正后的 q 值 */
+  q?: number | null
 }

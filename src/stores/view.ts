@@ -25,6 +25,7 @@ export const useViewStore = defineStore('view', () => {
   const matrixMethod = ref('pearson')
   const matrixMask = ref(true)
   const matrixAnnot = ref(true)
+  const matrixSignif = ref(false)
 
   /* 散点 */
   const scatterX = ref('')
@@ -73,6 +74,7 @@ export const useViewStore = defineStore('view', () => {
       matrixMethod,
       matrixMask,
       matrixAnnot,
+      matrixSignif,
       scatterX,
       scatterY,
       scatterColor,
@@ -117,6 +119,7 @@ export const useViewStore = defineStore('view', () => {
     matrixMethod.value = 'pearson'
     matrixMask.value = true
     matrixAnnot.value = true
+    matrixSignif.value = false
 
     scatterX.value = pickDefault(nums, /stress|hours|score/i)
     scatterY.value = pickDefault(
@@ -177,6 +180,7 @@ export const useViewStore = defineStore('view', () => {
     }
     if (typeof config.matrixMask === 'boolean') matrixMask.value = config.matrixMask
     if (typeof config.matrixAnnot === 'boolean') matrixAnnot.value = config.matrixAnnot
+    if (typeof config.matrixSignif === 'boolean') matrixSignif.value = config.matrixSignif
 
     if (anyCol(config.scatterX)) scatterX.value = config.scatterX as string
     if (isNum(config.scatterY)) scatterY.value = config.scatterY as string
@@ -237,6 +241,7 @@ export const useViewStore = defineStore('view', () => {
       matrixMethod: matrixMethod.value,
       matrixMask: matrixMask.value,
       matrixAnnot: matrixAnnot.value,
+      matrixSignif: matrixSignif.value,
       scatterX: scatterX.value || undefined,
       scatterY: scatterY.value || undefined,
       scatterColor: scatterColor.value || undefined,
@@ -269,6 +274,7 @@ export const useViewStore = defineStore('view', () => {
     matrixMethod.value = 'pearson'
     matrixMask.value = true
     matrixAnnot.value = true
+    matrixSignif.value = false
     scatterX.value = ''
     scatterY.value = ''
     scatterColor.value = ''
@@ -300,6 +306,7 @@ export const useViewStore = defineStore('view', () => {
     matrixMethod,
     matrixMask,
     matrixAnnot,
+    matrixSignif,
     scatterX,
     scatterY,
     scatterColor,

@@ -28,6 +28,7 @@ function sanitizeConfig(raw: unknown): PresetConfig {
     matrixMethod: str(raw.matrixMethod, 20),
     matrixMask: bool(raw.matrixMask),
     matrixAnnot: bool(raw.matrixAnnot),
+    matrixSignif: bool(raw.matrixSignif),
     scatterX: str(raw.scatterX),
     scatterY: str(raw.scatterY),
     scatterColor: str(raw.scatterColor),

@@ -12,8 +12,9 @@ import {
   buildDataset,
 } from '@/lib/infer'
 import { assoc, computePairs, slimColumns } from '@/lib/associations'
+import { bhAdjust } from '@/lib/stats'
 import AssociationsWorker from '@/workers/associations.worker?worker&inline'
-import type { AssocMethod, Column, Dataset, PairAssoc } from '@/types'
+import type { AssocMethod, AssocResult, Column, Dataset, PairAssoc } from '@/types'
 import { toast } from '@/composables/useToast'
 import { t } from '@/i18n'
 import { useSettingsStore } from './settings'
@@ -200,18 +201,23 @@ export const useDatasetStore = defineStore('dataset', () => {
     return pairCache.value[method] ?? []
   }
 
-  /** 单列与目标的关联（不缓存，O(n)） */
+  /** 单列与目标的关联（不缓存，O(n)）；附带 FDR 校正 q 值 */
   function assocWithTarget(target: Column, method: AssocMethod = 'pearson') {
     const ds = dataset.value
     if (!ds) return []
-    return assocCols(ds)
+    const list: (AssocResult & { name: string; q?: number | null })[] = assocCols(ds)
       .filter((c) => c.name !== target.name)
       .map((c) => {
         const a = assoc(target, c, method)
         return a ? { name: c.name, ...a } : null
       })
       .filter((x): x is NonNullable<typeof x> => !!x)
-      .sort((x, y) => y.strength - x.strength)
+    const qs = bhAdjust(list.map((x) => x.p))
+    list.forEach((x, i) => {
+      x.q = qs[i]
+    })
+    list.sort((x, y) => y.strength - x.strength)
+    return list
   }
 
   return {

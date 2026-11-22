@@ -1,4 +1,4 @@
-import { cramersV, etaStats, pearson, ranks } from './stats'
+import { bhAdjust, corrPValue, cramersV, etaStats, fisherCI, pearson, ranks } from './stats'
 import type { AssocMethod, AssocResult, Column, PairAssoc } from '@/types'
 
 const rankCache = new WeakMap<Column, (number | null)[]>()
@@ -21,19 +21,33 @@ function numNum(c1: Column, c2: Column, method: AssocMethod): AssocResult | null
   if (n < 3) return null
   const r = method === 'spearman' ? pearson(ranksOf(c1), ranksOf(c2)) : pearson(x, y)
   if (r === null) return null
-  return { strength: Math.abs(r), signed: r, type: method === 'spearman' ? 'ρ' : 'r', n }
+  return {
+    strength: Math.abs(r),
+    signed: r,
+    type: method === 'spearman' ? 'ρ' : 'r',
+    n,
+    p: corrPValue(r, n),
+    ci: fisherCI(r, n),
+  }
 }
 
 function catCat(c1: Column, c2: Column): AssocResult | null {
   const res = cramersV(c1.labels || [], c2.labels || [])
   if (!res) return null
-  return { strength: res.v, signed: null, type: 'V', n: res.n }
+  return { strength: res.v, signed: null, type: 'V', n: res.n, p: res.p, ci: null }
 }
 
 function numCat(nc: Column, cc: Column): AssocResult | null {
   const res = etaStats(nc.num || [], cc.labels || [])
   if (!res) return null
-  return { strength: Math.sqrt(res.e2), signed: null, type: 'η', n: res.n }
+  return {
+    strength: Math.sqrt(res.e2),
+    signed: null,
+    type: 'η',
+    n: res.n,
+    p: Number.isFinite(res.p) ? res.p : null,
+    ci: null,
+  }
 }
 
 /** 任取两列，按类型自动选择度量：r / ρ / V / η */
@@ -59,6 +73,10 @@ export function computePairs(
       if (a) out.push({ a: use[i].name, b: use[j].name, ...a })
     }
   }
+  const qs = bhAdjust(out.map((p) => p.p))
+  out.forEach((p, i) => {
+    p.q = qs[i]
+  })
   out.sort((x, y) => y.strength - x.strength)
   return out
 }

@@ -1,5 +1,22 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- p values for r / ρ (t test), Cramér's V (chi-square) and η (one-way ANOVA F)
+- Fisher z 95% confidence intervals for r / ρ, slope CI, R² and slope p value in regressions
+- Benjamini–Hochberg FDR q values for target rankings and all variable pairs
+- Optional significance stars in the correlation matrix
+- Significance counts and p / q / CI details in target associations, scatter notes and insights
+- Per-chart legend position override (bottom / top / right / hidden)
+- Chart panels fill the available viewport height on desktop; grouped charts use an internally scrolling grid
+
+### Changed
+
+- Plotly is lazy-loaded (first-screen JS drops from ~4.9 MB to ~250 KB) and prefetched after CSV load
+- Mobile keeps natural page scrolling and fixed chart heights instead of compressing to one screen
+
 ## 2.0.0 — 2026-11-22
 
 ### Added

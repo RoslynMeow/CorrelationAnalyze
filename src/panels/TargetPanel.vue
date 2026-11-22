@@ -6,7 +6,8 @@ import { useViewStore } from '@/stores/view'
 import PlotlyChart from '@/components/PlotlyChart.vue'
 import SelectField from '@/components/SelectField.vue'
 import { baseLayout } from '@/lib/chartTheme'
-import { fmtInt, shortName } from '@/lib/format'
+import { fmtInt, fmtP, shortName } from '@/lib/format'
+import { starsForP } from '@/lib/stats'
 import { useNarrow } from '@/composables/useNarrow'
 import { useViewportHeight } from '@/composables/useViewportHeight'
 import { useSettingsStore } from '@/stores/settings'
@@ -42,7 +43,7 @@ const traces = computed(() => [
       narrow.value ? shortName(settings.columnLabel(d.name), 16) : settings.columnLabel(d.name),
     ),
     marker: { color: ordered.value.map((d) => settings.assocColor(d.signed)) },
-    text: ordered.value.map((d) => `${d.strength.toFixed(2)} ${d.type}`),
+    text: ordered.value.map((d) => `${d.strength.toFixed(2)}${starsForP(d.q)} ${d.type}`),
     textposition: 'outside',
     cliponaxis: false,
     bargap: 0.32,
@@ -51,9 +52,12 @@ const traces = computed(() => [
       d.type,
       d.signed === null ? '—' : d.signed.toFixed(2),
       d.n,
+      fmtP(d.p),
+      fmtP(d.q),
+      d.ci ? `${d.ci[0].toFixed(2)} ~ ${d.ci[1].toFixed(2)}` : '—',
     ]),
     hovertemplate: t(
-      '<b>%{customdata[0]}</b><br>关联强度 %{x:.3f}（%{customdata[1]}）<br>有符号值 %{customdata[2]} · n=%{customdata[3]}<extra></extra>',
+      '<b>%{customdata[0]}</b><br>关联强度 %{x:.3f}（%{customdata[1]}）<br>有符号值 %{customdata[2]} · n=%{customdata[3]}<br>p = %{customdata[4]} · FDR q = %{customdata[5]}<br>95% CI %{customdata[6]}<extra></extra>',
     ),
   },
 ])
@@ -90,6 +94,10 @@ const stats = computed(() => {
       k: t('强度 ≥ 0.5'),
       v: t('{n} 个', { n: list.value.filter((d) => d.strength >= 0.5).length }),
     },
+    {
+      k: t('显著（FDR < 0.05）'),
+      v: t('{n} 个', { n: list.value.filter((d) => (d.q ?? 1) < 0.05).length }),
+    },
     { k: t('完整样本'), v: fmtInt(strongest.n) },
   ]
 })
@@ -112,7 +120,7 @@ const stats = computed(() => {
         ]"
       />
       <span class="hint hint-wide">
-        {{ $t('r = Pearson · ρ = Spearman · η = 相关比（数值×类别） · V = Cramér\'s V（类别×类别）｜ 绿=正相关，红=负相关，蓝=无方向') }}
+        {{ $t('r = Pearson · ρ = Spearman · η = 相关比（数值×类别） · V = Cramér\'s V（类别×类别）｜ 绿=正相关，红=负相关，蓝=无方向｜ * q<0.05 · ** q<0.01 · *** q<0.001（FDR 校正）') }}
       </span>
     </div>
 

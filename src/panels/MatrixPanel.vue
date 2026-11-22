@@ -7,7 +7,8 @@ import PlotlyChart from '@/components/PlotlyChart.vue'
 import SelectField from '@/components/SelectField.vue'
 import { baseLayout } from '@/lib/chartTheme'
 import { divergingScale, sequentialScale } from '@/lib/color'
-import { cramersV, pearson, ranks } from '@/lib/stats'
+import { fmtP } from '@/lib/format'
+import { cramersV, corrPValue, pearson, ranks, starsForP } from '@/lib/stats'
 import { useNarrow } from '@/composables/useNarrow'
 import { useViewportHeight } from '@/composables/useViewportHeight'
 import { useSettingsStore } from '@/stores/settings'
@@ -25,6 +26,7 @@ const {
   matrixMethod: method,
   matrixMask: mask,
   matrixAnnot: annot,
+  matrixSignif: signif,
 } = storeToRefs(view)
 
 const cols = computed<Column[]>(() =>
@@ -35,43 +37,65 @@ const cols = computed<Column[]>(() =>
 
 const names = computed(() => cols.value.map((c) => settings.columnLabel(c.name)))
 
-function valueOf(a: Column, b: Column): number | null {
+function valueOf(a: Column, b: Column): { z: number | null; p: number | null } {
   if (mode.value === 'num') {
+    const x = a.num || []
+    const y = b.num || []
+    let n = 0
+    const len = Math.min(x.length, y.length)
+    for (let i = 0; i < len; i++) {
+      if (x[i] !== null && y[i] !== null) n++
+    }
     const r =
       method.value === 'spearman'
-        ? pearson(ranks(a.num || []), ranks(b.num || []))
-        : pearson(a.num || [], b.num || [])
-    return r === null ? null : +r.toFixed(3)
+        ? pearson(ranks(x), ranks(y))
+        : pearson(x, y)
+    return {
+      z: r === null ? null : +r.toFixed(3),
+      p: r === null ? null : corrPValue(r, n),
+    }
   }
   const res = cramersV(a.labels || [], b.labels || [])
-  return res ? +res.v.toFixed(3) : null
+  return res ? { z: +res.v.toFixed(3), p: res.p } : { z: null, p: null }
 }
 
 const matrix = computed(() => {
   const z: (number | null)[][] = []
   const text: string[][] = []
+  const ps: string[][] = []
+  const annotate = annot.value
+  const mark = signif.value
   for (let i = 0; i < cols.value.length; i++) {
     const zr: (number | null)[] = []
     const tr: string[] = []
+    const pr: string[] = []
     for (let j = 0; j < cols.value.length; j++) {
       if (mask.value && j > i) {
         zr.push(null)
         tr.push('')
+        pr.push('')
         continue
       }
       if (i === j) {
         zr.push(mode.value === 'num' ? 1 : null)
-        tr.push(mode.value === 'num' ? '1.00' : '')
+        tr.push(mode.value === 'num' && annotate ? '1.00' : '')
+        pr.push('')
         continue
       }
-      const v = valueOf(cols.value[i], cols.value[j])
-      zr.push(v)
-      tr.push(v === null ? '' : v.toFixed(2))
+      const cell = valueOf(cols.value[i], cols.value[j])
+      zr.push(cell.z)
+      const value = cell.z === null ? '' : cell.z.toFixed(2)
+      const stars = mark ? starsForP(cell.p) : ''
+      tr.push(
+        cell.z === null ? '' : annotate ? `${value}${stars}` : stars,
+      )
+      pr.push(fmtP(cell.p))
     }
     z.push(zr)
     text.push(tr)
+    ps.push(pr)
   }
-  return { z, text }
+  return { z, text, ps }
 })
 
 const chartH = computed(() => {
@@ -90,7 +114,9 @@ const chartW = computed(() => {
   )
 })
 
-const showText = computed(() => annot.value && cols.value.length <= 22)
+const showText = computed(
+  () => (annot.value || signif.value) && cols.value.length <= 22,
+)
 
 const numScale = computed(() => {
   const hm = settings.state.charts.heatmap
@@ -116,6 +142,7 @@ const trace = computed(() => {
       zmax: vmax,
       text: showText.value ? matrix.value.text : undefined,
       texttemplate: showText.value ? '%{text}' : undefined,
+      customdata: matrix.value.ps,
       textfont: {
         size: Math.max(6, Math.min(10, (narrow.value ? 190 : 260) / cols.value.length)),
         color: '#111827',
@@ -124,8 +151,8 @@ const trace = computed(() => {
       ygap: 2,
       colorbar: { thickness: 9, len: 0.7, outlinewidth: 0, tickfont: { size: 9 } },
       hovertemplate: num
-        ? '%{y} × %{x}<br>r = %{z:.3f}<extra></extra>'
-        : '%{y} × %{x}<br>V = %{z:.3f}<extra></extra>',
+        ? '%{y} × %{x}<br>r = %{z:.3f}<br>p = %{customdata}<extra></extra>'
+        : '%{y} × %{x}<br>V = %{z:.3f}<br>p = %{customdata}<extra></extra>',
     },
   ]
 })
@@ -146,19 +173,25 @@ const layout = computed(() =>
 )
 
 const note = computed(() => {
+  let base: string
   if (mode.value === 'num') {
-    return t('数值变量 {n} 个 · {method} · 蓝色为负、红色为正', {
+    base = t('数值变量 {n} 个 · {method} · 蓝色为负、红色为正', {
       n: cols.value.length,
       method:
         method.value === 'spearman'
           ? t('Spearman ρ（单调关系）')
           : t('Pearson r（线性关系）'),
     })
+  } else {
+    base = t(
+      '类别变量 {n} 个（每列 ≤ 25 个取值）· V 越大关联越强（0 ~ 1），与方向无关',
+      { n: cols.value.length },
+    )
   }
-  return t(
-    '类别变量 {n} 个（每列 ≤ 25 个取值）· V 越大关联越强（0 ~ 1），与方向无关',
-    { n: cols.value.length },
-  )
+  if (signif.value) {
+    base += ' · ' + t('* p<0.05 · ** p<0.01 · *** p<0.001（逐对检验，未校正）')
+  }
+  return base
 })
 </script>
 
@@ -184,6 +217,7 @@ const note = computed(() => {
       />
       <label class="chk"><input v-model="mask" type="checkbox" /> {{ $t('只显示下三角') }}</label>
       <label class="chk"><input v-model="annot" type="checkbox" /> {{ $t('标注数值') }}</label>
+      <label class="chk"><input v-model="signif" type="checkbox" /> {{ $t('显著性标记') }}</label>
     </div>
 
     <div class="card chart-card">

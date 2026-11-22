@@ -34,9 +34,9 @@ from the test fixtures.
 | Tab | What it does |
 | --- | --- |
 | Overview | Dataset KPIs, top-10 association pairs, automatic summary |
-| Matrix | Pearson / Spearman for numeric columns, Cramér's V for categorical ones |
-| Target | Rank every column against a chosen target; r / ρ / η / V chosen automatically |
-| Scatter | X/Y/color/size, linear fit, date axis |
+| Matrix | Pearson / Spearman for numeric columns, Cramér's V for categorical ones, significance stars |
+| Target | Rank every column against a chosen target; r / ρ / η / V with p values, 95% CI and FDR correction |
+| Scatter | X/Y/color/size, linear fit with R², slope CI and p value, date axis |
 | Group | Box plots for multiple numeric variables by any group |
 | Pairs | SPLOM matrix, up to 6 dimensions, colored by category |
 | Distribution | Histogram + KDE, optional group overlay, adjustable bins |
@@ -66,8 +66,11 @@ Also included:
 | numeric × categorical | **correlation ratio η** = √(SS_between / SS_total), 0–1 |
 | categorical × categorical | **Cramér's V** (chi-square based), 0–1 |
 
-Missing values are handled pairwise. The implementation lives in `src/lib/stats.ts` and is
-validated against pandas / scipy with a 1e-9 tolerance.
+Missing values are handled pairwise. p values use the t test for r / ρ, chi-square for V and
+one-way ANOVA F for η. Fisher z confidence intervals cover r / ρ; regression slopes use a
+t-based interval. Target rankings and all variable pairs include Benjamini–Hochberg FDR
+q values. The implementation lives in `src/lib/stats.ts` and is validated against
+pandas / scipy with a 1e-9 tolerance.
 
 ## Quick start
 
@@ -78,7 +81,7 @@ git clone https://github.com/RoslynMeow/CorrelationAnalyze.git
 cd CorrelationAnalyze
 npm install
 npm run dev          # http://localhost:5188
-npm test             # 72 tests
+npm test             # 88 tests
 npm run build        # -> dist/
 npm run build:single # -> dist-single/index.html (portable, offline)
 ```
@@ -96,7 +99,7 @@ src/
   workers/           # pairwise association worker
   components/        # PlotlyChart, SettingsDrawer, ...
   panels/            # 11 analysis tabs
-tests/               # 72 tests + CSV fixture
+tests/               # 88 tests + CSV fixture
 .github/             # CI, Pages, issue/PR templates
 ```
 
@@ -116,6 +119,11 @@ and settings validation. Baseline examples:
 | Spearman ρ (same pair) | −0.946607341491 |
 | η (stress_level grouped by risk_level) | 0.719637734744 |
 | Cramér's V (gender × risk_level) | 0.183791360553 |
+| Pearson p (stress_level × mental_health_index) | 1.08140841778e-19 |
+| 95% CI (same pair) | −0.987883158842 ~ −0.946361416480 |
+| R² (sleep_hours → stress_level) | 0.0435836813004 |
+| η F-test p | 5.27974699208e-05 |
+| Cramér's V chi-square p | 0.730837564067 |
 
 ## Deployment
 
