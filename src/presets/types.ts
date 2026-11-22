@@ -6,6 +6,7 @@ export interface PresetConfig {
   matrixMask?: boolean
   matrixAnnot?: boolean
   matrixSignif?: boolean
+  partialControls?: string[]
   scatterX?: string
   scatterY?: string
   scatterColor?: string

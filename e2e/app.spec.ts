@@ -43,6 +43,17 @@ test('相关矩阵可显示显著性星号', async ({ page }) => {
   await expect(page.locator('[data-chart-id="matrix"]')).toContainText('***')
 })
 
+test('偏相关矩阵与 VIF', async ({ page }) => {
+  await openSample(page)
+  await openTab(page, '偏相关 / VIF')
+  await expect(page.getByText('偏相关矩阵')).toBeVisible()
+  await expect(page.locator('.vif-row').first()).toBeVisible()
+
+  await page.locator('.chips label[title="sleep_hours"]').click()
+  await expect(page.getByText('控制：sleep_hours')).toBeVisible()
+  await expect(page.locator('[data-chart-id="partial"]')).toBeVisible()
+})
+
 test('数据搜索与导出', async ({ page }) => {
   await openSample(page)
   await openTab(page, '数据预览')

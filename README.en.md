@@ -35,6 +35,7 @@ from the test fixtures.
 | --- | --- |
 | Overview | Dataset KPIs, top-10 association pairs, automatic summary |
 | Matrix | Pearson / Spearman for numeric columns, Cramér's V for categorical ones, significance stars |
+| Partial / VIF | Partial correlation matrix controlling up to 5 variables; variance inflation factors for numeric columns |
 | Target | Rank every column against a chosen target; r / ρ / η / V with p values, 95% CI and FDR correction |
 | Scatter | X/Y/color/size, linear fit with R², slope CI and p value, date axis |
 | Group | Box plots for multiple numeric variables by any group |
@@ -69,8 +70,10 @@ Also included:
 Missing values are handled pairwise. p values use the t test for r / ρ, chi-square for V and
 one-way ANOVA F for η. Fisher z confidence intervals cover r / ρ; regression slopes use a
 t-based interval. Target rankings and all variable pairs include Benjamini–Hochberg FDR
-q values. The implementation lives in `src/lib/stats.ts` and is validated against
-pandas / scipy with a 1e-9 tolerance.
+q values. Partial correlations residualize on up to 5 controls (standardized regression);
+VIF = 1 / (1 − R²) flags multicollinearity (VIF < 5 normal, 5–10 watch, > 10 high).
+The implementation lives in `src/lib/stats.ts` and is validated against
+pandas / scipy / statsmodels with a 1e-9 tolerance.
 
 ## Quick start
 
@@ -81,7 +84,7 @@ git clone https://github.com/RoslynMeow/CorrelationAnalyze.git
 cd CorrelationAnalyze
 npm install
 npm run dev          # http://localhost:5188
-npm test             # 88 tests
+npm test             # 92 tests
 npm run test:e2e     # Playwright browser tests
 npm run build        # -> dist/
 npm run build:single # -> dist-single/index.html (portable, offline)
@@ -99,8 +102,8 @@ src/
   lib/               # csv, infer, stats, chart theme, export
   workers/           # pairwise association worker
   components/        # PlotlyChart, SettingsDrawer, ...
-  panels/            # 11 analysis tabs
-tests/               # 88 tests + CSV fixture
+  panels/            # 12 analysis tabs
+tests/               # 92 tests + CSV fixture
 e2e/                 # Playwright browser tests
 .github/             # CI, Pages, issue/PR templates
 ```
@@ -128,6 +131,8 @@ and report generation. Baseline examples:
 | R² (sleep_hours → stress_level) | 0.0435836813004 |
 | η F-test p | 5.27974699208e-05 |
 | Cramér's V chi-square p | 0.730837564067 |
+| Partial r (stress × mental_health, controlling sleep_hours) | −0.973479978414 |
+| VIF (age) | 2.36285825544 |
 
 ## Deployment
 
@@ -141,7 +146,7 @@ Full board: **https://github.com/users/RoslynMeow/projects/8**
 
 - [x] CSV import: encodings, delimiters, type inference
 - [x] r / ρ / V / η and target ranking
-- [x] 11 analysis tabs
+- [x] 12 analysis tabs
 - [x] Appearance, palettes, per-chart sizes and titles, export, settings JSON
 - [x] Web Worker, GitHub Pages, single-file build
 - [x] Phase 2: column / value display aliases

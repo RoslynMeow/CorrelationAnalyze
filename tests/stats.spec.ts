@@ -9,20 +9,24 @@ import {
   bhAdjust,
   chi2UpperP,
   corrPValue,
+  corrPValueDf,
   cramersV,
   describe as desc,
   etaStats,
   fUpperP,
   fisherCI,
+  invertMatrix,
   kde,
   linreg,
   normInv,
+  partialCorrMatrix,
   pearson,
   ranks,
   spearman,
   starsForP,
   studentTCritical,
   studentTTwoSidedP,
+  vifStats,
 } from '@/lib/stats'
 import type { Dataset } from '@/types'
 
@@ -226,5 +230,62 @@ describe('分布函数与推断统计（scipy 基准）', () => {
       expect(byP[i].q!).toBeGreaterThanOrEqual(byP[i].p! - 1e-15)
       if (i) expect(byP[i].q! + 1e-15).toBeGreaterThanOrEqual(byP[i - 1].q!)
     }
+  })
+})
+
+describe('偏相关与共线性（scipy / statsmodels 基准）', () => {
+  it('矩阵求逆', () => {
+    const inv = invertMatrix([
+      [4, 7],
+      [2, 6],
+    ])!
+    expect(inv[0][0]).toBeCloseTo(0.6, 12)
+    expect(inv[0][1]).toBeCloseTo(-0.7, 12)
+    expect(inv[1][0]).toBeCloseTo(-0.2, 12)
+    expect(inv[1][1]).toBeCloseTo(0.4, 12)
+    expect(invertMatrix([[1, 1], [1, 1]])).toBeNull()
+  })
+
+  it('控制单变量后的偏相关与 p 值', () => {
+    const a = col('stress_level').num!
+    const b = col('mental_health_index').num!
+    const c = col('sleep_hours').num!
+    const res = partialCorrMatrix([a, b], [c])!
+    expect(res.n).toBe(30)
+    expect(res.df).toBe(27)
+    expect(res.r[0][1]).toBeCloseTo(-0.9734799784135981, 9)
+    expect(corrPValueDf(res.r[0][1]!, res.df)! / 7.888173245703816e-19).toBeCloseTo(1, 6)
+
+    const res2 = partialCorrMatrix(
+      [col('study_hours_per_day').num!, col('academic_performance').num!],
+      [col('stress_level').num!],
+    )!
+    expect(res2.r[0][1]).toBeCloseTo(0.2963245300361346, 9)
+    expect(corrPValueDf(res2.r[0][1]!, res2.df)).toBeCloseTo(0.11855797786399706, 9)
+  })
+
+  it('控制两个变量后的偏相关', () => {
+    const res = partialCorrMatrix(
+      [col('burnout_score').num!, col('dropout_risk').num!],
+      [col('stress_level').num!, col('sleep_hours').num!],
+    )!
+    expect(res.df).toBe(26)
+    expect(res.r[0][1]).toBeCloseTo(0.3331685093723759, 9)
+  })
+
+  it('VIF 与标准化回归 R² 一致', () => {
+    const nums = ds.columns.filter((c) => c.type === 'number')
+    const vars = nums.map((c) => c.num || [])
+    const res = vifStats(vars)!
+    expect(res.n).toBe(30)
+    const vifOf = (name: string): number => {
+      const i = nums.findIndex((c) => c.name === name)
+      return res.items[i]!.vif
+    }
+    expect(vifOf('age') / 2.3628582554357385).toBeCloseTo(1, 6)
+    expect(vifOf('study_hours_per_day') / 8.351964018884292).toBeCloseTo(1, 6)
+    expect(vifOf('physical_activity') / 1.6821509479449377).toBeCloseTo(1, 6)
+    // 完全共线的列无法得到有限 VIF
+    expect(res.items[nums.findIndex((c) => c.name === 'stress_level')]).toBeNull()
   })
 })

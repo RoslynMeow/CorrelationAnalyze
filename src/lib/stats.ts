@@ -195,8 +195,13 @@ export function fUpperP(f: number, d1: number, d2: number): number {
 /** 相关系数的 t 检验（双侧 H0: ρ = 0） */
 export function corrPValue(r: number, n: number): number | null {
   if (!Number.isFinite(r) || n < 3) return null
+  return corrPValueDf(r, n - 2)
+}
+
+/** 已知自由度时的相关系数 p 值（偏相关用） */
+export function corrPValueDf(r: number, df: number): number | null {
+  if (!Number.isFinite(r) || !(df > 0)) return null
   if (Math.abs(r) >= 1) return 0
-  const df = n - 2
   const t = r * Math.sqrt(df / (1 - r * r))
   return studentTTwoSidedP(t, df)
 }
@@ -490,4 +495,243 @@ export function kde(values: number[], xs: number[], bandwidth?: number): number[
     }
     return s * norm
   })
+}
+
+/* ================= 偏相关 / 共线性 ================= */
+
+/** 去掉含缺失 / 非有限值的行，返回转置后的列数组 */
+function completeColumns(cols: (number | null)[][]): number[][] | null {
+  if (!cols.length) return null
+  const len = Math.min(...cols.map((c) => c.length))
+  const rows: number[][] = []
+  for (let i = 0; i < len; i++) {
+    const row: number[] = []
+    let ok = true
+    for (const c of cols) {
+      const v = c[i]
+      if (v === null || v === undefined || !Number.isFinite(v)) {
+        ok = false
+        break
+      }
+      row.push(v)
+    }
+    if (ok) rows.push(row)
+  }
+  if (!rows.length) return null
+  return cols.map((_, j) => rows.map((r) => r[j]))
+}
+
+function pearsonMatrix(cols: number[][]): number[][] | null {
+  const p = cols.length
+  const n = cols[0]?.length ?? 0
+  if (p < 2 || n < p + 1) return null
+  const means = cols.map((c) => c.reduce((s, v) => s + v, 0) / n)
+  const sds = cols.map((c, i) => {
+    const m = means[i]
+    return Math.sqrt(c.reduce((s, v) => s + (v - m) ** 2, 0) / Math.max(1, n - 1))
+  })
+  if (sds.some((s) => !(s > 0))) return null
+  const r: number[][] = Array.from({ length: p }, () => new Array(p).fill(0))
+  for (let i = 0; i < p; i++) {
+    r[i][i] = 1
+    for (let j = i + 1; j < p; j++) {
+      let s = 0
+      for (let k = 0; k < n; k++) s += (cols[i][k] - means[i]) * (cols[j][k] - means[j])
+      const v = s / ((n - 1) * sds[i] * sds[j])
+      const clamped = Math.max(-1, Math.min(1, v))
+      r[i][j] = clamped
+      r[j][i] = clamped
+    }
+  }
+  return r
+}
+
+/** 高斯-约当求逆；奇异或接近奇异时返回 null */
+export function invertMatrix(a: number[][]): number[][] | null {
+  const n = a.length
+  if (!n || a.some((row) => row.length !== n)) return null
+  const m = a.map((row, i) => [
+    ...row,
+    ...Array.from({ length: n }, (_, j) => (i === j ? 1 : 0)),
+  ])
+  for (let col = 0; col < n; col++) {
+    let pivot = col
+    for (let r = col + 1; r < n; r++) {
+      if (Math.abs(m[r][col]) > Math.abs(m[pivot][col])) pivot = r
+    }
+    if (Math.abs(m[pivot][col]) < 1e-12) return null
+    if (pivot !== col) [m[col], m[pivot]] = [m[pivot], m[col]]
+    const pv = m[col][col]
+    for (let j = 0; j < 2 * n; j++) m[col][j] /= pv
+    for (let r = 0; r < n; r++) {
+      if (r === col) continue
+      const f = m[r][col]
+      if (!f) continue
+      for (let j = 0; j < 2 * n; j++) m[r][j] -= f * m[col][j]
+    }
+  }
+  return m.map((row) => row.slice(n))
+}
+
+export interface PartialMatrixResult {
+  /** 无法计算（例如被控制变量完全解释）的单元格为 null */
+  r: (number | null)[][]
+  n: number
+  df: number
+}
+
+/** 解线性方程组 a·x = b（部分主元高斯消元） */
+function solveLinear(a: number[][], b: number[]): number[] | null {
+  const n = a.length
+  if (!n || b.length !== n) return null
+  const m = a.map((row, i) => [...row, b[i]])
+  for (let col = 0; col < n; col++) {
+    let pivot = col
+    for (let r = col + 1; r < n; r++) {
+      if (Math.abs(m[r][col]) > Math.abs(m[pivot][col])) pivot = r
+    }
+    if (Math.abs(m[pivot][col]) < 1e-9) return null
+    if (pivot !== col) [m[col], m[pivot]] = [m[pivot], m[col]]
+    const pv = m[col][col]
+    for (let j = col; j <= n; j++) m[col][j] /= pv
+    for (let r = 0; r < n; r++) {
+      if (r === col) continue
+      const f = m[r][col]
+      if (!f) continue
+      for (let j = col; j <= n; j++) m[r][j] -= f * m[col][j]
+    }
+  }
+  return m.map((row) => row[n])
+}
+
+/**
+ * 偏相关矩阵：vars 中任意两列在控制 controls 后的相关系数。
+ * 先对控制变量做标准化回归取残差，再算残差相关；使用完整行（listwise）。
+ */
+export function partialCorrMatrix(
+  vars: (number | null)[][],
+  controls: (number | null)[][] = [],
+): PartialMatrixResult | null {
+  const m = vars.length
+  const k = controls.length
+  if (m < 2) return null
+  const all = completeColumns([...vars, ...controls])
+  if (!all) return null
+  const n = all[0].length
+  if (n <= m + k) return null
+  const df = n - k - 2
+  if (df < 1) return null
+
+  if (!k) {
+    const corr = pearsonMatrix(all)
+    if (!corr) return null
+    return { r: corr.slice(0, m).map((row) => row.slice(0, m)), n, df }
+  }
+
+  // 标准化，避免量纲差异导致病态矩阵
+  const means = all.map((c) => c.reduce((s, v) => s + v, 0) / n)
+  const sds = all.map((c, i) => {
+    const mu = means[i]
+    return Math.sqrt(c.reduce((s, v) => s + (v - mu) ** 2, 0) / Math.max(1, n - 1))
+  })
+  if (sds.some((s) => !(s > 0))) return null
+  const z = all.map((c, i) => c.map((v) => (v - means[i]) / sds[i]))
+  const ctrl = z.slice(m)
+  const gram = Array.from({ length: k }, (_, i) =>
+    Array.from({ length: k }, (_, j) => {
+      let s = 0
+      for (let r = 0; r < n; r++) s += ctrl[i][r] * ctrl[j][r]
+      return s
+    }),
+  )
+
+  const residuals: (number[] | null)[] = []
+  for (let j = 0; j < m; j++) {
+    const y = z[j]
+    const rhs = Array.from({ length: k }, (_, i) => {
+      let s = 0
+      for (let r = 0; r < n; r++) s += ctrl[i][r] * y[r]
+      return s
+    })
+    const beta = solveLinear(gram, rhs)
+    if (!beta) return null
+    const res: number[] = new Array(n)
+    let ss = 0
+    for (let r = 0; r < n; r++) {
+      let fit = 0
+      for (let c = 0; c < k; c++) fit += beta[c] * ctrl[c][r]
+      const v = y[r] - fit
+      res[r] = v
+      ss += v * v
+    }
+    // 该列被控制变量完全解释时偏相关无定义
+    residuals.push(Math.sqrt(ss / Math.max(1, n - 1)) < 1e-9 ? null : res)
+  }
+
+  const r: (number | null)[][] = Array.from({ length: m }, () => new Array(m).fill(null))
+  for (let i = 0; i < m; i++) {
+    const a = residuals[i]
+    if (!a) continue
+    r[i][i] = 1
+    for (let j = i + 1; j < m; j++) {
+      const b = residuals[j]
+      if (!b) continue
+      let sa = 0
+      let sb = 0
+      let saa = 0
+      let sbb = 0
+      let sab = 0
+      for (let t = 0; t < n; t++) {
+        sa += a[t]
+        sb += b[t]
+        saa += a[t] * a[t]
+        sbb += b[t] * b[t]
+        sab += a[t] * b[t]
+      }
+      const num = sab - (sa * sb) / n
+      const den = Math.sqrt((saa - (sa * sa) / n) * (sbb - (sb * sb) / n))
+      const v = den > 0 ? Math.max(-1, Math.min(1, num / den)) : null
+      r[i][j] = v
+      r[j][i] = v
+    }
+  }
+  return { r, n, df }
+}
+
+export interface VifResult {
+  n: number
+  /** 与输入列一一对应；无法计算时为 null */
+  items: ({ vif: number; r2: number } | null)[]
+}
+
+/**
+ * 方差膨胀因子：每列对其余列做标准化线性回归得到的 1 / (1 - R²)。
+ * 使用完整行；样本量不足、矩阵奇异或 R² ≈ 1 时对应项为 null。
+ */
+export function vifStats(vars: (number | null)[][]): VifResult | null {
+  const p = vars.length
+  if (p < 2) return null
+  const all = completeColumns(vars)
+  if (!all) return null
+  const n = all[0].length
+  if (n <= p) return null
+  const corr = pearsonMatrix(all)
+  if (!corr) return null
+  const items = corr.map((row, j) => {
+    const others: number[][] = []
+    const rhs: number[] = []
+    for (let i = 0; i < p; i++) {
+      if (i === j) continue
+      others.push(corr[i].filter((_, c) => c !== j))
+      rhs.push(row[i])
+    }
+    // 极小的岭项，避免完全共线时矩阵奇异；只影响数值稳定性
+    for (let i = 0; i < others.length; i++) others[i][i] += 1e-8
+    const beta = solveLinear(others, rhs)
+    if (!beta) return null
+    const r2 = Math.max(0, Math.min(1, rhs.reduce((s, v, i) => s + v * beta[i], 0)))
+    if (r2 >= 1 - 1e-6) return null
+    return { vif: 1 / (1 - r2), r2 }
+  })
+  return { n, items }
 }

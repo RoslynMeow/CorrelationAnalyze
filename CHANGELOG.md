@@ -15,6 +15,8 @@
 - Insight cards use a 2–3 column grid with an internally scrolling main area on desktop
 - Dialog focus trap and Esc-to-close for settings, report, presets, chart popovers and app menus
 - Playwright E2E suite for upload, tab switching, matrix stars, search/export, PNG download, dialogs and report generation
+- Partial correlation matrix controlling up to 5 numeric variables (standardized residualization, t-test p values)
+- VIF multicollinearity panel with normal / watch / high tiers and collinearity notes
 
 ### Changed
 

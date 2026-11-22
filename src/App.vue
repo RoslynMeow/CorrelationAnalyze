@@ -20,6 +20,7 @@ import { t } from '@/i18n'
 import Toast from '@/components/Toast.vue'
 import OverviewPanel from '@/panels/OverviewPanel.vue'
 import MatrixPanel from '@/panels/MatrixPanel.vue'
+import PartialPanel from '@/panels/PartialPanel.vue'
 import TargetPanel from '@/panels/TargetPanel.vue'
 import ScatterPanel from '@/panels/ScatterPanel.vue'
 import GroupPanel from '@/panels/GroupPanel.vue'
@@ -33,6 +34,7 @@ import DataPanel from '@/panels/DataPanel.vue'
 const TABS = [
   { key: 'overview', label: '关联总览', component: OverviewPanel },
   { key: 'matrix', label: '相关矩阵', component: MatrixPanel },
+  { key: 'partial', label: '偏相关 / VIF', component: PartialPanel },
   { key: 'target', label: '目标关联', component: TargetPanel },
   { key: 'scatter', label: '散点拟合', component: ScatterPanel },
   { key: 'group', label: '分组对比', component: GroupPanel },

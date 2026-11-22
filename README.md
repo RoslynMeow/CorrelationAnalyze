@@ -22,7 +22,7 @@
   <img alt="Vite" src="https://img.shields.io/badge/Vite-8-646cff?style=flat-square&logo=vite&logoColor=white">
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5-3178c6?style=flat-square&logo=typescript&logoColor=white">
   <img alt="Plotly" src="https://img.shields.io/badge/Plotly-4-3f4f75?style=flat-square&logo=plotly&logoColor=white">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-88%20passed-3fb950?style=flat-square">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-92%20passed-3fb950?style=flat-square">
 </p>
 
 <p align="center"><strong>简体中文</strong> · <a href="./README.en.md">English</a></p>
@@ -43,6 +43,7 @@
 | --- | --- |
 | 关联总览 | 数据规模 KPI、全部变量对的关联强度 Top 10、自动文字解读 |
 | 相关矩阵 | 数值变量 Pearson / Spearman；类别变量 Cramér's V；下三角遮罩、数值标注、显著性星号 |
+| 偏相关 / VIF | 控制最多 5 个变量后的偏相关矩阵；数值列方差膨胀因子与共线性分级 |
 | 目标关联 | 选一个目标列，其余列按关联强度排序；自动区分 r / ρ / η / V，附 p 值、95% CI 与 FDR 校正 |
 | 散点拟合 | 任选 X / Y / 颜色 / 气泡大小；线性拟合（R²、斜率 CI、p 值）；日期列可作时间轴 |
 | 分组对比 | 按任意分组列批量画箱线图，可多选数值变量 |
@@ -90,6 +91,8 @@
 - **p 值**：r / ρ 用 t 检验；V 用卡方检验；η 用 F 检验（单因素方差分析）
 - **95% 置信区间**：r / ρ 经 Fisher z 变换；回归斜率用 t 分布
 - **多重比较**：目标关联与全部变量对提供 Benjamini–Hochberg FDR 校正 q 值；矩阵星号为逐对未校正 p 值
+- **偏相关**：对控制变量做标准化回归取残差后计算 r，p 值自由度为 n − 控制变量数 − 2
+- **共线性**：VIF = 1 / (1 − R²)，由该列对其余数值列的标准化回归得到；VIF < 5 正常、5–10 需关注、>10 高共线
 - 相关性不等于因果，样本量较小时请结合业务判断
 
 实现集中在 `src/lib/stats.ts`，全部为纯函数，并有 pandas / scipy 对照测试（p 值、CI、R²、FDR 均有基准）。
@@ -104,7 +107,7 @@ cd CorrelationAnalyze
 npm install
 
 npm run dev          # http://localhost:5188
-npm test             # 88 个单元测试
+npm test             # 92 个单元测试
 npm run test:e2e     # Playwright 浏览器测试
 npm run typecheck
 npm run build        # 常规构建 -> dist/
@@ -173,8 +176,8 @@ CorrelationAnalyze/
 │  │  └─ format.ts
 │  ├─ workers/associations.worker.ts
 │  ├─ components/              # PlotlyChart / SettingsDrawer / 图表工具条等
-│  └─ panels/                  # 11 个页签
-├─ tests/                      # 88 个单元测试 + fixtures/sample.csv（仅测试用）
+│  └─ panels/                  # 12 个页签
+├─ tests/                      # 92 个单元测试 + fixtures/sample.csv（仅测试用）
 ├─ e2e/                        # Playwright 浏览器端测试
 └─ .github/                    # CI、Pages、Issue/PR 模板
 ```
@@ -198,9 +201,9 @@ npm test        # 单元测试
 npm run test:e2e # 浏览器端测试（首次需 npx playwright install chromium）
 ```
 
-当前 **88 个单元测试 + 6 个 E2E 测试全部通过**：
+当前 **92 个单元测试 + 6 个 E2E 测试全部通过**：
 
-- `tests/stats.spec.ts`：基础统计 + 与 pandas / scipy 对照（容差 1e-9）
+- `tests/stats.spec.ts`：基础统计 + 与 pandas / scipy / statsmodels 对照（含 p 值、CI、R²、FDR、偏相关、VIF，容差 1e-9）
 - `tests/csv.spec.ts`：引号、CRLF、BOM、重复列名、GB18030 / UTF-16
 - `tests/infer.spec.ts`：类型推断、ID 列、分组列、有序等级、行数截断
 - `tests/settings.spec.ts`：配置合并、非法值回退、颜色校验、尺寸限幅、JSON 往返
@@ -224,6 +227,8 @@ npm run test:e2e # 浏览器端测试（首次需 npx playwright install chromiu
 | R²（sleep_hours → stress_level） | 0.0435836813004 |
 | η 的 F 检验 p | 5.27974699208e-05 |
 | Cramér's V 的卡方 p | 0.730837564067 |
+| 偏相关（stress × mental_health，控制 sleep_hours） | −0.973479978414 |
+| VIF（age） | 2.36285825544 |
 
 ## 部署
 
@@ -241,7 +246,7 @@ npm run test:e2e # 浏览器端测试（首次需 npx playwright install chromiu
 
 - [x] CSV 自动编码 / 分隔符 / 类型推断
 - [x] r / ρ / V / η 与目标关联
-- [x] 11 个分析页签
+- [x] 12 个分析页签
 - [x] 外观、色板、表格、单图尺寸/标题、导出与配置导入导出
 - [x] Web Worker、GitHub Pages、单文件构建
 - [x] 第 2 期：列名与类别取值显示映射
