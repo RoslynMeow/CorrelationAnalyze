@@ -11,6 +11,10 @@
 - Significance counts and p / q / CI details in target associations, scatter notes and insights
 - Per-chart legend position override (bottom / top / right / hidden)
 - Chart panels fill the available viewport height on desktop; grouped charts use an internally scrolling grid
+- Chunked data search (roughly 8 ms per frame) with live progress, so typing stays responsive on 100k rows
+- Insight cards use a 2–3 column grid with an internally scrolling main area on desktop
+- Dialog focus trap and Esc-to-close for settings, report, presets, chart popovers and app menus
+- Playwright E2E suite for upload, tab switching, matrix stars, search/export, PNG download, dialogs and report generation
 
 ### Changed
 

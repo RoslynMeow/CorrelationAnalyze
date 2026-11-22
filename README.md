@@ -105,6 +105,7 @@ npm install
 
 npm run dev          # http://localhost:5188
 npm test             # 88 个单元测试
+npm run test:e2e     # Playwright 浏览器测试
 npm run typecheck
 npm run build        # 常规构建 -> dist/
 npm run build:single # 单文件便携版 -> dist-single/index.html
@@ -173,7 +174,8 @@ CorrelationAnalyze/
 │  ├─ workers/associations.worker.ts
 │  ├─ components/              # PlotlyChart / SettingsDrawer / 图表工具条等
 │  └─ panels/                  # 11 个页签
-├─ tests/                      # 88 个测试 + fixtures/sample.csv（仅测试用）
+├─ tests/                      # 88 个单元测试 + fixtures/sample.csv（仅测试用）
+├─ e2e/                        # Playwright 浏览器端测试
 └─ .github/                    # CI、Pages、Issue/PR 模板
 ```
 
@@ -186,16 +188,17 @@ CorrelationAnalyze/
 | 状态 | Pinia |
 | 图表 | Plotly.js（热力图、SPLOM、雷达、箱线、日期轴、WebGL 散点） |
 | 计算 | 纯 TypeScript，变量对放入 Web Worker |
-| 测试 | Vitest |
+| 测试 | Vitest + Playwright |
 | 部署 | GitHub Actions + GitHub Pages；单文件版用 `vite-plugin-singlefile` |
 
 ## 测试
 
 ```bash
-npm test
+npm test        # 单元测试
+npm run test:e2e # 浏览器端测试（首次需 npx playwright install chromium）
 ```
 
-当前 **88 个测试全部通过**：
+当前 **88 个单元测试 + 6 个 E2E 测试全部通过**：
 
 - `tests/stats.spec.ts`：基础统计 + 与 pandas / scipy 对照（容差 1e-9）
 - `tests/csv.spec.ts`：引号、CRLF、BOM、重复列名、GB18030 / UTF-16
@@ -205,6 +208,7 @@ npm test
 - `tests/i18n.spec.ts`：占位符替换、文案覆盖与恢复
 - `tests/report.spec.ts`：报告 HTML 结构、章节与转义
 - `tests/presets.spec.ts`：内置模板、列匹配、快照与导入校验
+- `e2e/app.spec.ts`：载入 CSV、切换页签、矩阵星号、数据搜索/导出、PNG 下载、弹窗焦点与 Esc、报告生成
 
 对照基准示例：
 

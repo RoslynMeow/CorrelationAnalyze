@@ -8,3 +8,6 @@ dist-single/
 *.log
 .vite/
 coverage/
+test-results/
+playwright-report/
+blob-report/

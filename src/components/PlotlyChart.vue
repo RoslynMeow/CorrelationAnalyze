@@ -412,6 +412,11 @@ onDeactivated(() => {
   styleOpen.value = false
 })
 
+function onEscKey(e: KeyboardEvent): void {
+  if (e.key === 'Escape' && styleOpen.value) styleOpen.value = false
+}
+onMounted(() => window.addEventListener('keydown', onEscKey))
+
 let resizeObserver: ResizeObserver | null = null
 let resizeRaf = 0
 onMounted(() => {
@@ -460,6 +465,7 @@ watch(
 
 onBeforeUnmount(() => {
   window.removeEventListener('pointermove', onResizeMove)
+  window.removeEventListener('keydown', onEscKey)
   if (resizing.value) {
     document.body.style.userSelect = ''
     document.body.style.cursor = ''

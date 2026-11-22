@@ -82,6 +82,7 @@ cd CorrelationAnalyze
 npm install
 npm run dev          # http://localhost:5188
 npm test             # 88 tests
+npm run test:e2e     # Playwright browser tests
 npm run build        # -> dist/
 npm run build:single # -> dist-single/index.html (portable, offline)
 ```
@@ -100,6 +101,7 @@ src/
   components/        # PlotlyChart, SettingsDrawer, ...
   panels/            # 11 analysis tabs
 tests/               # 88 tests + CSV fixture
+e2e/                 # Playwright browser tests
 .github/             # CI, Pages, issue/PR templates
 ```
 
@@ -107,11 +109,13 @@ tests/               # 88 tests + CSV fixture
 
 ```bash
 npm run typecheck
-npm test
+npm test          # unit tests
+npm run test:e2e  # Playwright (run npx playwright install chromium once)
 ```
 
 Covers statistics against pandas / scipy, CSV parsing and encodings, type inference,
-and settings validation. Baseline examples:
+settings validation, plus browser flows for upload, tabs, search, downloads, dialogs
+and report generation. Baseline examples:
 
 | Metric | Value |
 | --- | --- |

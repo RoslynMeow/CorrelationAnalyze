@@ -48,6 +48,15 @@ function onDocClick(e: MouseEvent): void {
   if (tabMenuOpen.value && !target?.closest('.tab-select')) tabMenuOpen.value = false
 }
 
+function onKey(e: KeyboardEvent): void {
+  if (e.key !== 'Escape') return
+  if (menuOpen.value || tabMenuOpen.value) {
+    menuOpen.value = false
+    tabMenuOpen.value = false
+    e.stopPropagation()
+  }
+}
+
 function toggleAppMenu(): void {
   tabMenuOpen.value = false
   menuOpen.value = !menuOpen.value
@@ -79,6 +88,7 @@ onMounted(() => {
   }
   window.addEventListener('resize', updateScroll)
   document.addEventListener('click', onDocClick)
+  document.addEventListener('keydown', onKey)
 })
 
 onBeforeUnmount(() => {
@@ -86,6 +96,7 @@ onBeforeUnmount(() => {
   ro = null
   window.removeEventListener('resize', updateScroll)
   document.removeEventListener('click', onDocClick)
+  document.removeEventListener('keydown', onKey)
 })
 
 watch(

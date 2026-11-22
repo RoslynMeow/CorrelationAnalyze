@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import ColorField from '@/components/ColorField.vue'
 import { PALETTES, DEFAULT_HEATMAP } from '@/settings/defaults'
 import { TEXT_CATALOG } from '@/i18n/catalog'
@@ -7,10 +7,17 @@ import { t } from '@/i18n'
 import { useDatasetStore } from '@/stores/dataset'
 import { useSettingsStore } from '@/stores/settings'
 import { toast } from '@/composables/useToast'
+import { useFocusTrap } from '@/composables/useFocusTrap'
 import { downloadDataUrl } from '@/lib/exportChart'
 
 const props = defineProps<{ open: boolean }>()
 const emit = defineEmits<{ (e: 'close'): void }>()
+const drawerEl = ref<HTMLElement | null>(null)
+useFocusTrap(
+  computed(() => props.open),
+  drawerEl,
+  () => emit('close'),
+)
 
 const settings = useSettingsStore()
 const ds = useDatasetStore()
@@ -160,10 +167,6 @@ function clearAllProfiles(): void {
   }
 }
 
-function onKey(e: KeyboardEvent): void {
-  if (e.key === 'Escape' && props.open) emit('close')
-}
-
 watch(
   () => props.open,
   (v) => {
@@ -171,9 +174,7 @@ watch(
   },
 )
 
-onMounted(() => window.addEventListener('keydown', onKey))
 onBeforeUnmount(() => {
-  window.removeEventListener('keydown', onKey)
   document.body.style.overflow = ''
 })
 </script>
@@ -181,7 +182,7 @@ onBeforeUnmount(() => {
 <template>
   <Teleport to="body">
     <div v-if="props.open" class="drawer-veil" @click="emit('close')"></div>
-    <aside v-if="props.open" class="drawer" role="dialog" :aria-label="$t('设置')">
+    <aside v-if="props.open" ref="drawerEl" class="drawer" role="dialog" aria-modal="true" tabindex="-1" :aria-label="$t('设置')">
       <header class="drawer-head">
         <h3>{{ $t('设置') }}</h3>
         <span class="hint">{{ $t('自动保存在本机') }}</span>

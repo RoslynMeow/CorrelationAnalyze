@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
+import { useFocusTrap } from '@/composables/useFocusTrap'
 
 const props = defineProps<{
   open: boolean
@@ -13,6 +14,12 @@ const emit = defineEmits<{
 
 const selected = ref<string[]>([])
 const includeCharts = ref(true)
+const dialogEl = ref<HTMLElement | null>(null)
+useFocusTrap(
+  computed(() => props.open),
+  dialogEl,
+  () => emit('close'),
+)
 
 watch(
   () => props.open,
@@ -50,7 +57,7 @@ function generate(): void {
 <template>
   <Teleport to="body">
     <div v-if="props.open" class="report-veil" @click.self="emit('close')">
-      <div class="report-dialog" role="dialog" aria-modal="true" :aria-label="$t('导出报告')">
+      <div ref="dialogEl" class="report-dialog" role="dialog" aria-modal="true" tabindex="-1" :aria-label="$t('导出报告')">
         <header class="report-dialog-head">
           <h3>{{ $t('导出报告') }}</h3>
           <button class="btn icon" type="button" :title="$t('关闭')" @click="emit('close')">

@@ -256,7 +256,7 @@ async function copyInsights(): Promise<void> {
 </script>
 
 <template>
-  <section class="panel">
+  <section class="panel panel-fit insight-panel">
     <div class="controls">
       <SelectField
         v-model="targetName"

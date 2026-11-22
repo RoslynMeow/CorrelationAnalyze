@@ -1379,6 +1379,18 @@ html[data-theme='dark'] .dropcard.drag {
   grid-template-columns: repeat(auto-fit, minmax(min(340px, 100%), 1fr));
   gap: var(--grid-gap);
 }
+.panel-fit .insights {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  align-content: start;
+  padding-right: 4px;
+}
+@media (min-width: 1240px) {
+  .insights {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
 .insights > * {
   min-width: 0;
 }
@@ -2680,5 +2692,9 @@ input[type='color']::-webkit-color-swatch {
   .panel-fit .grid-charts {
     overflow: visible;
     grid-auto-rows: auto;
+  }
+  .panel-fit .insights {
+    overflow: visible;
+    padding-right: 0;
   }
 }

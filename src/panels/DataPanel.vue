@@ -14,6 +14,13 @@ const pageSize = ref('50')
 const page = ref(0)
 let searchTimer: ReturnType<typeof setTimeout> | undefined
 
+/** 分块搜索状态：null 表示无筛选 */
+const matched = ref<number[] | null>(null)
+const scanning = ref(false)
+const progress = ref(0)
+let scanToken = 0
+let scanRaf = 0
+
 watch(searchInput, (v) => {
   if (searchTimer) clearTimeout(searchTimer)
   searchTimer = setTimeout(() => {
@@ -21,37 +28,102 @@ watch(searchInput, (v) => {
   }, 180)
 })
 
-watch(() => ds.datasetId, () => {
-  searchInput.value = ''
-  query.value = ''
-  page.value = 0
-  closeProfile()
-})
+function stopScan(): void {
+  scanToken++
+  if (scanRaf) cancelAnimationFrame(scanRaf)
+  scanRaf = 0
+  scanning.value = false
+}
 
-const filtered = computed(() => {
+/** 每帧最多扫描约 8ms，避免 10 万行时阻塞输入 */
+function runSearch(): void {
+  stopScan()
   const d = ds.dataset
-  if (!d) return []
-  const rows = d.rows
   const q = query.value.trim().toLowerCase()
-  if (!q) return rows.map((_, i) => i)
+  page.value = 0
+  progress.value = 0
+  if (!d || !q) {
+    matched.value = null
+    return
+  }
 
   // 列显示名 / 原始列名命中时，直接显示全部行
   const columnHit = d.columns.some(
     (c) =>
       c.name.toLowerCase().includes(q) || settings.columnLabel(c.name).toLowerCase().includes(q),
   )
-  if (columnHit) return rows.map((_, i) => i)
-
-  const idx: number[] = []
-  for (let i = 0; i < rows.length; i++) {
-    const hit = rows[i].some((v, ci) => {
-      if (String(v).toLowerCase().includes(q)) return true
-      const c = d.columns[ci]
-      return c ? settings.valueLabel(c.name, v).toLowerCase().includes(q) : false
-    })
-    if (hit) idx.push(i)
+  if (columnHit) {
+    matched.value = d.rows.map((_, i) => i)
+    progress.value = 1
+    return
   }
-  return idx
+
+  const rows = d.rows
+  const token = ++scanToken
+  const idx: number[] = []
+  matched.value = []
+  scanning.value = true
+  let i = 0
+
+  const step = (): void => {
+    if (token !== scanToken) return
+    const start = performance.now()
+    let n = 0
+    while (i < rows.length && (n < 500 || performance.now() - start < 8)) {
+      const hit = rows[i].some((v, ci) => {
+        if (String(v).toLowerCase().includes(q)) return true
+        const c = d.columns[ci]
+        return c ? settings.valueLabel(c.name, v).toLowerCase().includes(q) : false
+      })
+      if (hit) idx.push(i)
+      i++
+      n++
+    }
+    progress.value = rows.length ? i / rows.length : 1
+    if (i < rows.length) {
+      scanRaf = requestAnimationFrame(step)
+    } else {
+      scanRaf = 0
+      scanning.value = false
+      matched.value = idx
+    }
+  }
+
+  if (typeof requestAnimationFrame === 'undefined') {
+    while (i < rows.length) {
+      const hit = rows[i].some((v, ci) => {
+        if (String(v).toLowerCase().includes(q)) return true
+        const c = d.columns[ci]
+        return c ? settings.valueLabel(c.name, v).toLowerCase().includes(q) : false
+      })
+      if (hit) idx.push(i)
+      i++
+    }
+    scanning.value = false
+    progress.value = 1
+    matched.value = idx
+    return
+  }
+  scanRaf = requestAnimationFrame(step)
+}
+
+watch(query, runSearch, { flush: 'post' })
+
+watch(() => ds.datasetId, () => {
+  stopScan()
+  searchInput.value = ''
+  query.value = ''
+  matched.value = null
+  progress.value = 0
+  page.value = 0
+  closeProfile()
+})
+
+const allRows = computed(() => (ds.dataset ? ds.dataset.rows.map((_, i) => i) : []))
+
+const filtered = computed(() => {
+  if (!query.value.trim()) return allRows.value
+  return matched.value ?? []
 })
 
 const size = computed(() => Number(pageSize.value) || 50)
@@ -86,6 +158,12 @@ const visibleRows = computed(() => {
 
 const pageInfo = computed(() => {
   const q = query.value.trim()
+  if (scanning.value) {
+    return t('正在搜索 {p}%（原 {n} 行）', {
+      p: Math.round(progress.value * 100),
+      n: fmtInt(ds.n),
+    })
+  }
   const total = filtered.value.length
   return (
     t('共 {total} 行', { total: fmtInt(total) }) +
@@ -141,7 +219,7 @@ const profile = computed(() => {
 
 function exportCsv(): void {
   const d = ds.dataset
-  if (!d) return
+  if (!d || scanning.value) return
   const rows = filtered.value.map((i) => d.rows[i])
   downloadCsv([d.headers, ...rows], 'export.csv')
   toast(t('已导出 {n} 行', { n: fmtInt(rows.length) }))
@@ -215,16 +293,23 @@ function onDocClick(e: MouseEvent): void {
   if (!target?.closest('.colpop') && !target?.closest('.th-name')) closeProfile()
 }
 
+function onEscKey(e: KeyboardEvent): void {
+  if (e.key === 'Escape' && activeName.value) closeProfile()
+}
+
 onMounted(() => {
   document.addEventListener('click', onDocClick)
+  document.addEventListener('keydown', onEscKey)
   window.addEventListener('scroll', closeProfile, true)
   window.addEventListener('resize', closeProfile)
 })
 onBeforeUnmount(() => {
   document.removeEventListener('click', onDocClick)
+  document.removeEventListener('keydown', onEscKey)
   window.removeEventListener('scroll', closeProfile, true)
   window.removeEventListener('resize', closeProfile)
   if (searchTimer) clearTimeout(searchTimer)
+  stopScan()
   cancelClose()
 })
 onDeactivated(() => {
@@ -260,7 +345,7 @@ onDeactivated(() => {
           {{ $t('{n} 行/页', { n }) }}
         </option>
       </select>
-      <button class="btn export-btn" type="button" @click="exportCsv" :title="$t('导出当前数据 CSV')">
+      <button class="btn export-btn" type="button" :disabled="scanning" @click="exportCsv" :title="$t('导出当前数据 CSV')">
         <svg
           viewBox="0 0 16 16"
           width="13"
@@ -316,7 +401,7 @@ onDeactivated(() => {
                 class="null"
                 style="text-align: center; padding: 24px"
               >
-                {{ $t('没有匹配的行') }}
+                {{ scanning ? $t('正在搜索…') : $t('没有匹配的行') }}
               </td>
             </tr>
           </tbody>

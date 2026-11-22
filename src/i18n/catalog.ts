@@ -1,4 +1,4 @@
-/** 由 scripts/i18n-catalog.mjs 生成；请勿手改。共 400 条。 */
+/** 由 scripts/i18n-catalog.mjs 生成；请勿手改。共 402 条。 */
 export const TEXT_CATALOG: string[] = [
   " · 最多 {max} 个",
   "（不堆叠）",
@@ -352,6 +352,8 @@ export const TEXT_CATALOG: string[] = [
   "正在读取…",
   "正在加载图表库…",
   "正在生成报告…",
+  "正在搜索 {p}%（原 {n} 行）",
+  "正在搜索…",
   "支持的文件类型：",
   "值",
   "只看已修改",

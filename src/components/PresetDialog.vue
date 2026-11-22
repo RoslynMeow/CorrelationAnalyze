@@ -5,6 +5,7 @@ import { useDatasetStore } from '@/stores/dataset'
 import { presetColumns } from '@/presets/types'
 import { downloadDataUrl } from '@/lib/exportChart'
 import { toast } from '@/composables/useToast'
+import { useFocusTrap } from '@/composables/useFocusTrap'
 import { t } from '@/i18n'
 
 const props = defineProps<{ open: boolean }>()
@@ -15,6 +16,12 @@ const ds = useDatasetStore()
 const selected = ref('auto')
 const newName = ref('')
 const fileInput = ref<HTMLInputElement | null>(null)
+const dialogEl = ref<HTMLElement | null>(null)
+useFocusTrap(
+  computed(() => props.open),
+  dialogEl,
+  () => emit('close'),
+)
 
 const matchMap = computed(() => {
   const map = new Map<string, number>()
@@ -83,7 +90,7 @@ async function onImport(e: Event): Promise<void> {
 <template>
   <Teleport to="body">
     <div v-if="props.open" class="report-veil" @click.self="emit('close')">
-      <div class="report-dialog preset-dialog" role="dialog" aria-modal="true" :aria-label="$t('预设模板')">
+      <div ref="dialogEl" class="report-dialog preset-dialog" role="dialog" aria-modal="true" tabindex="-1" :aria-label="$t('预设模板')">
         <header class="report-dialog-head">
           <h3>{{ $t('预设模板') }}</h3>
           <button class="btn icon" type="button" :title="$t('关闭')" @click="emit('close')">✕</button>
