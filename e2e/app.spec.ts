@@ -51,7 +51,13 @@ test('偏相关矩阵与 VIF', async ({ page }) => {
   const vifWidth = await page.locator('.vif-card').evaluate((el) => el.getBoundingClientRect().width)
   expect(vifWidth).toBeLessThan(400)
 
+  await expect(page.locator('.chipfield-selected')).toHaveCount(0)
+  await page.locator('.chipfield-head').click()
+  await expect(page.locator('.chips')).toBeVisible()
   await page.locator('.chips label[title="sleep_hours"]').click()
+  await expect(page.getByText('控制：sleep_hours')).toBeVisible()
+  await page.locator('.chipfield-head').click()
+  await expect(page.locator('.chipfield-selected')).toContainText('sleep_hours')
   await expect(page.getByText('控制：sleep_hours')).toBeVisible()
   await expect(page.locator('[data-chart-id="partial"]')).toBeVisible()
 })

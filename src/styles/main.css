@@ -1057,6 +1057,64 @@ html[data-theme='dark'] .dropcard.drag {
   font-size: 11.5px;
   color: var(--muted);
 }
+.chipfield-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.chipfield-head:hover .chipfield-label {
+  color: var(--text);
+}
+.chipfield-count {
+  font-size: 11.5px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.chipfield-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+  font-size: 11.5px;
+  color: var(--accent);
+  white-space: nowrap;
+}
+.chipfield-caret {
+  display: inline-block;
+  transition: transform 0.15s;
+  transform: rotate(-90deg);
+}
+.chipfield-caret.open {
+  transform: rotate(0);
+}
+.chipfield-body {
+  min-width: 0;
+}
+.chipfield-selected {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.chip-static {
+  padding: 3px 9px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--panel-2);
+  color: var(--text);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.chipfield-empty {
+  font-size: 11.5px;
+}
 .hint-wide {
   flex: 1 1 100%;
 }
