@@ -99,8 +99,7 @@ describe('配置合并与校验', () => {
     expect(s.charts.sizes.bad).toBeUndefined()
   })
 
-  it('单图标题覆盖只保留非空文本', () => {
-    const s = mergeSettings({
+  it('单图标题覆盖只保留非空文本', () => {    const s = mergeSettings({
       charts: {
         titles: {
           scatter: { title: '压力 vs 心理健康', xTitle: '   ', yTitle: '指数' },
@@ -120,6 +119,13 @@ describe('配置合并与校验', () => {
     expect(
       mergeSettings({ charts: { legendPosition: 'left' } }).charts.legendPosition,
     ).toBe('bottom')
+  })
+
+  it('单图图例位置只保留合法值', () => {
+    const s = mergeSettings({
+      charts: { legends: { scatter: 'top', matrix: 'left', bad: 1 } },
+    })
+    expect(s.charts.legends).toEqual({ scatter: 'top' })
   })
 
   it('Plotly 原生工具栏默认关闭，可手动开启', () => {

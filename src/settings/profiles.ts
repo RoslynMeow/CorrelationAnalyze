@@ -1,7 +1,7 @@
 import { isHexColor } from '@/lib/color'
 import { sanitizePresets } from '@/presets/sanitize'
 import type { PresetConfig } from '@/presets/types'
-import type { ChartSize, ChartTitle, FileProfile, Profiles } from './defaults'
+import type { ChartSize, ChartTitle, FileProfile, LegendPosition, Profiles } from './defaults'
 
 const MAX_PROFILES = 80
 
@@ -106,6 +106,19 @@ function sanitizeView(v: unknown): PresetConfig | undefined {
   return parsed[0]?.config
 }
 
+const LEGEND_POSITIONS = ['bottom', 'top', 'right', 'hidden'] as const
+
+function sanitizeLegends(v: unknown): Record<string, LegendPosition> | undefined {
+  if (!isRec(v)) return undefined
+  const out: Record<string, LegendPosition> = {}
+  for (const [id, pos] of Object.entries(v)) {
+    if (LEGEND_POSITIONS.includes(pos as LegendPosition)) {
+      out[id.slice(0, 80)] = pos as LegendPosition
+    }
+  }
+  return Object.keys(out).length ? out : undefined
+}
+
 /** 校验从 localStorage / 配置 JSON 读取的文件配置 */
 export function sanitizeProfiles(raw: unknown): Profiles {  if (!isRec(raw)) return {}
   const out: Profiles = {}
@@ -126,6 +139,7 @@ export function sanitizeProfiles(raw: unknown): Profiles {  if (!isRec(raw)) ret
       series: sanitizeSeries(val.series),
       sizes: sanitizeSizes(val.sizes),
       titles: sanitizeTitles(val.titles),
+      legends: sanitizeLegends(val.legends),
       view: sanitizeView(val.view),
     }
     n++

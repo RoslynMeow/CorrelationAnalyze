@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import { computed, onActivated, onBeforeUnmount, onDeactivated, onMounted, ref, watch } from 'vue'
-import Plotly from 'plotly.js-dist-min'
-import { CHART_CONFIG } from '@/lib/chartTheme'
+import { computed, onActivated, onBeforeUnmount, onDeactivated, onMounted, ref, shallowRef, watch } from 'vue'
+import type { PlotlyInstance } from '@/lib/plotly'
+import { loadPlotly } from '@/lib/plotly'
+import { CHART_CONFIG, applyLegendPosition } from '@/lib/chartTheme'
+import type { LegendPosition } from '@/settings/defaults'
 import { withAlpha } from '@/lib/color'
 import {
   chartImage,
@@ -27,17 +29,38 @@ const props = withDefaults(
     styleId?: string
     /** 面板给这张图算出的默认最大宽度（可被单图设置覆盖） */
     maxWidth?: number
+    /** 填满父容器剩余高度（父级需是 flex 列，用于图表页一屏展示） */
+    fill?: boolean
   }>(),
   { chartId: 'chart' },
 )
 
 const settings = useSettingsStore()
+const plotly = shallowRef<PlotlyInstance | null>(null)
+const chartLoading = ref(true)
+const chartError = ref(false)
 const el = ref<HTMLDivElement | null>(null)
 const wrapEl = ref<HTMLDivElement | null>(null)
 const styleOpen = ref(false)
 const resizing = ref(false)
 const preview = ref<{ width: number; height: number } | null>(null)
 const dragBase = ref<{ w: number; h: number } | null>(null)
+
+const legendOverride = computed(() => settings.chartLegend(props.chartId))
+const globalLegendLabel = computed(() => {
+  const labels: Record<LegendPosition, string> = {
+    bottom: translate('底部'),
+    top: translate('顶部'),
+    right: translate('右侧'),
+    hidden: translate('隐藏'),
+  }
+  return labels[settings.state.charts.legendPosition]
+})
+
+function onLegend(e: Event): void {
+  const value = (e.target as HTMLSelectElement).value as LegendPosition | ''
+  settings.setChartLegend(props.chartId, value || null)
+}
 
 const size = computed(() => settings.chartSize(props.chartId))
 const titleOverride = computed(() => settings.chartTitle(props.chartId))
@@ -53,6 +76,11 @@ const effectiveWidth = computed<number | null>(
   () => size.value.width ?? settings.state.charts.defaultWidth ?? props.maxWidth ?? null,
 )
 
+/** 无单图高度覆盖时，自动填满父容器 */
+const fillHost = computed(
+  () => !!props.fill && !size.value.height && !preview.value,
+)
+
 const wrapStyle = computed(() => {
   if (preview.value) {
     return {
@@ -62,8 +90,17 @@ const wrapStyle = computed(() => {
       margin: '0 auto',
     }
   }
-  const h = effectiveHeight.value
   const w = effectiveWidth.value
+  if (fillHost.value) {
+    return {
+      height: 'auto',
+      width: w ? `${w}px` : '100%',
+      maxWidth: '100%',
+      margin: w ? '0 auto' : '0',
+      flex: '1 1 auto',
+    }
+  }
+  const h = effectiveHeight.value
   return {
     height: h ? `${h}px` : props.height || '430px',
     width: w ? `${w}px` : '100%',
@@ -74,7 +111,13 @@ const wrapStyle = computed(() => {
 
 const styledLayout = computed(() => {
   const base = { ...(props.layout || {}) }
-  if (effectiveHeight.value) base.height = effectiveHeight.value
+  if (fillHost.value) {
+    // 由容器高度决定；Plotly 的 autosize 会跟随容器
+    delete base.height
+    base.autosize = true
+  } else if (effectiveHeight.value) {
+    base.height = effectiveHeight.value
+  }
   const t = titleOverride.value
   if (t.title) {
     base.title = { ...(base.title as Record<string, unknown> | undefined), text: t.title }
@@ -94,6 +137,9 @@ const styledLayout = computed(() => {
       ...y,
       title: { ...(y?.title as Record<string, unknown> | undefined), text: t.yTitle },
     }
+  }
+  if (legendOverride.value) {
+    applyLegendPosition(base, legendOverride.value)
   }
   return base
 })
@@ -297,9 +343,9 @@ const hasZoomableAxes = computed(() =>
 )
 
 async function resetZoom(): Promise<void> {
-  if (!el.value) return
+  if (!el.value || !plotly.value) return
   try {
-    await Plotly.relayout(el.value, {
+    await plotly.value.relayout(el.value, {
       'xaxis.autorange': true,
       'yaxis.autorange': true,
     })
@@ -327,22 +373,36 @@ async function draw(): Promise<void> {
     needsDraw = true
     return
   }
+  if (!plotly.value) {
+    needsDraw = true
+    return
+  }
   const config = {
     ...CHART_CONFIG,
     ...(props.config || {}),
     displayModeBar: settings.state.charts.showModeBar ? 'hover' : false,
-  } as Parameters<typeof Plotly.react>[3]
+  } as Parameters<PlotlyInstance['react']>[3]
   try {
-    const data = styledTraces.value as Parameters<typeof Plotly.react>[1]
-    const layout = styledLayout.value as Parameters<typeof Plotly.react>[2]
-    await Plotly.react(el.value, data, layout, config)
+    const data = styledTraces.value as Parameters<PlotlyInstance['react']>[1]
+    const layout = styledLayout.value as Parameters<PlotlyInstance['react']>[2]
+    await plotly.value.react(el.value, data, layout, config)
     needsDraw = false
   } catch (err) {
     console.error('Plotly 渲染失败', err)
   }
 }
 
-onMounted(draw)
+onMounted(async () => {
+  try {
+    plotly.value = await loadPlotly()
+    chartLoading.value = false
+    await draw()
+  } catch (err) {
+    console.error(err)
+    chartError.value = true
+    chartLoading.value = false
+  }
+})
 onActivated(() => {
   requestAnimationFrame(() => {
     void draw()
@@ -368,9 +428,10 @@ onMounted(() => {
         void draw()
         return
       }
+      if (!plotly.value) return
       try {
         // Plotly 4 的 resize 可能返回 Promise，需显式捕获
-        const result = Plotly.Plots.resize(el.value) as unknown
+        const result = plotly.value.Plots.resize(el.value) as unknown
         if (result && typeof (result as Promise<unknown>).catch === 'function') {
           ;(result as Promise<unknown>).catch(() => {})
         }
@@ -406,9 +467,9 @@ onBeforeUnmount(() => {
   resizeObserver?.disconnect()
   resizeObserver = null
   if (resizeRaf) cancelAnimationFrame(resizeRaf)
-  if (el.value) {
+  if (el.value && plotly.value) {
     try {
-      Plotly.purge(el.value)
+      plotly.value.purge(el.value)
     } catch {
       /* 忽略 */
     }
@@ -467,13 +528,16 @@ function onSeriesColor(key: string, e: Event): void {
   <div
     ref="wrapEl"
     class="chart-wrap"
-    :class="{ resizing }"
+    :class="{ resizing, fill: fillHost }"
     :style="wrapStyle"
     :data-chart-id="chartId"
   >
     <div ref="el" class="chart-host" data-plotly-host :style="hostStyle"></div>
 
-    <div class="chart-tools" @mousedown.stop @click.stop>
+    <div v-if="chartLoading" class="chart-loading">{{ $t('正在加载图表库…') }}</div>
+    <div v-else-if="chartError" class="chart-loading error">{{ $t('图表库加载失败') }}</div>
+
+    <div v-if="!chartLoading && !chartError" class="chart-tools" @mousedown.stop @click.stop>
       <button class="chart-tool" type="button" :title="$t('复制图片')" @click="copyImage">
         <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.3">
           <rect x="5.2" y="5.2" width="8" height="8" rx="1.5" />
@@ -599,6 +663,17 @@ function onSeriesColor(key: string, e: Event): void {
           >
             {{ $t('恢复默认标题') }}
           </button>
+
+          <div class="cs-sub">{{ $t('图例') }}</div>
+          <select class="cs-select" :value="legendOverride ?? ''" @change="onLegend">
+            <option value="">
+              {{ $t('跟随全局（{pos}）', { pos: globalLegendLabel }) }}
+            </option>
+            <option value="bottom">{{ $t('底部') }}</option>
+            <option value="top">{{ $t('顶部') }}</option>
+            <option value="right">{{ $t('右侧') }}</option>
+            <option value="hidden">{{ $t('隐藏') }}</option>
+          </select>
 
           <template v-if="seriesList.length">
             <div class="cs-sub">{{ $t('配色') }}</div>

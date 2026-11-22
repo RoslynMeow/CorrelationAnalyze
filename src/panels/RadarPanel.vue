@@ -114,7 +114,7 @@ const built = computed(() => {
 </script>
 
 <template>
-  <section class="panel">
+  <section class="panel panel-fit">
     <div class="controls controls-chips">
       <SelectField
         v-model="groupName"
@@ -139,13 +139,14 @@ const built = computed(() => {
       </div>
     </div>
 
-    <div class="card" style="padding: 8px 8px 0">
+    <div class="card chart-card">
       <PlotlyChart
         v-if="built"
         chart-id="radar"
         :traces="built.traces"
         :layout="built.layout"
         :height="chartH"
+        :fill="!narrow"
       />
       <div v-else class="empty-chart">
         {{

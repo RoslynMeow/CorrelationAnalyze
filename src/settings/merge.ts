@@ -5,6 +5,7 @@ import {
   type ChartSize,
   type ChartTitle,
   type ColorToken,
+  type LegendPosition,
   type Settings,
   TOKEN_VARS,
 } from './defaults'
@@ -140,6 +141,14 @@ export function mergeSettings(raw: unknown): Settings {
     }
   }
 
+  const legendsIn = isRec(ch.legends) ? ch.legends : {}
+  const legends: Record<string, LegendPosition> = {}
+  for (const [chartId, pos] of Object.entries(legendsIn)) {
+    if (LEGEND_POSITIONS.includes(pos as LegendPosition)) {
+      legends[chartId.slice(0, 80)] = pos as LegendPosition
+    }
+  }
+
   /* ---------- export ---------- */
   const ex = isRec(r.exportSettings) ? r.exportSettings : {}
   const exportSettings: Settings['exportSettings'] = {
@@ -189,6 +198,7 @@ export function mergeSettings(raw: unknown): Settings {
           : clamped(ch.defaultWidth, 280, 1600),
       sizes,
       titles,
+      legends,
       series,
     },
     exportSettings,

@@ -136,7 +136,7 @@ const stats = computed(() => {
 </script>
 
 <template>
-  <section class="panel">
+  <section class="panel panel-fit">
     <div class="controls">
       <SelectField
         v-model="varName"
@@ -165,13 +165,14 @@ const stats = computed(() => {
       <label class="chk"><input v-model="showKde" type="checkbox" /> {{ $t('核密度曲线') }}</label>
     </div>
 
-    <div class="card" style="padding: 8px 8px 0">
+    <div class="card chart-card">
       <PlotlyChart
         v-if="built"
         chart-id="distribution"
         :traces="built.traces"
         :layout="built.layout"
         :height="chartH"
+        :fill="!narrow"
       />
       <div v-else class="empty-chart">{{ $t('该列没有可用的数值，无法绘制分布') }}</div>
     </div>

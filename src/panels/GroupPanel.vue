@@ -88,7 +88,7 @@ const charts = computed(() => {
 </script>
 
 <template>
-  <section class="panel">
+  <section class="panel panel-fit">
     <div class="controls controls-chips">
       <SelectField
         v-model="groupName"
@@ -121,6 +121,7 @@ const charts = computed(() => {
           :height="chartH"
           :chart-id="'group:' + c.key"
           style-id="group"
+          :fill="!narrow"
         />
       </div>
     </div>

@@ -69,6 +69,8 @@ export interface ChartSettings {
   sizes: Record<string, ChartSize>
   /** chartId → 单图标题覆盖 */
   titles: Record<string, ChartTitle>
+  /** chartId → 单图图例位置覆盖 */
+  legends: Record<string, LegendPosition>
   /** chartId → 系列名（无名为 __default__）→ 颜色 */
   series: Record<string, Record<string, string>>
 }
@@ -110,6 +112,7 @@ export interface FileProfile {
   series: Record<string, Record<string, string>>
   sizes: Record<string, ChartSize>
   titles: Record<string, ChartTitle>
+  legends?: Record<string, LegendPosition>
   /** 面板选择快照（目标、分组、散点、雷达等） */
   view?: PresetConfig
 }
@@ -204,6 +207,7 @@ export function defaultSettings(): Settings {
       defaultWidth: null,
       sizes: {},
       titles: {},
+      legends: {},
       series: {},
     },
     exportSettings: {

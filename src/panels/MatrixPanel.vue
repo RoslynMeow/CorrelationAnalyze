@@ -163,7 +163,7 @@ const note = computed(() => {
 </script>
 
 <template>
-  <section class="panel">
+  <section class="panel panel-fit">
     <div class="controls">
       <div class="seg">
         <button type="button" :class="{ active: mode === 'num' }" @click="mode = 'num'">
@@ -186,7 +186,7 @@ const note = computed(() => {
       <label class="chk"><input v-model="annot" type="checkbox" /> {{ $t('标注数值') }}</label>
     </div>
 
-    <div class="card" style="padding: 8px 8px 0">
+    <div class="card chart-card">
       <PlotlyChart
         v-if="cols.length >= 2"
         chart-id="matrix"
@@ -194,6 +194,7 @@ const note = computed(() => {
         :layout="layout"
         :height="chartH"
         :max-width="chartW"
+        :fill="!narrow"
       />
       <div v-else class="empty-chart">
         {{ $t('{msg}，无法计算矩阵', { msg: mode === 'num' ? $t('数值列不足 2 个') : $t('类别列不足 2 个') }) }}

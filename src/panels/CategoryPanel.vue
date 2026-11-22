@@ -115,20 +115,21 @@ const built = computed(() => {
 </script>
 
 <template>
-  <section class="panel">
+  <section class="panel panel-fit">
     <div class="controls">
       <SelectField v-model="catName" :label="$t('类别列')" :options="categoryOptions" />
       <SelectField v-model="stackName" :label="$t('堆叠分组')" :options="stackOptions" />
       <label class="chk"><input v-model="percent" type="checkbox" /> {{ $t('显示百分比') }}</label>
     </div>
 
-    <div class="card" style="padding: 8px 8px 0">
+    <div class="card chart-card">
       <PlotlyChart
         v-if="built"
         chart-id="category"
         :traces="built.traces"
         :layout="built.layout"
         :height="chartH"
+        :fill="!narrow"
       />
       <div v-else class="empty-chart">{{ $t('该数据集没有可用的类别列') }}</div>
     </div>

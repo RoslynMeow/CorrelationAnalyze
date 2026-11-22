@@ -1,6 +1,7 @@
 import { chartThemeTick } from './themeBus'
 import { useSettingsStore } from '@/stores/settings'
 import { useNarrow } from '@/composables/useNarrow'
+import type { LegendPosition } from '@/settings/defaults'
 import type { Column } from '@/types'
 
 export function cssv(name: string): string {
@@ -15,6 +16,60 @@ export const CHART_CONFIG = {
 }
 
 type AnyRec = Record<string, unknown>
+
+export function legendLayoutFor(pos: LegendPosition): AnyRec {
+  if (pos === 'top') {
+    return {
+      orientation: 'h',
+      xref: 'container',
+      x: 0.01,
+      xanchor: 'left',
+      yref: 'container',
+      y: 0.99,
+      yanchor: 'top',
+    }
+  }
+  if (pos === 'right') {
+    return { orientation: 'v', x: 1.02, y: 1, xanchor: 'left', yanchor: 'top' }
+  }
+  if (pos === 'hidden') return {}
+  return {
+    orientation: 'h',
+    xref: 'container',
+    x: 0.01,
+    xanchor: 'left',
+    yref: 'container',
+    y: 0.01,
+    yanchor: 'bottom',
+  }
+}
+
+/** 在已有布局上应用图例位置（单图覆盖用） */
+export function applyLegendPosition(lay: AnyRec, pos: LegendPosition): AnyRec {
+  const current = (lay.legend as AnyRec | undefined) || {}
+  lay.legend = {
+    ...legendLayoutFor(pos),
+    ...(current.font ? { font: current.font } : {}),
+  }
+  if (pos === 'hidden') {
+    lay.showlegend = false
+    return lay
+  }
+  if (lay.showlegend === false) return lay
+
+  const m = { ...(lay.margin as AnyRec | undefined) }
+  const num = (v: unknown, fallback: number): number =>
+    Number.isFinite(Number(v)) ? Number(v) : fallback
+  if (pos === 'bottom') {
+    m.b = Math.max(num(m.b, 56), 96)
+  } else if (pos === 'top') {
+    m.t = Math.max(num(m.t, 46), lay.title ? 96 : 72)
+  } else {
+    m.r = Math.max(num(m.r, 24), 150)
+  }
+  lay.margin = m
+  return lay
+}
 
 /** 统一图表布局：跟随主题、色板、坐标轴网格与图例位置 */
 export function baseLayout(extra: AnyRec = {}): AnyRec {
@@ -34,31 +89,6 @@ export function baseLayout(extra: AnyRec = {}): AnyRec {
   const legendPos = settings.state.charts.legendPosition
   const bg = transparent ? 'rgba(0,0,0,0)' : cssv('--panel')
 
-  const legendLayout: AnyRec =
-    legendPos === 'top'
-      ? {
-          orientation: 'h',
-          xref: 'container',
-          x: 0.01,
-          xanchor: 'left',
-          yref: 'container',
-          y: 0.99,
-          yanchor: 'top',
-        }
-      : legendPos === 'right'
-        ? { orientation: 'v', x: 1.02, y: 1, xanchor: 'left', yanchor: 'top' }
-        : legendPos === 'hidden'
-          ? {}
-          : {
-              orientation: 'h',
-              xref: 'container',
-              x: 0.01,
-              xanchor: 'left',
-              yref: 'container',
-              y: 0.01,
-              yanchor: 'bottom',
-            }
-
   const lay: AnyRec = {
     paper_bgcolor: bg,
     plot_bgcolor: bg,
@@ -66,7 +96,7 @@ export function baseLayout(extra: AnyRec = {}): AnyRec {
     colorway: [...settings.palette],
     margin: { l: 64, r: 24, t: 46, b: 56 },
     hoverlabel: { bgcolor: cssv('--panel'), bordercolor: grid, font: { color: text, size: baseFont } },
-    legend: { ...legendLayout, font: { size: narrow.value ? 12 : 11, color: muted } },
+    legend: { ...legendLayoutFor(legendPos), font: { size: narrow.value ? 12 : 11, color: muted } },
     xaxis: {
       gridcolor: grid,
       showgrid: showGrid,
@@ -107,23 +137,7 @@ export function baseLayout(extra: AnyRec = {}): AnyRec {
   }
 
   Object.assign(lay, extra)
-
-  if (legendPos === 'hidden') {
-    lay.showlegend = false
-  } else if (lay.showlegend !== false) {
-    const m = { ...(lay.margin as AnyRec) }
-    const num = (v: unknown, fallback: number): number =>
-      Number.isFinite(Number(v)) ? Number(v) : fallback
-    if (legendPos === 'bottom') {
-      m.b = Math.max(num(m.b, 56), 96)
-    } else if (legendPos === 'top') {
-      m.t = Math.max(num(m.t, 46), lay.title ? 96 : 72)
-    } else {
-      m.r = Math.max(num(m.r, 24), 150)
-    }
-    lay.margin = m
-  }
-
+  applyLegendPosition(lay, legendPos)
   return lay
 }
 

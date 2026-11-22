@@ -174,7 +174,7 @@ const built = computed(() => {
 </script>
 
 <template>
-  <section class="panel">
+  <section class="panel panel-fit">
     <div class="controls">
       <SelectField v-model="xName" :label="$t('X 轴')" :options="xOptions" />
       <SelectField
@@ -188,13 +188,14 @@ const built = computed(() => {
       <label class="chk"><input v-model="logX" type="checkbox" /> {{ $t('对数 X') }}</label>
     </div>
 
-    <div class="card" style="padding: 8px 8px 0">
+    <div class="card chart-card">
       <PlotlyChart
         v-if="built"
         chart-id="scatter"
         :traces="built.traces"
         :layout="built.layout"
         :height="chartH"
+        :fill="!narrow"
       />
       <div v-else class="empty-chart">
         {{ xName && yName ? $t('所选变量没有有效数值对') : $t('该数据集没有足够的数值列，无法绘制散点图') }}

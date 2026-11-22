@@ -1,7 +1,7 @@
 import { computed, ref, watch } from 'vue'
 import { defineStore } from 'pinia'
 import { chartThemeTick, bumpTheme } from '@/lib/themeBus'
-import { defaultSettings, TOKEN_VARS, type ChartSize, type ChartTitle, type ColorToken, type FileProfile, type Profiles, type Settings } from '@/settings/defaults'
+import { defaultSettings, TOKEN_VARS, type ChartSize, type ChartTitle, type ColorToken, type FileProfile, type LegendPosition, type Profiles, type Settings } from '@/settings/defaults'
 import { mergeSettings } from '@/settings/merge'
 import { emptyProfile, profileKey, sanitizeProfiles } from '@/settings/profiles'
 import type { PresetConfig } from '@/presets/types'
@@ -390,6 +390,26 @@ export const useSettingsStore = defineStore('settings', () => {
     state.value.charts.titles = all
   }
 
+  /* ---------------- 单图图例 ---------------- */
+
+  function chartLegend(chartId: string): LegendPosition | null {
+    return activeProfile.value?.legends?.[chartId] ?? state.value.charts.legends[chartId] ?? null
+  }
+
+  function setChartLegend(chartId: string, pos: LegendPosition | null): void {
+    const done = mutateProfile((p) => {
+      const legends = { ...(p.legends ?? {}) }
+      if (pos) legends[chartId] = pos
+      else delete legends[chartId]
+      return { ...p, legends }
+    })
+    if (done && pos) return
+    const all = { ...state.value.charts.legends }
+    if (pos) all[chartId] = pos
+    else delete all[chartId]
+    state.value.charts.legends = all
+  }
+
   /* ---------------- 列名 / 取值显示映射 ---------------- */
 
   function columnLabel(name: string): string {
@@ -544,6 +564,8 @@ export const useSettingsStore = defineStore('settings', () => {
     chartTitle,
     setChartTitle,
     clearChartTitle,
+    chartLegend,
+    setChartLegend,
     columnLabel,
     valueLabel,
     setColumnAlias,

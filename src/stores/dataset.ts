@@ -18,6 +18,7 @@ import { toast } from '@/composables/useToast'
 import { t } from '@/i18n'
 import { useSettingsStore } from './settings'
 import { useViewStore } from './view'
+import { loadPlotly } from '@/lib/plotly'
 
 interface PendingCall {
   resolve: (pairs: PairAssoc[]) => void
@@ -69,6 +70,8 @@ export const useDatasetStore = defineStore('dataset', () => {
     datasetId.value++
     pairCache.value = {}
     error.value = ''
+    // 预取图表库，进入图表页通常已就绪
+    void loadPlotly().catch(() => {})
     document.title = `${name} · ${t('关联性分析')}`
     if (ds.truncated) {
       toast(t('数据超过 {n} 行，仅载入前 {n} 行', { n: ds.n.toLocaleString('zh-CN') }), 4000)

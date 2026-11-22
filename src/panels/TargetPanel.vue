@@ -96,7 +96,7 @@ const stats = computed(() => {
 </script>
 
 <template>
-  <section class="panel">
+  <section class="panel panel-fit">
     <div class="controls">
       <SelectField
         v-model="targetName"
@@ -116,13 +116,14 @@ const stats = computed(() => {
       </span>
     </div>
 
-    <div class="card" style="padding: 8px 8px 0">
+    <div class="card chart-card">
       <PlotlyChart
         v-if="list.length"
         chart-id="target"
         :traces="traces"
         :layout="layout"
         :height="chartH"
+        :fill="!narrow"
       />
       <div v-else class="empty-chart">{{ $t('目标变量与其他列没有足够的完整数据') }}</div>
     </div>

@@ -113,7 +113,7 @@ const top3 = computed(() => pairs.value.slice(0, 3))
 </script>
 
 <template>
-  <section class="panel">
+  <section class="panel panel-fit">
     <KpiCards :items="kpis" />
     <div class="grid2">
       <div class="card">
@@ -127,6 +127,7 @@ const top3 = computed(() => pairs.value.slice(0, 3))
           :traces="traces"
           :layout="layout"
           :height="chartH"
+          :fill="!narrow"
         />
         <div v-else class="empty-chart">
           {{ $t('数据中可分析的变量不足（至少需要 2 个数值或类别列）') }}
