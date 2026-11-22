@@ -31,12 +31,28 @@ export function baseLayout(extra: AnyRec = {}): AnyRec {
 
   const legendLayout: AnyRec =
     legendPos === 'top'
-      ? { orientation: 'h', x: 0, y: 1.02, xanchor: 'left', yanchor: 'bottom' }
+      ? {
+          orientation: 'h',
+          xref: 'container',
+          x: 0.01,
+          xanchor: 'left',
+          yref: 'container',
+          y: 0.99,
+          yanchor: 'top',
+        }
       : legendPos === 'right'
         ? { orientation: 'v', x: 1.02, y: 1, xanchor: 'left', yanchor: 'top' }
         : legendPos === 'hidden'
           ? {}
-          : { orientation: 'h', x: 0, y: -0.14, xanchor: 'left', yanchor: 'top' }
+          : {
+              orientation: 'h',
+              xref: 'container',
+              x: 0.01,
+              xanchor: 'left',
+              yref: 'container',
+              y: 0.01,
+              yanchor: 'bottom',
+            }
 
   const lay: AnyRec = {
     paper_bgcolor: bg,
