@@ -48,6 +48,8 @@ test('偏相关矩阵与 VIF', async ({ page }) => {
   await openTab(page, '偏相关 / VIF')
   await expect(page.getByText('偏相关矩阵')).toBeVisible()
   await expect(page.locator('.vif-row').first()).toBeVisible()
+  const vifWidth = await page.locator('.vif-card').evaluate((el) => el.getBoundingClientRect().width)
+  expect(vifWidth).toBeLessThan(400)
 
   await page.locator('.chips label[title="sleep_hours"]').click()
   await expect(page.getByText('控制：sleep_hours')).toBeVisible()

@@ -709,6 +709,10 @@ html[data-theme='dark'] .dropcard.drag {
 .grid2 .card {
   margin-top: 0;
 }
+/* 偏相关页：矩阵占主宽度，VIF 列表收窄为侧栏 */
+.partial-grid {
+  grid-template-columns: minmax(0, 1fr) clamp(300px, 24vw, 380px);
+}
 /* 偏相关页：右侧 VIF 列表 */
 .vif-card {
   min-height: 0;
