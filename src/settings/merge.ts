@@ -13,6 +13,7 @@ const MODES = ['light', 'dark', 'system'] as const
 const DENSITIES = ['compact', 'normal', 'comfortable'] as const
 const SHADOWS = ['none', 'soft', 'strong'] as const
 const FORMATS = ['png', 'svg'] as const
+const LEGEND_POSITIONS = ['bottom', 'top', 'right', 'hidden'] as const
 
 type AnyRec = Record<string, unknown>
 
@@ -177,6 +178,11 @@ export function mergeSettings(raw: unknown): Settings {
       transparent: typeof ch.transparent === 'boolean' ? ch.transparent : d.charts.transparent,
       showModeBar:
         typeof ch.showModeBar === 'boolean' ? ch.showModeBar : d.charts.showModeBar,
+      legendPosition: pickEnum(
+        ch.legendPosition,
+        LEGEND_POSITIONS,
+        d.charts.legendPosition,
+      ),
       defaultWidth:
         ch.defaultWidth === null || ch.defaultWidth === undefined
           ? null

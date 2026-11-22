@@ -94,7 +94,6 @@ const built = computed(() => {
       xaxis: { tickfont: { size: 9 } },
       yaxis: { tickfont: { size: 9 } },
       showlegend: !!ccol,
-      legend: { orientation: 'h', y: -0.1 },
     }),
   }
 })

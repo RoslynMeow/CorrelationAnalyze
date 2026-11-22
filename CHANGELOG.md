@@ -16,6 +16,7 @@
 - Built-in presets, custom preset save/import/export
 - Responsive app bar: secondary actions collapse below 1280px; tabs become a dropdown navigator below 900px
 - Data preview fills the viewport with an internally scrolling table; column profiles open from header hover/tap
+- Legend position setting (bottom / top / right / hidden) with automatic margins to avoid axis-title overlap
 - Drag-to-resize charts with live CSS preview
 - Per-chart toolbar: copy image, PNG, SVG, TSV, reset zoom, chart settings
 - Copy insights as plain text; import/export settings as JSON

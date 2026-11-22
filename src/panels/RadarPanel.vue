@@ -108,7 +108,6 @@ const built = computed(() => {
         },
       },
       showlegend: true,
-      legend: { orientation: 'h', y: -0.08 },
     }),
   }
 })

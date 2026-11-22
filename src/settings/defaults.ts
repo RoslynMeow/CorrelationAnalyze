@@ -4,6 +4,7 @@ export type ThemeMode = 'light' | 'dark' | 'system'
 export type Density = 'compact' | 'normal' | 'comfortable'
 export type ShadowPreset = 'none' | 'soft' | 'strong'
 export type ExportFormat = 'png' | 'svg'
+export type LegendPosition = 'bottom' | 'top' | 'right' | 'hidden'
 
 export type ColorToken =
   | 'bg'
@@ -60,6 +61,8 @@ export interface ChartSettings {
   transparent: boolean
   /** 是否显示 Plotly 自带工具栏（默认关闭，用应用自己的工具条） */
   showModeBar: boolean
+  /** 图例位置 */
+  legendPosition: LegendPosition
   /** 全局图表宽度上限；null = 自适应 */
   defaultWidth: number | null
   /** chartId → 单图尺寸覆盖 */
@@ -197,6 +200,7 @@ export function defaultSettings(): Settings {
       grid: true,
       transparent: true,
       showModeBar: false,
+      legendPosition: 'bottom',
       defaultWidth: null,
       sizes: {},
       titles: {},

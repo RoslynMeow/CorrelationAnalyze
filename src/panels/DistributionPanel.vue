@@ -115,7 +115,6 @@ const built = computed(() => {
       bargap: 0.02,
       xaxis: { title: { text: varLabel } },
       yaxis: { title: { text: t('密度') } },
-      legend: { orientation: 'h', y: -0.16 },
       showlegend: !!gcol,
     }),
   }

@@ -168,7 +168,6 @@ const built = computed(() => {
         type: logX.value ? 'log' : xc.type === 'date' ? 'date' : 'linear',
       },
       yaxis: { title: { text: yLabel } },
-      legend: { orientation: 'h', y: -0.14 },
     }),
   }
 })

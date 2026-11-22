@@ -108,7 +108,6 @@ const built = computed(() => {
         tickangle: order.length > 6 ? -30 : 0,
       },
       yaxis: { title: { text: percent.value ? t('百分比 (%)') : t('行数') } },
-      legend: { orientation: 'h', y: -0.2 },
       showlegend: !!scol,
     }),
   }

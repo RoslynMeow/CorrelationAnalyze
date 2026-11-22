@@ -112,6 +112,16 @@ describe('配置合并与校验', () => {
     expect(s.charts.titles.bad).toBeUndefined()
   })
 
+  it('图例位置默认底部，非法值回退', () => {
+    expect(mergeSettings({}).charts.legendPosition).toBe('bottom')
+    expect(
+      mergeSettings({ charts: { legendPosition: 'right' } }).charts.legendPosition,
+    ).toBe('right')
+    expect(
+      mergeSettings({ charts: { legendPosition: 'left' } }).charts.legendPosition,
+    ).toBe('bottom')
+  })
+
   it('Plotly 原生工具栏默认关闭，可手动开启', () => {
     expect(mergeSettings({}).charts.showModeBar).toBe(false)
     expect(mergeSettings({ charts: { showModeBar: true } }).charts.showModeBar).toBe(true)

@@ -406,6 +406,41 @@ onBeforeUnmount(() => {
           </div>
 
           <div class="set-block">
+            <div class="set-label">{{ $t('图例位置') }}</div>
+            <div class="seg full">
+              <button
+                type="button"
+                :class="{ active: settings.state.charts.legendPosition === 'bottom' }"
+                @click="settings.state.charts.legendPosition = 'bottom'"
+              >
+                {{ $t('底部') }}
+              </button>
+              <button
+                type="button"
+                :class="{ active: settings.state.charts.legendPosition === 'top' }"
+                @click="settings.state.charts.legendPosition = 'top'"
+              >
+                {{ $t('顶部') }}
+              </button>
+              <button
+                type="button"
+                :class="{ active: settings.state.charts.legendPosition === 'right' }"
+                @click="settings.state.charts.legendPosition = 'right'"
+              >
+                {{ $t('右侧') }}
+              </button>
+              <button
+                type="button"
+                :class="{ active: settings.state.charts.legendPosition === 'hidden' }"
+                @click="settings.state.charts.legendPosition = 'hidden'"
+              >
+                {{ $t('隐藏') }}
+              </button>
+            </div>
+            <p class="hint">{{ $t('图例与 X 轴标题重叠时，可改为顶部或右侧。') }}</p>
+          </div>
+
+          <div class="set-block">
             <div class="set-label">{{ $t('图表宽度上限') }}</div>
             <select v-model.number="settings.state.charts.defaultWidth" class="set-select">
               <option :value="null">{{ $t('自适应（100%）') }}</option>
