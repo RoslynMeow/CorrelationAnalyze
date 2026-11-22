@@ -342,42 +342,11 @@ html[data-theme='dark'] .dropcard.drag {
   background: var(--panel);
   border-bottom: 1px solid var(--border);
 }
-.tabs {
-  display: flex;
-  gap: 3px;
-  overflow-x: auto;
-  flex: 1;
-  min-width: 0;
-  scrollbar-width: none;
-  overscroll-behavior-x: contain;
-}
-.tabs::-webkit-scrollbar {
-  display: none;
-}
-.tabs.scrollable {
-  mask-image: linear-gradient(
-    to right,
-    transparent 0,
-    #000 14px,
-    #000 calc(100% - 14px),
-    transparent 100%
-  );
-}
-.tabs.scrollable.at-start {
-  mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 14px), transparent 100%);
-}
-.tabs.scrollable.at-end {
-  mask-image: linear-gradient(to right, transparent 0, #000 14px, #000 100%);
-}
-.tabs.scrollable.at-start.at-end {
-  mask-image: none;
-}
-
-/* 窄屏：页签折叠为下拉选择 */
+/* 页签统一使用下拉选择，避免宽屏 / 长文件名临界判断 */
 .tab-select {
-  display: none;
+  display: block;
   position: relative;
-  flex: 1 1 auto;
+  flex: 0 1 240px;
   min-width: 0;
 }
 .tab-current {
@@ -451,33 +420,12 @@ html[data-theme='dark'] .dropcard.drag {
   color: var(--accent);
   font-weight: 650;
 }
-.tab {
-  flex: none;
-  border: 0;
-  background: transparent;
-  color: var(--muted);
-  padding: 7px 12px;
-  border-radius: 8px;
-  font-size: 12.5px;
-  font-family: inherit;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: 0.15s;
-}
-.tab:hover {
-  color: var(--text);
-  background: var(--panel-2);
-}
-.tab.active {
-  background: var(--accent-soft);
-  color: var(--accent);
-  font-weight: 650;
-}
 .appactions {
   display: flex;
   align-items: center;
   gap: 8px;
   flex: none;
+  margin-left: auto;
 }
 .appactions-inline {
   display: flex;
@@ -530,7 +478,7 @@ html[data-theme='dark'] .dropcard.drag {
   border: 1px solid var(--border);
   border-radius: 999px;
   padding: 3px 10px;
-  max-width: 180px;
+  max-width: 260px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -2450,13 +2398,7 @@ input[type='color']::-webkit-color-swatch {
 /* ================= 响应式 ================= */
 @media (max-width: 1280px) {
   .filechip {
-    max-width: 150px;
-  }
-  .wide-only {
-    display: none !important;
-  }
-  .compact-only {
-    display: block;
+    max-width: 200px;
   }
 }
 @media (max-width: 1100px) {
@@ -2482,16 +2424,10 @@ input[type='color']::-webkit-color-swatch {
     overflow: visible;
   }
   .filechip {
-    max-width: 120px;
+    max-width: 140px;
   }
 }
 @media (max-width: 900px) {
-  .wide-nav {
-    display: none;
-  }
-  .tab-select {
-    display: block;
-  }
   .wrap {
     padding: 12px 12px 48px;
   }
@@ -2516,9 +2452,6 @@ input[type='color']::-webkit-color-swatch {
   .tab {
     padding: 6px 9px;
     font-size: 12px;
-  }
-  .tabs {
-    overscroll-behavior-x: contain;
   }
   .btn {
     height: 30px;
@@ -2752,6 +2685,12 @@ input[type='color']::-webkit-color-swatch {
   }
   .btn.icon {
     width: 36px;
+  }
+  .tab-select {
+    flex: 1 1 auto;
+  }
+  .filechip {
+    max-width: 110px;
   }
   .tab-current {
     height: 38px;
