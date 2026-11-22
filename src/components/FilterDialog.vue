@@ -141,7 +141,7 @@ function colMax(name: string): string {
 
         <div class="filter-body">
           <div v-if="!draft.length" class="filter-empty">
-            <p class="hint">{{ $t('还没有筛选条件。添加条件后，图表、统计和报告都只基于匹配的行。') }}</p>
+            <p class="hint">{{ $t('还没有筛选条件。添加条件后，图表和统计都只基于匹配的行。') }}</p>
           </div>
 
           <div v-for="(rule, i) in draft" :key="i" class="filter-rule">
