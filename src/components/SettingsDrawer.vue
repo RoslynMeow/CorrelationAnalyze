@@ -10,8 +10,19 @@ import { toast } from '@/composables/useToast'
 import { useFocusTrap } from '@/composables/useFocusTrap'
 import { downloadDataUrl } from '@/lib/exportChart'
 
-const props = defineProps<{ open: boolean }>()
-const emit = defineEmits<{ (e: 'close'): void }>()
+const props = defineProps<{
+  open: boolean
+  filterActive?: boolean
+  filteredRows?: number
+  totalRows?: number
+}>()
+const emit = defineEmits<{
+  (e: 'close'): void
+  (e: 'filter'): void
+  (e: 'presets'): void
+  (e: 'share'): void
+  (e: 'change'): void
+}>()
 const drawerEl = ref<HTMLElement | null>(null)
 useFocusTrap(
   computed(() => props.open),
@@ -21,7 +32,9 @@ useFocusTrap(
 
 const settings = useSettingsStore()
 const ds = useDatasetStore()
-const tab = ref<'appearance' | 'charts' | 'table' | 'data' | 'text' | 'export' | 'config'>('appearance')
+const tab = ref<
+  'actions' | 'appearance' | 'charts' | 'table' | 'data' | 'text' | 'export' | 'config'
+>('actions')
 const fileInput = ref<HTMLInputElement | null>(null)
 const colQuery = ref('')
 const valueColumn = ref('')
@@ -29,6 +42,7 @@ const textQuery = ref('')
 const overridesOnly = ref(false)
 
 const TABS = [
+  { id: 'actions', label: '操作' },
   { id: 'appearance', label: '外观' },
   { id: 'charts', label: '图表' },
   { id: 'table', label: '表格' },
@@ -202,6 +216,52 @@ onBeforeUnmount(() => {
       </nav>
 
       <div class="drawer-body">
+        <!-- ================= 操作 ================= -->
+        <section v-if="tab === 'actions'" class="set-section">
+          <p class="hint set-action-intro">
+            {{ $t('顶栏只保留文件名，常用操作集中在这里。') }}
+          </p>
+          <div class="set-action-list">
+            <button class="set-action" type="button" @click="emit('filter')">
+              <span>
+                <b>{{ $t('筛选数据') }}</b>
+                <small>
+                  {{
+                    props.filterActive
+                      ? $t('已筛选 {n} / {total} 行', {
+                          n: props.filteredRows ?? 0,
+                          total: props.totalRows ?? 0,
+                        })
+                      : $t('按类别、数值或日期筛选行')
+                  }}
+                </small>
+              </span>
+              <span class="set-action-arrow">›</span>
+            </button>
+            <button class="set-action" type="button" @click="emit('presets')">
+              <span>
+                <b>{{ $t('预设模板') }}</b>
+                <small>{{ $t('套用自动推荐、内置模板或自定义配置') }}</small>
+              </span>
+              <span class="set-action-arrow">›</span>
+            </button>
+            <button class="set-action" type="button" @click="emit('share')">
+              <span>
+                <b>{{ $t('分享当前视图') }}</b>
+                <small>{{ $t('复制包含页签、筛选与视图选择的链接') }}</small>
+              </span>
+              <span class="set-action-arrow">›</span>
+            </button>
+            <button class="set-action" type="button" @click="emit('change')">
+              <span>
+                <b>{{ $t('更换 CSV') }}</b>
+                <small>{{ $t('重新选择数据文件，当前筛选会被清空') }}</small>
+              </span>
+              <span class="set-action-arrow">›</span>
+            </button>
+          </div>
+        </section>
+
         <!-- ================= 外观 ================= -->
         <section v-if="tab === 'appearance'" class="set-section">
           <div class="set-block">
@@ -700,7 +760,7 @@ onBeforeUnmount(() => {
         </section>
 
         <!-- ================= 配置 ================= -->
-        <section v-else class="set-section">
+        <section v-else-if="tab === 'config'" class="set-section">
           <div class="set-block">
             <div class="set-label">
               {{ $t('按文件配置') }}

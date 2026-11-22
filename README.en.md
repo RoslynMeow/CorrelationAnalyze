@@ -48,6 +48,7 @@ from the test fixtures.
 
 Also included:
 
+- Top bar keeps only the file name and a settings button; filters, presets, sharing and changing CSV live under Settings → Actions
 - Global row filter (category values, numeric / date ranges, AND combined); all statistics, charts, preview and share links use the filtered rows
 - Settings drawer: theme tokens, density, radius, shadow, table styles
 - 4 palette presets + custom palette; per-chart and per-series colors
