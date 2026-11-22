@@ -29,6 +29,7 @@
 
 - Partial correlation page: the VIF list is now a compact sidebar (300–380 px) so the matrix gets the main width
 - Partial correlation page: the control-variable picker is collapsible and shows the selected variables when folded
+- Per-chart width and height are now independent of the container: the card still fills the available height, while the plot can be resized freely and scrolls inside the card when larger
 
 ### Removed
 
