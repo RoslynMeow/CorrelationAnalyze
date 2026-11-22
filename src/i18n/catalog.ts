@@ -1,4 +1,4 @@
-/** 由 scripts/i18n-catalog.mjs 生成；请勿手改。共 380 条。 */
+/** 由 scripts/i18n-catalog.mjs 生成；请勿手改。共 381 条。 */
 export const TEXT_CATALOG: string[] = [
   " · 最多 {max} 个",
   "（不堆叠）",
@@ -297,6 +297,7 @@ export const TEXT_CATALOG: string[] = [
   "行数",
   "性能与优化",
   "选择 CSV 文件",
+  "选择分析页签",
   "选择要包含的页签。生成时会自动切换页签截取图表，可能需要几秒钟。",
   "学生心理健康",
   "颜色",

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 const props = defineProps<{
   tabs: { key: string; label: string }[]
@@ -22,6 +22,11 @@ const scrollable = ref(false)
 const atStart = ref(true)
 const atEnd = ref(true)
 const menuOpen = ref(false)
+const tabMenuOpen = ref(false)
+
+const activeLabel = computed(
+  () => props.tabs.find((t) => t.key === props.active)?.label || '',
+)
 
 let ro: ResizeObserver | null = null
 
@@ -38,9 +43,24 @@ function onScroll(): void {
 }
 
 function onDocClick(e: MouseEvent): void {
-  if (!menuOpen.value) return
   const target = e.target as HTMLElement | null
-  if (!target?.closest('.appmenu')) menuOpen.value = false
+  if (menuOpen.value && !target?.closest('.appmenu')) menuOpen.value = false
+  if (tabMenuOpen.value && !target?.closest('.tab-select')) tabMenuOpen.value = false
+}
+
+function toggleAppMenu(): void {
+  tabMenuOpen.value = false
+  menuOpen.value = !menuOpen.value
+}
+
+function toggleTabMenu(): void {
+  menuOpen.value = false
+  tabMenuOpen.value = !tabMenuOpen.value
+}
+
+function selectTab(key: string): void {
+  tabMenuOpen.value = false
+  emit('select', key)
 }
 
 function act(kind: 'presets' | 'report' | 'change' | 'settings'): void {
@@ -76,9 +96,35 @@ watch(
 
 <template>
   <header class="appbar">
+    <div class="tab-select">
+      <button
+        class="tab-current"
+        type="button"
+        :aria-expanded="tabMenuOpen"
+        :aria-label="$t('选择分析页签')"
+        @click="toggleTabMenu"
+      >
+        <span class="tab-current-label">{{ $t(activeLabel) }}</span>
+        <span class="tab-current-chev">▾</span>
+      </button>
+      <div v-if="tabMenuOpen" class="tab-menu" role="menu">
+        <button
+          v-for="t in props.tabs"
+          :key="t.key"
+          type="button"
+          class="tab-menu-item"
+          role="menuitem"
+          :class="{ active: props.active === t.key }"
+          @click="selectTab(t.key)"
+        >
+          {{ $t(t.label) }}
+        </button>
+      </div>
+    </div>
+
     <nav
       ref="tabsEl"
-      class="tabs"
+      class="tabs wide-nav"
       :class="{ scrollable, 'at-start': atStart, 'at-end': atEnd }"
       :aria-label="$t('分析页签')"
       @scroll.passive="onScroll"
@@ -134,7 +180,7 @@ watch(
           type="button"
           :title="$t('更多')"
           :aria-expanded="menuOpen"
-          @click="menuOpen = !menuOpen"
+          @click="toggleAppMenu"
         >
           ⋯
         </button>
