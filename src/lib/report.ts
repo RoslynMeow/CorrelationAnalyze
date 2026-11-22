@@ -58,7 +58,14 @@ export async function capturePanel(
       '.controls, .chart-tools, .chart-style, .chart-style-veil, .chart-resize, .chart-size-badge, .banner',
     )
     .forEach((el) => el.remove())
-  clone.querySelectorAll('button').forEach((el) => el.remove())
+  // 表头列名是可点击按钮，报告里保留文字；其他操作按钮移除
+  clone.querySelectorAll('button').forEach((el) => {
+    if (el.classList.contains('th-name')) {
+      el.replaceWith(document.createTextNode(el.textContent || ''))
+    } else {
+      el.remove()
+    }
+  })
 
   const cloneHosts = Array.from(clone.querySelectorAll<HTMLElement>('[data-plotly-host]'))
   let charts = 0
