@@ -14,7 +14,6 @@ import {
 import { assoc, computePairs, slimColumns } from '@/lib/associations'
 import { buildFilterMask, filterCount, normalizeRules, subsetDataset } from '@/lib/filter'
 import { bhAdjust } from '@/lib/stats'
-import { fmt } from '@/lib/format'
 import AssociationsWorker from '@/workers/associations.worker?worker&inline'
 import type { AssocMethod, AssocResult, Column, Dataset, FilterRule, PairAssoc } from '@/types'
 import { toast } from '@/composables/useToast'
@@ -70,34 +69,6 @@ export const useDatasetStore = defineStore('dataset', () => {
         })}`
       : '',
   )
-
-  const filterSummary = computed(() => {
-    if (!filterRules.value.length) return ''
-    const settings = useSettingsStore()
-    const parts: string[] = []
-    for (const rule of filterRules.value) {
-      const label = settings.columnLabel(rule.column)
-      if (rule.type === 'number') {
-        if (rule.min !== null && rule.max !== null) parts.push(`${label} ∈ [${fmt(rule.min, 4)}, ${fmt(rule.max, 4)}]`)
-        else if (rule.min !== null) parts.push(`${label} ≥ ${fmt(rule.min, 4)}`)
-        else if (rule.max !== null) parts.push(`${label} ≤ ${fmt(rule.max, 4)}`)
-      } else if (rule.type === 'date') {
-        parts.push(
-          rule.min && rule.max
-            ? `${label} ∈ [${rule.min}, ${rule.max}]`
-            : rule.min
-              ? `${label} ≥ ${rule.min}`
-              : `${label} ≤ ${rule.max}`,
-        )
-      } else {
-        const vals = rule.values.map((v) => settings.valueLabel(rule.column, v))
-        parts.push(
-          `${label} ∈ {${vals.join('、') || '—'}}${rule.includeMissing ? t('（含缺失）') : ''}`,
-        )
-      }
-    }
-    return parts.join(' · ')
-  })
 
   function column(name: string): Column | undefined {
     return dataset.value ? colByName(dataset.value, name) : undefined
@@ -308,7 +279,6 @@ export const useDatasetStore = defineStore('dataset', () => {
     sourceColumns,
     filterRules,
     filterActive,
-    filterSummary,
     nums,
     cats,
     dates,

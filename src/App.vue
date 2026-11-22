@@ -5,17 +5,8 @@ import { useSettingsStore } from '@/stores/settings'
 import DropZone from '@/components/DropZone.vue'
 import AppBar from '@/components/AppBar.vue'
 import SettingsDrawer from '@/components/SettingsDrawer.vue'
-import ReportDialog from '@/components/ReportDialog.vue'
 import PresetDialog from '@/components/PresetDialog.vue'
 import FilterDialog from '@/components/FilterDialog.vue'
-import {
-  buildReportHtml,
-  capturePanel,
-  openReportWindow,
-  waitForPanel,
-  writeReport,
-  type ReportSection,
-} from '@/lib/report'
 import { toast } from '@/composables/useToast'
 import { t } from '@/i18n'
 import { copyText } from '@/lib/exportChart'
@@ -55,7 +46,6 @@ const ds = useDatasetStore()
 const settings = useSettingsStore()
 const view = useViewStore()
 const settingsOpen = ref(false)
-const reportOpen = ref(false)
 const presetOpen = ref(false)
 const filterOpen = ref(false)
 
@@ -161,53 +151,6 @@ async function onDrop(e: DragEvent): Promise<void> {
   if (f) await ds.loadFile(f)
 }
 
-async function generateReport(
-  keys: string[],
-  includeCharts: boolean,
-  meta: { title: string; subtitle: string; notes: string },
-): Promise<void> {
-  const win = openReportWindow()
-  reportOpen.value = false
-  if (!win) {
-    toast(t('浏览器阻止了弹出窗口，请允许后重试'))
-    return
-  }
-
-  const prev = active.value
-  const sections: ReportSection[] = []
-  try {
-    for (const key of keys) {
-      active.value = key
-      await waitForPanel()
-      const panel = document.querySelector('main .panel') as HTMLElement | null
-      if (!panel) continue
-      const tab = TABS.find((x) => x.key === key)
-      sections.push(await capturePanel(panel, key, tab ? t(tab.label) : key, includeCharts))
-    }
-
-    const html = buildReportHtml(
-      {
-        datasetName: ds.fileName || 'dataset',
-        rows: ds.n,
-        columns: ds.dataset?.headers.length ?? 0,
-        generatedAt: new Date().toLocaleString('zh-CN'),
-        filterSummary: ds.filterActive ? ds.filterSummary : '',
-        ...meta,
-      },
-      sections,
-    )
-    writeReport(win, html)
-    toast(t('报告已生成'))
-  } catch (err) {
-    console.error(err)
-    win.close()
-    toast(t('生成报告失败'), 3500)
-  } finally {
-    active.value = prev
-    await nextTick()
-  }
-}
-
 onMounted(() => {
   window.addEventListener('dragenter', onDragEnter)
   window.addEventListener('dragover', onDragOver)
@@ -240,7 +183,6 @@ onBeforeUnmount(() => {
       @change="pick"
       @theme="settings.toggleMode()"
       @settings="settingsOpen = true"
-      @report="reportOpen = true"
       @presets="presetOpen = true"
       @share="shareView"
       @filter="filterOpen = true"
@@ -249,7 +191,7 @@ onBeforeUnmount(() => {
       <div v-if="ds.error" class="banner warn">⚠️ {{ ds.error }}</div>
       <div v-if="ds.filterActive" class="banner filter-banner">
         <span>
-          🔎 {{ $t('已筛选 {n} / {total} 行，分析与报告仅基于筛选后的数据', { n: ds.n, total: ds.sourceN }) }}
+          🔎 {{ $t('已筛选 {n} / {total} 行，分析仅基于筛选后的数据', { n: ds.n, total: ds.sourceN }) }}
         </span>
         <button class="linkbtn" type="button" @click="filterOpen = true">{{ $t('修改') }}</button>
         <button class="linkbtn" type="button" @click="clearFilter">{{ $t('清除') }}</button>
@@ -280,13 +222,6 @@ onBeforeUnmount(() => {
 
   <Toast />
   <SettingsDrawer :open="settingsOpen" @close="settingsOpen = false" />
-  <ReportDialog
-    :open="reportOpen"
-    :tabs="TABS"
-    :dataset-name="ds.fileName"
-    @close="reportOpen = false"
-    @generate="generateReport"
-  />
   <PresetDialog :open="presetOpen" @close="presetOpen = false" />
   <FilterDialog
     :open="filterOpen"

@@ -13,18 +13,21 @@
 - Chart panels fill the available viewport height on desktop; grouped charts use an internally scrolling grid
 - Chunked data search (roughly 8 ms per frame) with live progress, so typing stays responsive on 100k rows
 - Insight cards use a 2–3 column grid with an internally scrolling main area on desktop
-- Dialog focus trap and Esc-to-close for settings, report, presets, chart popovers and app menus
-- Playwright E2E suite for upload, tab switching, matrix stars, search/export, PNG download, dialogs and report generation
+- Dialog focus trap and Esc-to-close for settings, presets, filters, chart popovers and app menus
+- Playwright E2E suite for upload, tab switching, matrix stars, search/export, PNG download and dialogs
 - Partial correlation matrix controlling up to 5 numeric variables (standardized residualization, t-test p values)
 - VIF multicollinearity panel with normal / watch / high tiers and collinearity notes
-- Shareable view links (`?view=…`) that restore the current tab and analysis selections after loading the same CSV
-- Report dialog with custom title, subtitle and notes, rendered into the HTML / PDF export
-- Global row filter (category values, numeric and date ranges, AND combined): all statistics, charts, data preview, share links and reports use the filtered rows
+- Shareable view links (`?view=…`) that restore the current tab, analysis selections and active filter after loading the same CSV
+- Global row filter (category values, numeric and date ranges, AND combined): all statistics, charts, data preview and share links use the filtered rows
 
 ### Changed
 
 - Plotly is lazy-loaded (first-screen JS drops from ~4.9 MB to ~250 KB) and prefetched after CSV load
 - Mobile keeps natural page scrolling and fixed chart heights instead of compressing to one screen
+
+### Removed
+
+- Full-page HTML / PDF report export, its dialog and `src/lib/report.ts` (feature temporarily removed)
 
 ## 2.0.0 — 2026-11-22
 

@@ -48,7 +48,7 @@ from the test fixtures.
 
 Also included:
 
-- Global row filter (category values, numeric / date ranges, AND combined); all statistics, charts, preview and reports use the filtered rows
+- Global row filter (category values, numeric / date ranges, AND combined); all statistics, charts, preview and share links use the filtered rows
 - Settings drawer: theme tokens, density, radius, shadow, table styles
 - 4 palette presets + custom palette; per-chart and per-series colors
 - Per-chart width/height, presets, drag-to-resize, custom title / axis titles
@@ -56,8 +56,7 @@ Also included:
 - Per-file profiles keyed by CSV headers (aliases, sizes, titles, colors)
 - All static UI text can be searched, edited and reset in Settings → Text
 - Copy chart image, download PNG / SVG, copy data as TSV, copy insights
-- Full-page HTML report of selected tabs with custom title, subtitle and notes; print to PDF
-- Share link that restores the current tab and analysis selections (load the same CSV to reproduce)
+- Share link that restores the current tab, analysis selections and active row filter (load the same CSV to reproduce)
 - Built-in presets (auto, student mental health) plus save / import / export
 - Import / export settings as JSON; everything persisted locally
 
@@ -88,7 +87,7 @@ git clone https://github.com/RoslynMeow/CorrelationAnalyze.git
 cd CorrelationAnalyze
 npm install
 npm run dev          # http://localhost:5188
-npm test             # 104 tests
+npm test             # 101 tests
 npm run test:e2e     # Playwright browser tests
 npm run build        # -> dist/
 npm run build:single # -> dist-single/index.html (portable, offline)
@@ -107,7 +106,7 @@ src/
   workers/           # pairwise association worker
   components/        # PlotlyChart, SettingsDrawer, ...
   panels/            # 12 analysis tabs
-tests/               # 104 tests + CSV fixture
+tests/               # 101 tests + CSV fixture
 e2e/                 # Playwright browser tests
 .github/             # CI, Pages, issue/PR templates
 ```
@@ -121,8 +120,8 @@ npm run test:e2e  # Playwright (run npx playwright install chromium once)
 ```
 
 Covers statistics against pandas / scipy, CSV parsing and encodings, type inference,
-settings validation, plus browser flows for upload, tabs, search, downloads, dialogs
-and report generation. Baseline examples:
+settings and filters, plus browser flows for upload, tabs, search, downloads and dialogs.
+Baseline examples:
 
 | Metric | Value |
 | --- | --- |
@@ -157,10 +156,9 @@ Full board: **https://github.com/users/RoslynMeow/projects/8**
 - [x] Phase 2: per-file profiles
 - [x] Phase 2: editable UI text dictionary
 - [x] Phase 3: per-chart title and axis title editing
-- [x] Phase 3: full-page report export
 - [x] Phase 4: p values, 95% CI, R² and FDR correction
 - [x] Phase 4: partial correlation matrix and VIF
-- [x] Phase 4: shareable view links, custom report title and notes
+- [x] Phase 4: shareable view links with the active filter
 - [x] Phase 5: global row filter (category / numeric / date, AND combined)
 - [x] Common dataset presets (auto / mental health / custom)
 
