@@ -684,6 +684,60 @@ html[data-theme='dark'] .dropcard.drag {
   border-radius: var(--radius-ctl);
   box-shadow: var(--shadow);
 }
+.data-toolbar {
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 8px;
+}
+.searchbox {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1 1 240px;
+  min-width: 0;
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-ctl);
+  background: var(--panel);
+  color: var(--muted);
+}
+.searchbox:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.searchbox input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 12.5px;
+}
+.compact-select {
+  flex: none;
+  height: 32px;
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-ctl);
+  background: var(--panel);
+  color: var(--text);
+  font: inherit;
+  font-size: 12.5px;
+  outline: none;
+  cursor: pointer;
+}
+.compact-select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.export-btn {
+  flex: none;
+  white-space: nowrap;
+}
 .field {
   display: flex;
   flex-direction: column;
@@ -1458,6 +1512,15 @@ html[data-theme='dark'] .badge.date {
 .colpop-grid b {
   font-weight: 650;
   font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.colpop-wrap {
+  align-items: flex-start;
+}
+.colpop-wrap b {
+  white-space: normal;
+  word-break: break-word;
+  font-weight: 500;
 }
 .colpop-summary {
   margin-top: 8px;
@@ -2060,6 +2123,27 @@ input[type='color']::-webkit-color-swatch {
   .controls {
     padding: 10px;
     gap: 10px 12px;
+  }
+  .data-toolbar {
+    flex-wrap: nowrap;
+    gap: 6px;
+  }
+  .searchbox {
+    flex: 1 1 auto;
+    height: 30px;
+  }
+  .compact-select {
+    height: 30px;
+    padding: 0 6px;
+    font-size: 12px;
+  }
+  .export-btn {
+    width: 30px;
+    padding: 0;
+    flex: none;
+  }
+  .export-btn span {
+    display: none;
   }
   .chipbar {
     gap: 4px 8px;

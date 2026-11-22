@@ -2,7 +2,6 @@
 import { computed, onBeforeUnmount, onDeactivated, onMounted, ref, watch } from 'vue'
 import { useDatasetStore } from '@/stores/dataset'
 import { useSettingsStore } from '@/stores/settings'
-import SelectField from '@/components/SelectField.vue'
 import { downloadCsv, fmt, fmtInt, isNull, toNum } from '@/lib/format'
 import { toast } from '@/composables/useToast'
 import { t } from '@/i18n'
@@ -127,12 +126,28 @@ let closeTimer: ReturnType<typeof setTimeout> | undefined
 
 const extraStats = computed(() => {
   const c = activeCol.value
-  if (!c || c.type !== 'number') return []
-  return [
-    { k: t('中位数'), v: fmt(c.median) },
-    { k: t('标准差'), v: fmt(c.sd) },
-  ]
+  if (!c) return []
+  if (c.type === 'number') {
+    return [
+      { k: t('均值'), v: fmt(c.mean) },
+      { k: t('中位数'), v: fmt(c.median) },
+      { k: t('标准差'), v: fmt(c.sd) },
+      { k: t('最小值'), v: fmt(c.min) },
+      { k: t('最大值'), v: fmt(c.max) },
+    ]
+  }
+  if (c.type === 'date') {
+    const ts = (c.num || []).filter((v): v is number => v !== null)
+    if (!ts.length) return []
+    return [
+      { k: t('最早'), v: new Date(Math.min(...ts)).toLocaleDateString('zh-CN') },
+      { k: t('最晚'), v: new Date(Math.max(...ts)).toLocaleDateString('zh-CN') },
+    ]
+  }
+  return []
 })
+
+const isCategoryCol = computed(() => activeCol.value?.type === 'category')
 
 function cancelClose(): void {
   if (closeTimer) clearTimeout(closeTimer)
@@ -186,18 +201,49 @@ onDeactivated(() => {
 
 <template>
   <section class="panel panel-fit">
-    <div class="controls">
-      <label class="field" style="flex: 1 1 260px">
-        <span>{{ $t('搜索') }}</span>
-        <input v-model="query" type="text" :placeholder="$t('在所有列中搜索关键字…')" />
+    <div class="controls data-toolbar">
+      <label class="searchbox">
+        <svg
+          viewBox="0 0 16 16"
+          width="13"
+          height="13"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.4"
+          stroke-linecap="round"
+        >
+          <circle cx="7" cy="7" r="4.2" />
+          <path d="m10.2 10.2 3 3" />
+        </svg>
+        <input
+          v-model="query"
+          type="search"
+          :placeholder="$t('搜索所有列…')"
+          :aria-label="$t('搜索')"
+        />
       </label>
-      <SelectField
-        v-model="pageSize"
-        :label="$t('每页行数')"
-        :options="['25', '50', '100', '200']"
-      />
-      <div class="sep"></div>
-      <button class="btn" type="button" @click="exportCsv">{{ $t('导出当前数据 CSV') }}</button>
+      <select v-model="pageSize" class="compact-select" :aria-label="$t('每页行数')">
+        <option v-for="n in ['25', '50', '100', '200']" :key="n" :value="n">
+          {{ $t('{n} 行/页', { n }) }}
+        </option>
+      </select>
+      <button class="btn export-btn" type="button" @click="exportCsv" :title="$t('导出当前数据 CSV')">
+        <svg
+          viewBox="0 0 16 16"
+          width="13"
+          height="13"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.4"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M8 2.5v7" />
+          <path d="m5 6.5 3 3 3-3" />
+          <path d="M3.5 12.5v1h9v-1" />
+        </svg>
+        <span>{{ $t('导出 CSV') }}</span>
+      </button>
     </div>
 
     <div class="card data-card">
@@ -281,7 +327,10 @@ onDeactivated(() => {
         <div v-for="s in extraStats" :key="s.k" class="colpop-grid">
           <span>{{ s.k }}</span><b>{{ s.v }}</b>
         </div>
-        <div class="colpop-summary">{{ activeData.summary }}</div>
+        <div v-if="isCategoryCol" class="colpop-grid colpop-wrap">
+          <span>{{ $t('高频值') }}</span>
+          <b>{{ activeData.summary }}</b>
+        </div>
       </div>
     </Teleport>
   </section>
