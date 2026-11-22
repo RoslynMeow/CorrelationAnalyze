@@ -4,7 +4,7 @@
 
 **技术栈**：Vue 3 + Vite + TypeScript + Pinia + Plotly.js。所有计算在浏览器本地完成，文件不会上传。
 
-> 本项目由 v1 单文件版（`legacy/correlation-analysis.html`）迁移而来，统计口径与 v1 / notebook 完全一致，并补上了 notebook 里有、v1 缺的 3 个视图。
+> 本项目由 v1 单文件版迁移而来，统计口径与 v1 / notebook 完全一致，并补上了 notebook 里有、v1 缺的 3 个视图。v1 文件已清理，当前工程即唯一版本。
 
 ---
 
@@ -22,7 +22,7 @@ npm run preview      # 预览构建产物 → http://localhost:5188
 
 **端口固定为 5188**（`vite.config.ts` 的 `server.port` / `preview.port`，`strictPort: true`）。本机同时调试多个项目时不会和 5173 / 4173 冲突；需要改端口直接改这两处。
 
-落地页有「先看看示例数据」，会读取 `public/test.csv`（30 行 × 20 列，学生心理健康主题）。
+落地页的「示例数据」按钮载入**内置**的 `src/assets/sample.csv`（30 行 × 20 列，学生心理健康主题），不依赖网络或额外文件。
 
 ---
 
@@ -72,9 +72,9 @@ CorrelationAnalyze/
 ├─ vite.config.ts
 ├─ vitest.config.ts
 ├─ tsconfig.json
-├─ public/
-│  └─ test.csv                 # 示例数据（构建时原样复制）
 ├─ src/
+│  ├─ assets/
+│  │  └─ sample.csv            # 内置示例数据（?raw 打包进 JS）
 │  ├─ main.ts
 │  ├─ App.vue                  # 页签骨架 + 全局拖拽
 │  ├─ types.ts
@@ -99,7 +99,6 @@ CorrelationAnalyze/
 │  ├─ components/              # PlotlyChart / DropZone / AppBar / KpiCards / ChipGroup / SelectField / Toast
 │  └─ panels/                  # 11 个页签，与 v1 的 render 函数一一对应
 ├─ tests/                      # stats / csv / infer
-├─ legacy/                     # v1 单文件版、旧 README、原始 notebook
 └─ .github/workflows/deploy.yml
 ```
 
@@ -143,7 +142,7 @@ npm test
 
 当前 **36 个测试全部通过**，分三组：
 
-- `tests/stats.spec.ts`：基础统计 + 用 `test.csv` 与 pandas / scipy 对照（容差 1e-9）
+- `tests/stats.spec.ts`：基础统计 + 用内置示例数据与 pandas / scipy 对照（容差 1e-9）
 - `tests/csv.spec.ts`：引号、CRLF、BOM、重复列名、GB18030 / UTF-16
 - `tests/infer.spec.ts`：类型推断、ID 列、分组列、有序等级、行数截断
 
@@ -179,7 +178,7 @@ npm test
 npm run build:single
 ```
 
-产物是 `dist-single/index.html`（约 4.8 MB，内联 JS/CSS/Plotly/Worker），双击即可运行，适合发给别人或离线使用。示例数据按钮需要把 `test.csv` 放在同目录；没有也不影响其他功能。
+产物是 `dist-single/index.html`（约 4.8 MB，内联 JS/CSS/Plotly/Worker/示例数据），双击即可运行，适合发给别人或离线使用，不需要任何额外文件。
 
 ### 常规构建
 
@@ -220,18 +219,10 @@ npx serve dist   # 或任意静态服务器 / Nginx
 
 ---
 
-## 10. 旧版文件
-
-- `legacy/correlation-analysis.html`：v1 单文件版（4.6 MB，内联 Plotly）
-- `legacy/README-v1.md`：v1 交接文档
-- `legacy/Untitled.ipynb`：最初的 Jupyter 分析（需求来源）
-
-旧版仍可双击运行，作为对照基准保留。
-
----
-
-## 11. 变更记录
+## 10. 变更记录
 
 - **2026-11-21**：从 notebook 的图表整理出通用数据探索看板，后改为关联性分析程序，加入 r/ρ/V/η、目标关联、自动结论
 - **2026-11-22**：Plotly 内联为单文件；补齐响应式；编写 v1 README
 - **2026-11-22**：迁移到 Vue 3 + Vite + TypeScript 工程；统计逻辑拆成纯函数并加 36 个测试；补上分布 / 类别计数 / 雷达 3 个视图；加入 Web Worker、GitHub Pages 工作流与单文件构建
+- **2026-11-22**：多选工具条（搜索 / 全选 / 反选 / 清空）；响应式与视觉优化；示例数据改为内置（`src/assets/sample.csv`），删除 v1 的 legacy 文件
+

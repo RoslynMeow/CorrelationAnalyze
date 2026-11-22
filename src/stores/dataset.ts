@@ -13,6 +13,7 @@ import {
 } from '@/lib/infer'
 import { assoc, computePairs, slimColumns } from '@/lib/associations'
 import AssociationsWorker from '@/workers/associations.worker?worker&inline'
+import sampleCsv from '@/assets/sample.csv?raw'
 import type { AssocMethod, Column, Dataset, PairAssoc } from '@/types'
 import { toast } from '@/composables/useToast'
 
@@ -80,22 +81,16 @@ export const useDatasetStore = defineStore('dataset', () => {
     }
   }
 
-  async function loadSample(): Promise<void> {
-    loading.value = true
+  function loadSample(): void {
     error.value = ''
     try {
-      const res = await fetch('./test.csv')
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
-      const text = await res.text()
-      const { headers, rows } = parseCSV(text)
+      const { headers, rows } = parseCSV(sampleCsv)
       applyData(headers, rows, '示例数据 test')
       toast(`已载入示例数据 ${rows.length} 行 × ${headers.length} 列`)
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err)
-      error.value = `示例数据不可用（${msg}），请选择本地 CSV`
+      error.value = `示例数据解析失败（${msg}）`
       toast(error.value, 4000)
-    } finally {
-      loading.value = false
     }
   }
 
