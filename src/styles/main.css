@@ -882,6 +882,53 @@ html[data-theme='dark'] .dropcard.drag {
   display: flex;
   justify-content: flex-end;
 }
+
+/* 拖拽调整图表尺寸 */
+.chart-resize {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  z-index: 14;
+  display: grid;
+  place-items: end;
+  width: 18px;
+  height: 18px;
+  padding: 3px;
+  cursor: nwse-resize;
+  touch-action: none;
+  opacity: 0.35;
+  transition: opacity 0.15s;
+}
+.chart-wrap:hover .chart-resize,
+.chart-wrap.resizing .chart-resize,
+.chart-resize:focus-visible {
+  opacity: 1;
+}
+.chart-resize::after {
+  content: '';
+  width: 9px;
+  height: 9px;
+  border-right: 2px solid var(--muted);
+  border-bottom: 2px solid var(--muted);
+  border-bottom-right-radius: 2px;
+}
+.chart-wrap.resizing {
+  user-select: none;
+}
+.chart-size-badge {
+  position: absolute;
+  right: 22px;
+  bottom: 2px;
+  z-index: 14;
+  padding: 1px 5px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--panel);
+  color: var(--muted);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
 .grid-charts {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(330px, 100%), 1fr));
