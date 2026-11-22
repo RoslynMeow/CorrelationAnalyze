@@ -11,6 +11,7 @@ import { withAlpha } from '@/lib/color'
 import { groupLabels } from '@/lib/infer'
 import { isNull } from '@/lib/format'
 import { useNarrow } from '@/composables/useNarrow'
+import { useViewportHeight } from '@/composables/useViewportHeight'
 import { useSettingsStore } from '@/stores/settings'
 import { t } from '@/i18n'
 
@@ -18,10 +19,15 @@ const ds = useDatasetStore()
 const view = useViewStore()
 const settings = useSettingsStore()
 const narrow = useNarrow()
+const vh = useViewportHeight()
 
 const { groupCol: groupName, groupVars: vars, groupShowPoints: showPts } = storeToRefs(view)
 
-const chartH = computed(() => (narrow.value ? 215 : 245))
+const chartH = computed(() => {
+  const base = narrow.value ? 215 : 245
+  const fit = (vh.value - (narrow.value ? 300 : 320)) / 2
+  return Math.round(Math.max(narrow.value ? 170 : 185, Math.min(base, fit || base)))
+})
 
 const charts = computed(() => {
   const gcol = ds.column(groupName.value)

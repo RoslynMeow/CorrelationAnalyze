@@ -9,6 +9,7 @@ import { baseLayout } from '@/lib/chartTheme'
 import { groupLabels } from '@/lib/infer'
 import { isNull } from '@/lib/format'
 import { useNarrow } from '@/composables/useNarrow'
+import { useViewportHeight } from '@/composables/useViewportHeight'
 import { useSettingsStore } from '@/stores/settings'
 import { t } from '@/i18n'
 
@@ -16,6 +17,7 @@ const ds = useDatasetStore()
 const view = useViewStore()
 const settings = useSettingsStore()
 const narrow = useNarrow()
+const vh = useViewportHeight()
 
 const {
   categoryCol: catName,
@@ -23,7 +25,12 @@ const {
   categoryPercent: percent,
 } = storeToRefs(view)
 
-const chartH = computed(() => (narrow.value ? 380 : 480))
+const chartH = computed(() =>
+  Math.max(
+    narrow.value ? 280 : 300,
+    Math.min(narrow.value ? 400 : 480, vh.value - (narrow.value ? 250 : 260)),
+  ),
+)
 
 const PALETTE_FALLBACK = '#4c6ef5'
 

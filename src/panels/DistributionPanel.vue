@@ -10,6 +10,7 @@ import { groupLabels } from '@/lib/infer'
 import { isNull } from '@/lib/format'
 import { describe, kde } from '@/lib/stats'
 import { useNarrow } from '@/composables/useNarrow'
+import { useViewportHeight } from '@/composables/useViewportHeight'
 import { useSettingsStore } from '@/stores/settings'
 import { t } from '@/i18n'
 
@@ -17,6 +18,7 @@ const ds = useDatasetStore()
 const view = useViewStore()
 const settings = useSettingsStore()
 const narrow = useNarrow()
+const vh = useViewportHeight()
 
 const {
   distributionVar: varName,
@@ -25,7 +27,12 @@ const {
   distributionBins: bins,
 } = storeToRefs(view)
 
-const chartH = computed(() => (narrow.value ? 360 : 460))
+const chartH = computed(() =>
+  Math.max(
+    narrow.value ? 280 : 300,
+    Math.min(narrow.value ? 380 : 480, vh.value - (narrow.value ? 250 : 260)),
+  ),
+)
 
 const PALETTE_FALLBACK = '#4c6ef5'
 

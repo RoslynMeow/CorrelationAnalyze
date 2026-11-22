@@ -51,6 +51,7 @@ const reportOpen = ref(false)
 const presetOpen = ref(false)
 
 const active = ref(readHash())
+const mainEl = ref<HTMLElement | null>(null)
 function readHash(): string {
   const h = location.hash.replace(/^#\/?/, '')
   return TABS.some((t) => t.key === h) ? h : 'overview'
@@ -61,6 +62,7 @@ watch(active, (v) => {
   } catch {
     /* file:// 下可能受限 */
   }
+  mainEl.value?.scrollTo({ top: 0 })
 })
 
 const current = computed(() => TABS.find((t) => t.key === active.value) ?? TABS[0])
@@ -179,7 +181,7 @@ onBeforeUnmount(() => {
       @report="reportOpen = true"
       @presets="presetOpen = true"
     />
-    <main class="wrap">
+    <main ref="mainEl" class="wrap">
       <div v-if="ds.error" class="banner warn">⚠️ {{ ds.error }}</div>
       <!-- KeepAlive 用 key 做缓存索引；key 必须按「数据集 + 页签」唯一，
            否则不同页签会复用同一个组件实例 -->

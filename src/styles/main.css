@@ -54,6 +54,11 @@ body {
   max-width: 100%;
   overflow-x: clip;
 }
+html,
+body,
+#app {
+  height: 100%;
+}
 body {
   background: var(--bg);
   color: var(--text);
@@ -62,6 +67,13 @@ body {
   font-family: 'Segoe UI', 'Microsoft YaHei', 'PingFang SC', 'Hiragino Sans GB', system-ui,
     -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
+}
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
 }
 h1,
 h2,
@@ -322,6 +334,7 @@ html[data-theme='dark'] .dropcard.drag {
   position: sticky;
   top: 0;
   z-index: 50;
+  flex: none;
   display: flex;
   align-items: center;
   gap: 14px;
@@ -527,10 +540,42 @@ html[data-theme='dark'] .dropcard.drag {
   max-width: 1560px;
   margin: 0 auto;
   padding: 16px 20px 64px;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
 }
 .panel {
   animation: fade 0.18s ease;
   min-width: 0;
+}
+.panel-fit {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.panel-fit .controls {
+  flex: none;
+}
+.panel-fit .data-card {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0;
+}
+.panel-fit .data-card .tablewrap {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: none;
+  border: 0;
+  border-radius: 0;
+}
+.panel-fit .data-card .pager {
+  flex: none;
 }
 @keyframes fade {
   from {
@@ -1327,6 +1372,96 @@ html[data-theme='dark'] .badge.date {
   font-size: 11px;
   cursor: help;
 }
+
+/* 表头列画像 */
+.th-name {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: inherit;
+  cursor: help;
+  border-bottom: 1px dotted var(--border);
+}
+.th-name:hover,
+.th-name:focus-visible {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+  outline: none;
+}
+.colpop {
+  position: fixed;
+  z-index: 95;
+  width: 288px;
+  max-width: calc(100vw - 16px);
+  max-height: min(340px, 60vh);
+  overflow: auto;
+  padding: 12px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+}
+.colpop-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+.colpop-head b {
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.colpop-close {
+  margin-left: auto;
+  flex: none;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 12px;
+  padding: 2px 4px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.colpop-close:hover {
+  background: var(--panel-2);
+  color: var(--text);
+}
+.colpop-orig {
+  margin-bottom: 6px;
+  color: var(--muted);
+  font-size: 10.5px;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  word-break: break-all;
+}
+.colpop-grid {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 3px 0;
+  border-bottom: 1px dashed var(--border);
+  font-size: 11.5px;
+}
+.colpop-grid:last-of-type {
+  border-bottom: 0;
+}
+.colpop-grid span {
+  color: var(--muted);
+}
+.colpop-grid b {
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+.colpop-summary {
+  margin-top: 8px;
+  font-size: 11.5px;
+  line-height: 1.6;
+  word-break: break-word;
+}
 .pager {
   display: flex;
   align-items: center;
@@ -2048,6 +2183,40 @@ input[type='color']::-webkit-color-swatch {
   }
   .responsive tbody td.null {
     text-align: right;
+  }
+  /* 数据页在手机上保留表头（可点按查看列画像），表格内部横向滚动 */
+  .data-card .tablewrap.responsive {
+    overflow: auto !important;
+    background: var(--panel);
+  }
+  .data-card .responsive table {
+    display: table;
+    width: 100%;
+  }
+  .data-card .responsive thead {
+    display: table-header-group;
+  }
+  .data-card .responsive tbody {
+    display: table-row-group;
+  }
+  .data-card .responsive tr {
+    display: table-row;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+  .data-card .responsive th,
+  .data-card .responsive td {
+    display: table-cell;
+    padding: 6px 10px;
+    border-bottom: 1px solid var(--table-border);
+    text-align: left;
+    white-space: nowrap;
+  }
+  .data-card .responsive tbody td::before {
+    content: none;
+    display: none;
   }
 }
 @media (max-width: 420px) {

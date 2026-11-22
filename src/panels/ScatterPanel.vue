@@ -11,6 +11,7 @@ import { groupLabels } from '@/lib/infer'
 import { fmt, isNull } from '@/lib/format'
 import { linreg, pearson, spearman } from '@/lib/stats'
 import { useNarrow } from '@/composables/useNarrow'
+import { useViewportHeight } from '@/composables/useViewportHeight'
 import { useSettingsStore } from '@/stores/settings'
 import { t } from '@/i18n'
 
@@ -18,6 +19,7 @@ const ds = useDatasetStore()
 const view = useViewStore()
 const settings = useSettingsStore()
 const narrow = useNarrow()
+const vh = useViewportHeight()
 
 const {
   scatterX: xName,
@@ -40,7 +42,12 @@ const sizeOptions = computed(() => [
   ...ds.nums.map((c) => ({ value: c.name, label: settings.columnLabel(c.name) })),
 ])
 
-const chartH = computed(() => (narrow.value ? 380 : 520))
+const chartH = computed(() =>
+  Math.max(
+    narrow.value ? 300 : 340,
+    Math.min(narrow.value ? 420 : 560, vh.value - (narrow.value ? 220 : 240)),
+  ),
+)
 
 const built = computed(() => {
   const xc = ds.column(xName.value)

@@ -43,7 +43,7 @@ from the test fixtures.
 | Category | Countplot, stacked subgroups, percentage mode, imbalance ratio |
 | Radar | Group profiles with Min-Max or Z-Score normalization |
 | Insights | Data quality, strongest links, target drivers, redundancy |
-| Data | Search, pagination, column profiles, CSV export |
+| Data | Search, pagination, header hover/tap column profiles, CSV export |
 
 Also included:
 

@@ -9,6 +9,7 @@ import { baseLayout } from '@/lib/chartTheme'
 import { divergingScale, sequentialScale } from '@/lib/color'
 import { cramersV, pearson, ranks } from '@/lib/stats'
 import { useNarrow } from '@/composables/useNarrow'
+import { useViewportHeight } from '@/composables/useViewportHeight'
 import { useSettingsStore } from '@/stores/settings'
 import { t } from '@/i18n'
 import type { Column } from '@/types'
@@ -17,6 +18,7 @@ const ds = useDatasetStore()
 const view = useViewStore()
 const settings = useSettingsStore()
 const narrow = useNarrow()
+const vh = useViewportHeight()
 
 const {
   matrixMode: mode,
@@ -74,7 +76,9 @@ const matrix = computed(() => {
 
 const chartH = computed(() => {
   const cell = narrow.value ? 26 : 36
-  return Math.max(narrow.value ? 280 : 320, cols.value.length * cell + (narrow.value ? 80 : 130))
+  const needed = cols.value.length * cell + (narrow.value ? 80 : 130)
+  const max = vh.value - (narrow.value ? 230 : 250)
+  return Math.max(narrow.value ? 260 : 300, Math.min(needed, Math.max(280, max)))
 })
 
 /** 列少时不要把 2×2 矩阵拉满整张卡片 */

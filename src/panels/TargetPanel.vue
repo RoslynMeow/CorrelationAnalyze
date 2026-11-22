@@ -8,6 +8,7 @@ import SelectField from '@/components/SelectField.vue'
 import { baseLayout } from '@/lib/chartTheme'
 import { fmtInt, shortName } from '@/lib/format'
 import { useNarrow } from '@/composables/useNarrow'
+import { useViewportHeight } from '@/composables/useViewportHeight'
 import { useSettingsStore } from '@/stores/settings'
 import { t } from '@/i18n'
 import type { AssocMethod } from '@/types'
@@ -16,6 +17,7 @@ const ds = useDatasetStore()
 const view = useViewStore()
 const settings = useSettingsStore()
 const narrow = useNarrow()
+const vh = useViewportHeight()
 
 const { targetCol: targetName, targetMethod: method } = storeToRefs(view)
 
@@ -25,9 +27,11 @@ const list = computed(() =>
 )
 const ordered = computed(() => [...list.value].reverse())
 
-const chartH = computed(() =>
-  Math.max(narrow.value ? 320 : 360, list.value.length * (narrow.value ? 26 : 28) + (narrow.value ? 90 : 110)),
-)
+const chartH = computed(() => {
+  const needed = list.value.length * (narrow.value ? 26 : 28) + (narrow.value ? 90 : 110)
+  const max = vh.value - (narrow.value ? 230 : 250)
+  return Math.max(narrow.value ? 280 : 320, Math.min(needed, Math.max(300, max)))
+})
 
 const traces = computed(() => [
   {

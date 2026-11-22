@@ -6,19 +6,26 @@ import PlotlyChart from '@/components/PlotlyChart.vue'
 import { baseLayout } from '@/lib/chartTheme'
 import { fmtInt, shortName } from '@/lib/format'
 import { useNarrow } from '@/composables/useNarrow'
+import { useViewportHeight } from '@/composables/useViewportHeight'
 import { useSettingsStore } from '@/stores/settings'
 import { t } from '@/i18n'
 
 const ds = useDatasetStore()
 const settings = useSettingsStore()
 const narrow = useNarrow()
+const vh = useViewportHeight()
 
 onMounted(() => {
   void ds.ensurePairs('pearson')
 })
 
 const pairs = computed(() => ds.cachedPairs('pearson'))
-const chartH = computed(() => (narrow.value ? 380 : 430))
+const chartH = computed(() =>
+  Math.max(
+    narrow.value ? 280 : 320,
+    Math.min(narrow.value ? 360 : 460, vh.value - (narrow.value ? 250 : 300)),
+  ),
+)
 
 const kpis = computed(() => {
   const d = ds.dataset

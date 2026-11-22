@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onDeactivated, onMounted, ref, watch } from 'vue'
 import { useDatasetStore } from '@/stores/dataset'
 import { useSettingsStore } from '@/stores/settings'
 import SelectField from '@/components/SelectField.vue'
@@ -115,10 +115,77 @@ function exportCsv(): void {
   downloadCsv([d.headers, ...rows], 'export.csv')
   toast(t('已导出 {n} 行', { n: fmtInt(rows.length) }))
 }
+
+/* ---------------- 表头列画像浮窗 ---------------- */
+
+const profileMap = computed(() => new Map(profile.value.map((p) => [p.name, p])))
+const activeName = ref('')
+const activeData = computed(() => (activeName.value ? profileMap.value.get(activeName.value) : undefined))
+const activeCol = computed(() => (activeName.value ? ds.column(activeName.value) : undefined))
+const popStyle = ref<Record<string, string>>({})
+let closeTimer: ReturnType<typeof setTimeout> | undefined
+
+const extraStats = computed(() => {
+  const c = activeCol.value
+  if (!c || c.type !== 'number') return []
+  return [
+    { k: t('中位数'), v: fmt(c.median) },
+    { k: t('标准差'), v: fmt(c.sd) },
+  ]
+})
+
+function cancelClose(): void {
+  if (closeTimer) clearTimeout(closeTimer)
+  closeTimer = undefined
+}
+
+function closeProfile(): void {
+  activeName.value = ''
+  cancelClose()
+}
+
+function openProfile(name: string, e?: Event): void {
+  cancelClose()
+  activeName.value = name
+  const el = e?.currentTarget as HTMLElement | undefined
+  if (!el) return
+  const rect = el.getBoundingClientRect()
+  const width = 288
+  const left = Math.max(8, Math.min(rect.left, window.innerWidth - width - 8))
+  popStyle.value = { top: `${rect.bottom + 8}px`, left: `${left}px` }
+}
+
+function scheduleClose(): void {
+  cancelClose()
+  closeTimer = setTimeout(() => {
+    activeName.value = ''
+  }, 160)
+}
+
+function onDocClick(e: MouseEvent): void {
+  if (!activeName.value) return
+  const target = e.target as HTMLElement | null
+  if (!target?.closest('.colpop') && !target?.closest('.th-name')) closeProfile()
+}
+
+onMounted(() => {
+  document.addEventListener('click', onDocClick)
+  window.addEventListener('scroll', closeProfile, true)
+  window.addEventListener('resize', closeProfile)
+})
+onBeforeUnmount(() => {
+  document.removeEventListener('click', onDocClick)
+  window.removeEventListener('scroll', closeProfile, true)
+  window.removeEventListener('resize', closeProfile)
+  cancelClose()
+})
+onDeactivated(() => {
+  closeProfile()
+})
 </script>
 
 <template>
-  <section class="panel">
+  <section class="panel panel-fit">
     <div class="controls">
       <label class="field" style="flex: 1 1 260px">
         <span>{{ $t('搜索') }}</span>
@@ -133,13 +200,22 @@ function exportCsv(): void {
       <button class="btn" type="button" @click="exportCsv">{{ $t('导出当前数据 CSV') }}</button>
     </div>
 
-    <div class="card" style="padding: 0; overflow: hidden">
-      <div class="tablewrap responsive">
+    <div class="card data-card">
+      <div class="tablewrap responsive" @scroll.passive="closeProfile">
         <table>
           <thead>
             <tr>
               <th v-for="c in ds.dataset?.columns || []" :key="c.name">
-                {{ settings.columnLabel(c.name) }}<span class="badge" :class="c.type">{{ typeLabel(c.type) }}</span>
+                <button
+                  class="th-name"
+                  type="button"
+                  @mouseenter="openProfile(c.name, $event)"
+                  @mouseleave="scheduleClose"
+                  @click.stop="openProfile(c.name, $event)"
+                >
+                  {{ settings.columnLabel(c.name) }}
+                </button>
+                <span class="badge" :class="c.type">{{ typeLabel(c.type) }}</span>
                 <span v-if="c.missing" class="missdot" :title="$t('{n} 个缺失', { n: c.missing })">●</span>
               </th>
             </tr>
@@ -179,45 +255,34 @@ function exportCsv(): void {
       </div>
     </div>
 
-    <div class="card">
-      <div class="cardhead">
-        <h3>{{ $t('列画像') }}</h3>
-        <span class="hint">{{ $t('类型由数据自动推断') }}</span>
+    <Teleport to="body">
+      <div
+        v-if="activeData"
+        class="colpop"
+        :style="popStyle"
+        @mouseenter="cancelClose"
+        @mouseleave="scheduleClose"
+      >
+        <div class="colpop-head">
+          <b>{{ activeData.displayName }}</b>
+          <span class="badge" :class="activeData.type">{{ activeData.label }}</span>
+          <button class="colpop-close" type="button" :title="$t('关闭')" @click="closeProfile">
+            ✕
+          </button>
+        </div>
+        <div v-if="activeData.displayName !== activeData.name" class="colpop-orig">
+          {{ activeData.name }}
+        </div>
+        <div class="colpop-grid">
+          <span>{{ $t('非空') }}</span><b>{{ fmtInt(activeData.nonNull) }}</b>
+          <span>{{ $t('缺失') }}</span><b>{{ fmtInt(activeData.missing) }}</b>
+          <span>{{ $t('唯一值') }}</span><b>{{ fmtInt(activeData.unique) }}</b>
+        </div>
+        <div v-for="s in extraStats" :key="s.k" class="colpop-grid">
+          <span>{{ s.k }}</span><b>{{ s.v }}</b>
+        </div>
+        <div class="colpop-summary">{{ activeData.summary }}</div>
       </div>
-      <div class="tablewrap responsive compact">
-        <table>
-          <thead>
-            <tr>
-              <th>{{ $t('列名') }}</th>
-              <th>{{ $t('类型') }}</th>
-              <th>{{ $t('非空') }}</th>
-              <th>{{ $t('缺失') }}</th>
-              <th>{{ $t('唯一值') }}</th>
-              <th>{{ $t('统计 / 高频值') }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="p in profile" :key="p.name">
-              <td :data-label="$t('列名')"><b>{{ p.displayName }}</b></td>
-              <td :data-label="$t('类型')"><span class="badge" :class="p.type">{{ p.label }}</span></td>
-              <td :data-label="$t('非空')">{{ fmtInt(p.nonNull) }}</td>
-              <td :data-label="$t('缺失')">
-                <span v-if="p.missing" style="color: #d97706">
-                  {{ fmtInt(p.missing) }} ({{ ((p.missing / ds.n) * 100).toFixed(1) }}%)
-                </span>
-                <span v-else>0</span>
-              </td>
-              <td :data-label="$t('唯一值')">{{ fmtInt(p.unique) }}</td>
-              <td
-                :data-label="$t('统计 / 高频值')"
-                style="white-space: normal; max-width: 420px"
-              >
-                {{ p.summary }}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
+    </Teleport>
   </section>
 </template>

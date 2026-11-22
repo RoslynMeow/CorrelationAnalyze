@@ -10,6 +10,7 @@ import { baseLayout } from '@/lib/chartTheme'
 import { groupLabels } from '@/lib/infer'
 import { isNull } from '@/lib/format'
 import { useNarrow } from '@/composables/useNarrow'
+import { useViewportHeight } from '@/composables/useViewportHeight'
 import { useSettingsStore } from '@/stores/settings'
 import { t } from '@/i18n'
 
@@ -17,6 +18,7 @@ const ds = useDatasetStore()
 const view = useViewStore()
 const settings = useSettingsStore()
 const narrow = useNarrow()
+const vh = useViewportHeight()
 
 const { pairColor: colorName, pairDims: dims } = storeToRefs(view)
 
@@ -24,7 +26,12 @@ const colorOptions = computed(() => [
   { value: '', label: t('（不分组）') },
   ...ds.groups.map((c) => ({ value: c.name, label: settings.columnLabel(c.name) })),
 ])
-const chartH = computed(() => (narrow.value ? 430 : 620))
+const chartH = computed(() =>
+  Math.max(
+    narrow.value ? 340 : 360,
+    Math.min(narrow.value ? 480 : 620, vh.value - (narrow.value ? 210 : 220)),
+  ),
+)
 
 const built = computed(() => {
   const cols = dims.value.slice(0, 6).map((n) => ds.column(n))
