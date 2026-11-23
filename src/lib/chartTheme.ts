@@ -95,7 +95,12 @@ export function baseLayout(extra: AnyRec = {}): AnyRec {
     font: { family: "'Segoe UI','Microsoft YaHei','PingFang SC',sans-serif", size: baseFont, color: text },
     colorway: [...settings.palette],
     margin: { l: 64, r: 24, t: 46, b: 56 },
-    hoverlabel: { bgcolor: cssv('--panel'), bordercolor: grid, font: { color: text, size: baseFont } },
+    hoverlabel: {
+      bgcolor: cssv('--panel'),
+      bordercolor: grid,
+      font: { color: text, size: baseFont },
+      namelength: 40,
+    },
     legend: { ...legendLayoutFor(legendPos), font: { size: narrow.value ? 12 : 11, color: muted } },
     xaxis: {
       gridcolor: grid,

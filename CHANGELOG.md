@@ -30,6 +30,7 @@
 
 ### Fixed
 
+- Hover labels keep more of the trace name instead of Plotly's default 15-character truncation
 - Partial correlation page: the VIF list is now a compact sidebar (300–380 px) so the matrix gets the main width
 - Partial correlation page: the control-variable picker is collapsible and shows the selected variables when folded, and opens as a floating panel so the chart layout does not move
 - Per-chart width and height are now independent of the container: the card still fills the available height, while the plot can be resized freely and scrolls inside the card when larger
