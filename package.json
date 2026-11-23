@@ -1,7 +1,7 @@
 {
   "name": "association-analyzer",
   "private": true,
-  "version": "2.0.0",
+  "version": "2.1.0",
   "type": "module",
   "description": "纯前端 CSV 关联性分析看板",
   "scripts": {
